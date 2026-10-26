@@ -18,4 +18,8 @@ INSERT INTO member (nama, no_hp, tgl_daftar) VALUES
  ('Budi','081200000001',CURDATE()),('Sari','081200000002',CURDATE());
 INSERT INTO member_tingkat_riwayat (member_id, tingkat, berlaku_sejak) VALUES
  (1,'SILVER',NOW()),(2,'SILVER',NOW());
+UPDATE produk SET gambar = CONCAT('/static/img/menu/', CASE nama
+  WHEN 'Americano' THEN 'americano' WHEN 'Kopi Susu Seduh' THEN 'kopi-susu' WHEN 'Cappuccino' THEN 'cappuccino'
+  WHEN 'Matcha Latte' THEN 'matcha' WHEN 'Coklat' THEN 'coklat' WHEN 'Croissant' THEN 'croissant'
+  WHEN 'Roti Bakar' THEN 'roti-bakar' END, '.jpg');
 -- TODO M2: tambahkan contoh promo (4 jenis) + promo_cabang/produk/kategori

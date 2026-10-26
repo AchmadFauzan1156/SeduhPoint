@@ -1,0 +1,156 @@
+erDiagram
+  cabang {
+    int id PK
+    varchar nama
+    varchar alamat
+    boolean aktif
+    timestamp created_at
+    timestamp updated_at "null"
+    timestamp deleted_at "null"
+  }
+  pengguna {
+    int id PK
+    varchar username UK
+    varchar password_hash
+    enum peran
+    int cabang_id FK "null"
+    boolean aktif
+    timestamp created_at
+    timestamp updated_at "null"
+    timestamp deleted_at "null"
+  }
+  kategori {
+    int id PK
+    varchar nama UK
+    timestamp created_at
+    timestamp updated_at "null"
+    timestamp deleted_at "null"
+  }
+  produk {
+    int id PK
+    int kategori_id FK
+    varchar nama
+    bigint harga
+    boolean aktif
+    timestamp created_at
+    timestamp updated_at "null"
+    timestamp deleted_at "null"
+  }
+  member {
+    int id PK
+    varchar nama
+    varchar no_hp UK
+    date tgl_daftar
+    enum tingkat_saat_ini
+    timestamp created_at
+    timestamp updated_at "null"
+    timestamp deleted_at "null"
+  }
+  member_tingkat_riwayat {
+    int id PK
+    int member_id FK
+    enum tingkat
+    datetime berlaku_sejak
+  }
+  promo {
+    int id PK
+    varchar nama
+    enum jenis
+    int nilai_persen "null"
+    bigint nilai_nominal "null"
+    bigint min_belanja "null"
+    varchar kode_voucher UK "null"
+    int kuota "null"
+    int kuota_terpakai
+    date tgl_mulai
+    date tgl_selesai
+    time jam_mulai "null"
+    time jam_selesai "null"
+    boolean aktif
+    timestamp created_at
+    timestamp updated_at "null"
+    timestamp deleted_at "null"
+  }
+  promo_cabang {
+    int promo_id PK,FK
+    int cabang_id PK,FK
+  }
+  promo_produk {
+    int promo_id PK,FK
+    int produk_id PK,FK
+  }
+  promo_kategori {
+    int promo_id PK,FK
+    int kategori_id PK,FK
+  }
+  transaksi {
+    int id PK
+    varchar no_transaksi UK
+    varchar token UK "null"
+    int cabang_id FK
+    int pengguna_id FK
+    int member_id FK "null"
+    datetime waktu
+    bigint subtotal
+    bigint total_promo
+    int poin_ditukar
+    bigint potongan_poin
+    bigint total_bayar
+    int poin_diperoleh
+    enum status
+    varchar alasan_batal "null"
+    datetime waktu_batal "null"
+  }
+  transaksi_item {
+    int id PK
+    int transaksi_id FK
+    int produk_id FK
+    int qty
+    bigint harga_satuan
+  }
+  transaksi_promo {
+    int id PK
+    int transaksi_id FK
+    int promo_id FK
+    bigint nilai_potongan
+  }
+  poin_lot {
+    int id PK
+    int member_id FK
+    int transaksi_id FK
+    int poin_awal
+    int poin_sisa
+    datetime tgl_perolehan
+    datetime tgl_kedaluwarsa
+    enum status
+  }
+  poin_mutasi {
+    int id PK
+    int member_id FK
+    int lot_id FK
+    int transaksi_id FK "null"
+    enum jenis
+    int jumlah
+    datetime waktu
+  }
+  cabang |o--o{ pengguna : "cabang_id"
+  kategori ||--o{ produk : "kategori_id"
+  member ||--o{ member_tingkat_riwayat : "member_id"
+  promo ||--o{ promo_cabang : "promo_id"
+  cabang ||--o{ promo_cabang : "cabang_id"
+  promo ||--o{ promo_produk : "promo_id"
+  produk ||--o{ promo_produk : "produk_id"
+  promo ||--o{ promo_kategori : "promo_id"
+  kategori ||--o{ promo_kategori : "kategori_id"
+  cabang ||--o{ transaksi : "cabang_id"
+  pengguna ||--o{ transaksi : "pengguna_id"
+  member |o--o{ transaksi : "member_id"
+  transaksi ||--o{ transaksi_item : "transaksi_id"
+  produk ||--o{ transaksi_item : "produk_id"
+  transaksi ||--o{ transaksi_promo : "transaksi_id"
+  promo ||--o{ transaksi_promo : "promo_id"
+  member ||--o{ poin_lot : "member_id"
+  transaksi ||--o{ poin_lot : "transaksi_id"
+  member ||--o{ poin_mutasi : "member_id"
+  poin_lot ||--o{ poin_mutasi : "lot_id"
+  transaksi |o--o{ poin_mutasi : "transaksi_id"

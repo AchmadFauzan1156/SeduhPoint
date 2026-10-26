@@ -40,6 +40,7 @@ CREATE TABLE produk (
   kategori_id INT NOT NULL,
   nama        VARCHAR(100) NOT NULL,
   harga       BIGINT NOT NULL CHECK (harga >= 0),
+  gambar      VARCHAR(255) NULL,            -- path foto, mis. /static/img/menu/cappuccino.jpg
   aktif       BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NULL,
@@ -115,7 +116,8 @@ CREATE TABLE promo_kategori (
 
 CREATE TABLE transaksi (
   id             INT AUTO_INCREMENT PRIMARY KEY,
-  no_transaksi   VARCHAR(30) NOT NULL UNIQUE,
+  no_transaksi   VARCHAR(30) NOT NULL UNIQUE,   -- format: SP-<cabang>-<yyyymmdd>-<urut>
+  token          VARCHAR(64) NULL UNIQUE,       -- anti submit ganda (V08)
   cabang_id      INT NOT NULL,
   pengguna_id    INT NOT NULL,
   member_id      INT NULL,

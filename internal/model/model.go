@@ -37,6 +37,7 @@ type Produk struct {
 	KategoriNama string
 	Nama         string
 	Harga        int64
+	Gambar       string // path foto; kosong = pakai gambar bawaan
 	Aktif        bool
 }
 
