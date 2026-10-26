@@ -31,6 +31,10 @@ static/  docs/  scripts/
 ```
 Alur request: **Handler → Service → Repository → MySQL**.
 
+**Fitur yang sudah jalan (M2):** login & peran, Cabang, Kategori, Produk (dengan unggah foto), Member
+(daftar, cari, detail poin & lot, menuju Gold), Promo & voucher 4 jenis (cabang, jam, kuota, aktif/nonaktif).
+Akun contoh di `db/seed.sql`, termasuk 4 promo contoh (P1–P4 di `docs/data-uji.md`).
+
 **Contoh lengkap = modul Cabang** (`repository/cabang.go`, `service/cabang.go`, `handler/cabang.go`,
 `templates/cabang/`): daftar, tambah, ubah, hapus (soft delete), validasi, Post/Redirect/Get.
 Bagian yang harus dikerjakan: cari teks `TODO M2`, `TODO M3`, `TODO M4`.

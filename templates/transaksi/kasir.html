@@ -1,22 +1,4 @@
 {{define "konten"}}
-<h1 class="h4">Transaksi Baru</h1>
-<!-- TODO M3 (F-12–F-19). Sesuai rancangan UI "Konfirmasi Pembayaran" di laporan (Gambar 1.2) -->
-<form method="post" class="row g-3">
-  <div class="col-md-7">
-    <input class="form-control mb-2" name="member_q" placeholder="Cari member (opsional)">
-    <!-- daftar produk + qty; tiap baris: <input name="produk_id"> <input name="qty"> -->
-    <table class="table" id="keranjang"><thead><tr><th>Produk</th><th>Qty</th><th class="text-end">Harga</th></tr></thead><tbody></tbody></table>
-  </div>
-  <div class="col-md-5">
-    <div class="card"><div class="card-body">
-      <input class="form-control mb-2" name="kode_voucher" placeholder="Kode voucher">
-      <div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="pakai_min" id="pm"><label class="form-check-label" for="pm">Pakai potongan minimal belanja</label></div>
-      <input class="form-control mb-2" name="poin" type="number" min="0" placeholder="Tukar poin (maks 50%)">
-      <!-- rincian: subtotal, tiap promo, potongan poin, total bayar, poin didapat -->
-      <input type="hidden" name="token" value="">
-      <button class="btn btn-outline-secondary w-100 mb-2" formaction="/kasir/hitung">Hitung</button>
-      <button class="btn btn-coffee w-100" formaction="/kasir/bayar">Bayar</button>
-    </div></div>
-  </div>
-</form>
+<div class="title-row"><div><h1>Transaksi baru</h1></div></div>
+<p class="wip">Halaman kasir: menu bergambar, panel pesanan, promo otomatis, tukar poin (F-12 – F-19). Dikerjakan di M3. Rancangan tampilannya ada di docs/sketsa.</p>
 {{end}}

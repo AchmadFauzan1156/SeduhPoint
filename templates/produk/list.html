@@ -1,6 +1,52 @@
 {{define "konten"}}
-<div class="d-flex justify-content-between mb-3"><h1 class="h4">Produk</h1><a class="btn btn-coffee" href="/produk/form">+ Tambah</a></div>
-<!-- TODO M2 (F-02): kolom Nama, Kategori, Harga, Status, aksi Ubah -->
-<table class="table"><thead><tr><th>Nama</th><th>Kategori</th><th class="text-end">Harga</th><th>Status</th><th></th></tr></thead>
-<tbody>{{range .Data}}<tr><td>{{.Nama}}</td><td>{{.KategoriNama}}</td><td class="text-end">{{rupiah .Harga}}</td><td>{{if .Aktif}}Aktif{{else}}Nonaktif{{end}}</td><td><a href="/produk/{{.ID}}/edit">Ubah</a></td></tr>{{end}}</tbody></table>
+<div class="title-row"><div><h1>Produk</h1><p class="sub">{{len .Data.Daftar}} menu di {{len .Data.Kategori}} kategori</p></div>
+  <a class="btn" href="/produk">Tambah produk</a></div>
+<div class="grid" style="grid-template-columns:1fr 360px">
+  <div class="panel">
+    {{if .Data.Daftar}}
+    <table class="table">
+      <tr><th>Menu</th><th>Kategori</th><th class="num">Harga</th><th>Status</th><th class="num"><span class="sr-only">Aksi</span></th></tr>
+      {{range .Data.Daftar}}
+      <tr class="{{if eq .ID $.Data.Form.ID}}sel{{end}}">
+        <td><div class="cell-media"><span class="thumb" {{if .Gambar}}style="background-image:url({{.Gambar}})"{{end}} role="img" aria-label="Foto {{.Nama}}"></span><span class="id">{{.Nama}}</span></div></td>
+        <td>{{.KategoriNama}}</td><td class="num">{{rupiah .Harga}}</td>
+        <td>{{if .Aktif}}<span class="pill ok">Dijual</span>{{else}}<span class="pill off">Tidak dijual</span>{{end}}</td>
+        <td class="num"><a href="/produk/{{.ID}}/edit">Ubah</a></td>
+      </tr>
+      {{end}}
+    </table>
+    {{else}}<p class="empty">Belum ada produk.</p>{{end}}
+  </div>
+  {{with .Data}}
+  <form class="panel" method="post" action="{{.Action}}" enctype="multipart/form-data">
+    <h2 style="margin-bottom:16px">{{if .Form.ID}}Ubah {{.Form.Nama}}{{else}}Tambah produk{{end}}</h2>
+    <div id="preview" class="preview" {{if .Form.Gambar}}style="background-image:url({{.Form.Gambar}})"{{end}}></div>
+    <div class="field"><label for="gambar">Foto <span class="small">JPG/PNG/WebP, maks 2 MB</span></label>
+      <input id="gambar" name="gambar" type="file" accept="image/jpeg,image/png,image/webp" class="input" style="padding-top:6px">
+      <input type="hidden" name="gambar_lama" value="{{.Form.Gambar}}">
+      {{with index $.Errors "gambar"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
+    <div class="field"><label for="nama">Nama</label>
+      <input id="nama" name="nama" class="input{{if index $.Errors "nama"}} invalid{{end}}" value="{{.Form.Nama}}" maxlength="100" required>
+      {{with index $.Errors "nama"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
+    <div class="row2">
+      <div class="field"><label for="kategori_id">Kategori</label>
+        <select id="kategori_id" name="kategori_id" class="input{{if index $.Errors "kategori_id"}} invalid{{end}}" required>
+          <option value="">Pilih…</option>
+          {{range .Kategori}}<option value="{{.ID}}" {{if eq .ID $.Data.Form.KategoriID}}selected{{end}}>{{.Nama}}</option>{{end}}
+        </select>
+        {{with index $.Errors "kategori_id"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
+      <div class="field"><label for="harga">Harga (Rp)</label>
+        <input id="harga" name="harga" class="input{{if index $.Errors "harga"}} invalid{{end}}" inputmode="numeric" value="{{if .Form.Harga}}{{.Form.Harga}}{{end}}" required>
+        {{with index $.Errors "harga"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
+    </div>
+    <label class="check"><input type="checkbox" class="cb" name="aktif" {{if .Form.Aktif}}checked{{end}}> Dijual di kasir</label>
+    <div class="actions"><button class="btn">Simpan</button>
+      {{if .Form.ID}}<a class="btn ghost" href="/produk">Batal</a>{{end}}</div>
+  </form>
+  {{end}}
+</div>
+{{if .Data.Form.ID}}
+<form method="post" action="/produk/{{.Data.Form.ID}}/hapus" data-confirm="Hapus {{.Data.Form.Nama}} dari menu? Riwayat transaksinya tetap tersimpan." style="margin-top:16px">
+  <button class="link-btn bad">Hapus produk ini</button></form>
+{{end}}
 {{end}}

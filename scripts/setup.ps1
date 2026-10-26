@@ -1,7 +1,7 @@
 # Setup SeduhPoint di Windows + Laragon (M1.6)
 # Jalankan dari PowerShell:  powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
 # Tambahkan -Reset untuk menghapus dan membuat ulang database seduhpoint.
-param([switch]$Reset, [string]$MySql)
+param([switch]$Reset, [string]$MySql, [switch]$NoGit)
 $ErrorActionPreference = "Stop"
 Set-Location (Split-Path $PSScriptRoot -Parent)
 function Langkah($t) { Write-Host "`n== $t" -ForegroundColor Cyan }
@@ -71,6 +71,7 @@ try {
   else { throw "Login admin gagal (cek hash password di seed)" }
 } finally { Stop-Process -Id $p.Id -Force }
 
+if ($NoGit) { Write-Host "`nSELESAI (tanpa git)." -ForegroundColor Green; exit 0 }
 Langkah "Git"
 if (Get-Command git -ErrorAction SilentlyContinue) {
   if (-not (Test-Path .git)) { git init -b main | Out-Null; Write-Host "Repo git dibuat" }

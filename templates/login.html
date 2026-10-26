@@ -1,10 +1,15 @@
 {{define "konten"}}
-<div class="mx-auto" style="max-width:360px">
-  <h1 class="h4 mb-3">Masuk</h1>
-  <form method="post" action="/login">
-    <input class="form-control mb-2" name="username" placeholder="Username" value="{{index .Form "username"}}" required>
-    <input class="form-control mb-3" name="password" type="password" placeholder="Password" required>
-    <button class="btn btn-coffee w-100">Masuk</button>
-  </form>
-</div>
+<main class="login">
+  <div class="photo" style="background-image:url(/static/img/login.jpg)" role="img" aria-label="Meja barista dan menu kedai kopi"></div>
+  <div class="form"><form method="post" action="/login" style="width:340px">
+    <span class="logo" style="height:52px;margin:0 0 40px">{{template "logo"}}</span>
+    <h1>Masuk</h1><p class="sub" style="margin-bottom:24px">Akun admin atau kasir cabang.</p>
+    {{if .Error}}<div class="alert bad" role="alert">{{.Error}}</div>{{end}}
+    <div class="field"><label for="username">Username</label>
+      <input id="username" name="username" class="input" autocomplete="username" required value="{{index .Form "username"}}" autofocus></div>
+    <div class="field"><label for="password">Password</label>
+      <input id="password" name="password" type="password" class="input" autocomplete="current-password" required></div>
+    <button class="btn block" style="margin-top:8px">Masuk</button>
+  </form></div>
+</main>
 {{end}}

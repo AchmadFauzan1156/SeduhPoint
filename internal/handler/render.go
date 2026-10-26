@@ -28,7 +28,48 @@ func addOne(n int) int { return n + 1 }
 
 func tgl(t time.Time) string { return t.Format("02 Jan 2006 15:04") }
 
-var funcs = template.FuncMap{"rupiah": rupiah, "add_one": addOne, "tgl": tgl}
+// has: apakah id ada di daftar (untuk checkbox terpilih)
+func has(daftar []int, id int) bool {
+	for _, x := range daftar {
+		if x == id {
+			return true
+		}
+	}
+	return false
+}
+
+// jam: "14:00:00" -> "14:00"
+func jam(s string) string {
+	if len(s) >= 5 {
+		return s[:5]
+	}
+	return s
+}
+
+func tglInput(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return t.Format("2006-01-02")
+}
+
+func tglPendek(t time.Time) string {
+	bulan := [...]string{"Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"}
+	return strconv.Itoa(t.Day()) + " " + bulan[t.Month()-1] + " " + strconv.Itoa(t.Year())
+}
+
+// rentang: "1 Okt – 31 Des 2026" (tahun hanya sekali jika sama)
+func rentang(a, b time.Time) string {
+	bulan := [...]string{"Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"}
+	kiri := strconv.Itoa(a.Day()) + " " + bulan[a.Month()-1]
+	if a.Year() != b.Year() {
+		kiri += " " + strconv.Itoa(a.Year())
+	}
+	return kiri + " – " + tglPendek(b)
+}
+
+var funcs = template.FuncMap{"rentang": rentang, "rupiah": rupiah, "add_one": addOne, "tgl": tgl, "upper": strings.ToUpper,
+	"has": has, "jam": jam, "tglInput": tglInput, "tglPendek": tglPendek}
 
 type Renderer struct {
 	tpl map[string]*template.Template

@@ -14,11 +14,11 @@ type TransaksiHandler struct {
 }
 
 func (h *TransaksiHandler) Kasir(w http.ResponseWriter, r *http.Request) {
-	h.View.Tampil(w, "transaksi/kasir.html", halaman(r, "Transaksi Baru", nil))
+	h.View.Tampil(w, "transaksi/kasir.html", halaman(r, "Transaksi Baru", "kasir", nil))
 }
 func (h *TransaksiHandler) Hitung(w http.ResponseWriter, r *http.Request) {
 	// parse form -> h.Svc.Pratinjau -> tampilkan rincian (F-13, F-19)
-	h.View.Tampil(w, "transaksi/kasir.html", halaman(r, "Transaksi Baru", nil))
+	h.View.Tampil(w, "transaksi/kasir.html", halaman(r, "Transaksi Baru", "kasir", nil))
 }
 func (h *TransaksiHandler) Bayar(w http.ResponseWriter, r *http.Request) {
 	// h.Svc.Checkout -> redirect ke struk (PRG)
@@ -26,13 +26,13 @@ func (h *TransaksiHandler) Bayar(w http.ResponseWriter, r *http.Request) {
 }
 func (h *TransaksiHandler) Daftar(w http.ResponseWriter, r *http.Request) {
 	// kasir hanya melihat cabangnya sendiri
-	h.View.Tampil(w, "transaksi/list.html", halaman(r, "Riwayat Transaksi", nil))
+	h.View.Tampil(w, "transaksi/list.html", halaman(r, "Riwayat Transaksi", "transaksi", nil))
 }
 func (h *TransaksiHandler) Struk(w http.ResponseWriter, r *http.Request) {
-	h.View.Tampil(w, "transaksi/struk.html", halaman(r, "Struk", nil))
+	h.View.Tampil(w, "transaksi/struk.html", halaman(r, "Struk", "transaksi", nil))
 }
 func (h *TransaksiHandler) FormBatal(w http.ResponseWriter, r *http.Request) {
-	h.View.Tampil(w, "transaksi/batal.html", halaman(r, "Batalkan Transaksi", nil))
+	h.View.Tampil(w, "transaksi/batal.html", halaman(r, "Batalkan Transaksi", "transaksi", nil))
 }
 func (h *TransaksiHandler) Batal(w http.ResponseWriter, r *http.Request) {
 	// h.Svc.Batalkan(ctx, id, alasan)

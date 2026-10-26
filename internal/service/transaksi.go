@@ -62,7 +62,7 @@ func (s *TransaksiService) Detail(ctx context.Context, id int) (model.Transaksi,
 // Batalkan (F-20 – F-24, AB10).
 func (s *TransaksiService) Batalkan(ctx context.Context, id int, alasan string) error {
 	if alasan == "" {
-		return &ValidasiError{"Alasan pembatalan wajib diisi"}
+		return salah("alasan", "Alasan pembatalan wajib diisi")
 	}
 	return repository.WithTx(ctx, s.DB, func(tx *sql.Tx) error {
 		// 1. pastikan status SELESAI -> Repo.TandaiBatal

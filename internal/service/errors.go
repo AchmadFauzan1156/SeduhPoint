@@ -1,10 +1,13 @@
 // Package service: aturan bisnis. Tidak tahu http.Request dan tidak ada SQL (materi #10).
 package service
 
-// ValidasiError: salah input dari pengguna (handler -> 400/422),
-// dibedakan dari error server (500).
+// ValidasiError: salah input dari pengguna (handler -> 422 + pesan di dekat field),
+// dibedakan dari error server (500). Field = nama input yang salah (boleh kosong).
 type ValidasiError struct {
+	Field string
 	Pesan string
 }
 
 func (e *ValidasiError) Error() string { return e.Pesan }
+
+func salah(field, pesan string) error { return &ValidasiError{Field: field, Pesan: pesan} }

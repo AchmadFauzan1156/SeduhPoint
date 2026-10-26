@@ -2,7 +2,7 @@
 cd /d "%~dp0\.."
 title Push SeduhPoint ke GitHub
 git add -A
-git commit -q -m "Sketsa UI, logo, foto menu, review UI/UX dan aksesibilitas" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_01BoDXLG3ARMGdQ28S9Tn3rP"
+git commit -q -m "M2: login, cabang, kategori, produk + foto, member, promo & voucher" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_01BoDXLG3ARMGdQ28S9Tn3rP"
 git remote remove origin 2>nul
 git remote add origin https://github.com/AchmadFauzan1156/SeduhPoint.git
 git branch -M main

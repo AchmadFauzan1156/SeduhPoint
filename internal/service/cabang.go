@@ -23,14 +23,14 @@ func (s *CabangService) Detail(ctx context.Context, id int) (model.Cabang, error
 }
 
 func (s *CabangService) Buat(ctx context.Context, c model.Cabang) (int64, error) {
-	if err := validasiCabang(c); err != nil {
+	if err := validasiCabang(&c); err != nil {
 		return 0, err
 	}
 	return s.Repo.Tambah(ctx, c)
 }
 
 func (s *CabangService) Ubah(ctx context.Context, c model.Cabang) error {
-	if err := validasiCabang(c); err != nil {
+	if err := validasiCabang(&c); err != nil {
 		return err
 	}
 	return s.Repo.Ubah(ctx, c)
@@ -40,12 +40,13 @@ func (s *CabangService) Hapus(ctx context.Context, id int) error {
 	return s.Repo.Hapus(ctx, id)
 }
 
-func validasiCabang(c model.Cabang) error {
-	if strings.TrimSpace(c.Nama) == "" {
-		return &ValidasiError{"Nama cabang wajib diisi"}
+func validasiCabang(c *model.Cabang) error {
+	c.Nama, c.Alamat = strings.TrimSpace(c.Nama), strings.TrimSpace(c.Alamat)
+	if c.Nama == "" {
+		return salah("nama", "Nama cabang wajib diisi")
 	}
 	if len([]rune(c.Nama)) > 100 {
-		return &ValidasiError{"Nama cabang maksimal 100 karakter"}
+		return salah("nama", "Nama cabang maksimal 100 karakter")
 	}
 	return nil
 }

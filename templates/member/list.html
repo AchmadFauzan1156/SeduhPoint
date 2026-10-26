@@ -1,10 +1,59 @@
 {{define "konten"}}
-<div class="d-flex justify-content-between mb-3"><h1 class="h4">Member</h1><a class="btn btn-coffee" href="/member/form">+ Daftar</a></div>
-<!-- F-04: pencarian nama / no HP (form GET, materi #4) -->
-<form method="get" action="/member" class="d-flex gap-2 mb-3" style="max-width:420px">
-  <input class="form-control" name="q" placeholder="Cari nama atau no. HP">
-  <button class="btn btn-outline-secondary">Cari</button>
-</form>
-<table class="table"><thead><tr><th>Nama</th><th>No. HP</th><th>Tingkat</th><th></th></tr></thead>
-<tbody>{{range .Data}}<tr><td>{{.Nama}}</td><td>{{.NoHP}}</td><td><span class="badge {{if eq .Tingkat "GOLD"}}bg-warning text-dark{{else}}bg-secondary{{end}}">{{.Tingkat}}</span></td><td><a href="/member/{{.ID}}">Detail</a></td></tr>{{end}}</tbody></table>
+<div class="title-row"><div><h1>Member</h1><p class="sub">{{.Data.Total}} member · {{.Data.Gold}} Gold</p></div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <form method="get" action="/member" role="search"><label class="sr-only" for="q">Cari member</label>
+      <input id="q" name="q" class="input" style="width:260px" placeholder="Nama atau nomor HP" value="{{.Data.Q}}"></form>
+    <a class="btn" href="/member/form">Daftar member</a></div></div>
+<div class="grid" style="grid-template-columns:1fr 420px">
+  <div class="panel">
+    {{if .Data.Daftar}}
+    <table class="table">
+      <tr><th>Nama</th><th>Tingkat</th><th class="num">Poin aktif</th><th class="num">Belanja 3 bulan</th></tr>
+      {{range .Data.Daftar}}
+      <tr class="{{if or (eq .ID $.Data.Detail.Member.ID) (eq .ID $.Data.Form.ID)}}sel{{end}}">
+        <td class="id"><a class="row-link" href="/member/{{.ID}}">{{.Nama}}</a><span class="two">{{.NoHP}}</span></td>
+        <td>{{if eq .Tingkat "GOLD"}}<span class="pill gold">Gold</span>{{else}}<span class="pill silver">Silver</span>{{end}}</td>
+        <td class="num">{{.PoinAktif}}</td><td class="num">{{rupiah .Belanja3Bulan}}</td>
+      </tr>
+      {{end}}
+    </table>
+    {{else}}<p class="empty">{{if .Data.Q}}Tidak ada member dengan nama atau nomor "{{.Data.Q}}".{{else}}Belum ada member.{{end}}</p>{{end}}
+  </div>
+
+  {{if eq .Data.Mode "detail"}}{{with .Data.Detail}}
+  <div class="panel">
+    <div class="panel-head"><div><h2>{{.Member.Nama}}</h2><p class="small">{{.Member.NoHP}} · member sejak {{tglPendek .Member.TglDaftar}}</p></div>
+      {{if eq .Member.Tingkat "GOLD"}}<span class="pill gold">Gold</span>{{else}}<span class="pill silver">Silver</span>{{end}}</div>
+    <div style="display:flex;gap:32px;margin:8px 0 16px">
+      <div><div class="grey">Poin aktif</div><div style="font:700 32px/40px var(--head)">{{.Member.PoinAktif}}</div></div>
+      <div><div class="grey">{{if .MenujuGold}}Menuju Gold{{else}}Belanja 3 bulan{{end}}</div>
+        <div style="font:600 24px/40px var(--head)">{{if .MenujuGold}}{{rupiah .MenujuGold}}{{else}}{{rupiah .Member.Belanja3Bulan}}{{end}}</div></div>
+    </div>
+    <div style="height:8px;background:var(--ground);border-radius:999px;margin-bottom:20px" role="progressbar" aria-label="Progres menuju Gold" aria-valuenow="{{.PersenGold}}" aria-valuemin="0" aria-valuemax="100">
+      <div class="bar" style="width:{{.PersenGold}}%"></div></div>
+    <h2 style="margin-bottom:8px">Lot poin</h2>
+    {{if .Lot}}
+    <table class="table"><tr><th>Kedaluwarsa</th><th class="num">Sisa</th><th>Status</th></tr>
+      {{range .Lot}}<tr><td>{{tglPendek .TglKedaluwarsa}}</td><td class="num">{{.PoinSisa}}</td>
+        <td>{{if eq .Status "AKTIF"}}<span class="pill ok">Aktif</span>{{else if eq .Status "KEDALUWARSA"}}<span class="pill off">Kedaluwarsa</span>{{else if eq .Status "HABIS"}}<span class="pill off">Habis</span>{{else}}<span class="pill bad">Ditarik</span>{{end}}</td></tr>{{end}}
+    </table>
+    {{else}}<p class="small">Belum ada poin. Poin didapat dari setiap kelipatan Rp10.000 belanja.</p>{{end}}
+    <div class="actions"><a class="btn ghost" href="/member/{{.Member.ID}}/edit">Ubah data</a></div>
+  </div>
+  {{end}}{{else if eq .Data.Mode "form"}}{{with .Data}}
+  <form class="panel" method="post" action="{{.Action}}">
+    <h2 style="margin-bottom:16px">{{if .Form.ID}}Ubah data member{{else}}Daftar member baru{{end}}</h2>
+    <div class="field"><label for="nama">Nama</label>
+      <input id="nama" name="nama" class="input{{if index $.Errors "nama"}} invalid{{end}}" value="{{.Form.Nama}}" maxlength="100" required autocomplete="off">
+      {{with index $.Errors "nama"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
+    <div class="field"><label for="no_hp">Nomor HP</label>
+      <input id="no_hp" name="no_hp" class="input{{if index $.Errors "no_hp"}} invalid{{end}}" value="{{.Form.NoHP}}" inputmode="tel" placeholder="081234567890" required autocomplete="off">
+      {{with index $.Errors "no_hp"}}<p class="field-error" role="alert">{{.}}</p>{{else}}<p class="hint">Dipakai kasir untuk mencari member saat transaksi.</p>{{end}}</div>
+    {{if not .Form.ID}}<p class="note" style="margin-bottom:4px">Member baru mulai di tingkat Silver.</p>{{end}}
+    <div class="actions"><button class="btn">Simpan</button><a class="btn ghost" href="{{if .Form.ID}}/member/{{.Form.ID}}{{else}}/member{{end}}">Batal</a></div>
+  </form>
+  {{end}}{{else}}
+  <div class="panel"><h2>Pilih member</h2><p class="sub">Klik nama member untuk melihat saldo poin, lot poin, dan progres menuju Gold.</p></div>
+  {{end}}
+</div>
 {{end}}

@@ -16,7 +16,7 @@ type AuthService struct {
 	Repo *repository.PenggunaRepo
 }
 
-var ErrLoginGagal = &ValidasiError{"Username atau password salah"}
+var ErrLoginGagal = &ValidasiError{Pesan: "Username atau password salah"}
 
 func (s *AuthService) Login(ctx context.Context, username, password string) (model.Pengguna, error) {
 	p, err := s.Repo.CariByUsername(ctx, username)

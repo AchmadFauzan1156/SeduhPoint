@@ -1,11 +1,11 @@
 package handler
 
-// CONTOH LENGKAP (F-01) — handler lain mengikuti pola ini.
+// CONTOH LENGKAP (F-01) — handler lain mengikuti pola ini:
+// daftar + panel form di halaman yang sama, validasi di service, Post/Redirect/Get.
 
 import (
 	"fmt"
 	"net/http"
-	"strings"
 
 	"seduhpoint/internal/model"
 	"seduhpoint/internal/service"
@@ -16,32 +16,43 @@ type CabangForm struct {
 	Cabang model.Cabang
 }
 
+type CabangPage struct {
+	Daftar []model.Cabang
+	Form   CabangForm
+}
+
 type CabangHandler struct {
 	Svc  *service.CabangService
 	View *Renderer
 }
 
-func (h *CabangHandler) Daftar(w http.ResponseWriter, r *http.Request) {
-	daftar, err := h.Svc.Daftar(r.Context())
-	if err != nil {
-		gagal(w, err)
+func (h *CabangHandler) tampil(w http.ResponseWriter, r *http.Request, judul string, f CabangForm, err error) {
+	daftar, e := h.Svc.Daftar(r.Context())
+	if e != nil {
+		gagal(w, e)
 		return
 	}
-	h.View.Tampil(w, "cabang/list.html", halaman(r, "Cabang", daftar))
+	hal := halaman(r, judul, "cabang", CabangPage{Daftar: daftar, Form: f})
+	if err != nil {
+		formGagal(w, h.View, "cabang/list.html", hal, err)
+		return
+	}
+	h.View.Tampil(w, "cabang/list.html", hal)
 }
 
-func (h *CabangHandler) FormTambah(w http.ResponseWriter, r *http.Request) {
-	h.View.Tampil(w, "cabang/form.html", halaman(r, "Tambah Cabang",
-		CabangForm{Action: "/cabang", Cabang: model.Cabang{Aktif: true}}))
+func (h *CabangHandler) Daftar(w http.ResponseWriter, r *http.Request) {
+	h.tampil(w, r, "Cabang", CabangForm{Action: "/cabang", Cabang: model.Cabang{Aktif: true}}, nil)
 }
+
+func (h *CabangHandler) FormTambah(w http.ResponseWriter, r *http.Request) { h.Daftar(w, r) }
 
 func (h *CabangHandler) Simpan(w http.ResponseWriter, r *http.Request) {
 	c := cabangDariForm(r)
 	if _, err := h.Svc.Buat(r.Context(), c); err != nil {
-		h.formGagal(w, r, err, "Tambah Cabang", CabangForm{Action: "/cabang", Cabang: c})
+		h.tampil(w, r, "Cabang", CabangForm{Action: "/cabang", Cabang: c}, err)
 		return
 	}
-	http.Redirect(w, r, "/cabang?pesan=Cabang+ditambahkan", http.StatusSeeOther)
+	redirect(w, r, "/cabang", "Cabang "+c.Nama+" ditambahkan")
 }
 
 func (h *CabangHandler) FormEdit(w http.ResponseWriter, r *http.Request) {
@@ -54,8 +65,7 @@ func (h *CabangHandler) FormEdit(w http.ResponseWriter, r *http.Request) {
 		gagal(w, err)
 		return
 	}
-	h.View.Tampil(w, "cabang/form.html", halaman(r, "Ubah Cabang",
-		CabangForm{Action: fmt.Sprintf("/cabang/%d/edit", id), Cabang: c}))
+	h.tampil(w, r, "Ubah cabang", CabangForm{Action: fmt.Sprintf("/cabang/%d/edit", id), Cabang: c}, nil)
 }
 
 func (h *CabangHandler) Update(w http.ResponseWriter, r *http.Request) {
@@ -66,10 +76,10 @@ func (h *CabangHandler) Update(w http.ResponseWriter, r *http.Request) {
 	c := cabangDariForm(r)
 	c.ID = id
 	if err := h.Svc.Ubah(r.Context(), c); err != nil {
-		h.formGagal(w, r, err, "Ubah Cabang", CabangForm{Action: fmt.Sprintf("/cabang/%d/edit", id), Cabang: c})
+		h.tampil(w, r, "Ubah cabang", CabangForm{Action: fmt.Sprintf("/cabang/%d/edit", id), Cabang: c}, err)
 		return
 	}
-	http.Redirect(w, r, "/cabang?pesan=Cabang+diperbarui", http.StatusSeeOther)
+	redirect(w, r, "/cabang", "Cabang "+c.Nama+" disimpan")
 }
 
 func (h *CabangHandler) Hapus(w http.ResponseWriter, r *http.Request) {
@@ -81,26 +91,13 @@ func (h *CabangHandler) Hapus(w http.ResponseWriter, r *http.Request) {
 		gagal(w, err)
 		return
 	}
-	http.Redirect(w, r, "/cabang?pesan=Cabang+dihapus", http.StatusSeeOther)
-}
-
-// formGagal: salah input -> tampilkan ulang form beserta pesan (422), selain itu gagal().
-func (h *CabangHandler) formGagal(w http.ResponseWriter, r *http.Request, err error, judul string, f CabangForm) {
-	pesan, ok := pesanValidasi(err)
-	if !ok {
-		gagal(w, err)
-		return
-	}
-	hal := halaman(r, judul, f)
-	hal.Error = pesan
-	w.WriteHeader(http.StatusUnprocessableEntity)
-	h.View.Tampil(w, "cabang/form.html", hal)
+	redirect(w, r, "/cabang", "Cabang dihapus")
 }
 
 func cabangDariForm(r *http.Request) model.Cabang {
 	return model.Cabang{
-		Nama:   strings.TrimSpace(r.PostFormValue("nama")),
-		Alamat: strings.TrimSpace(r.PostFormValue("alamat")),
+		Nama:   r.PostFormValue("nama"),
+		Alamat: r.PostFormValue("alamat"),
 		Aktif:  r.PostFormValue("aktif") == "on",
 	}
 }

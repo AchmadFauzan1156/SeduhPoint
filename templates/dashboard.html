@@ -1,5 +1,9 @@
 {{define "konten"}}
-<h1 class="h4">Dashboard</h1>
-<p>Selamat datang, {{.Sesi.Username}}.</p>
-<!-- TODO M4: kartu ringkasan (transaksi hari ini, omzet, poin aktif, member Gold) -->
+<div class="title-row"><div><h1>Ringkasan</h1><p class="sub">Selamat datang, {{.Sesi.Username}}.</p></div></div>
+<div class="grid" style="grid-template-columns:repeat(3,1fr)">
+  <a class="panel" href="/produk"><h2>Produk</h2><p class="sub">Kelola menu, harga, dan foto.</p></a>
+  <a class="panel" href="/promo"><h2>Promo &amp; voucher</h2><p class="sub">Atur diskon, minimal belanja, beli 2 gratis 1, dan voucher.</p></a>
+  <a class="panel" href="/member"><h2>Member</h2><p class="sub">Cari member, lihat poin dan tingkat.</p></a>
+</div>
+<p class="wip" style="margin-top:24px">Angka omzet, transaksi, dan biaya promo hari ini tampil di sini setelah fitur transaksi (M3) dan laporan (M4) selesai.</p>
 {{end}}

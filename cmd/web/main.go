@@ -58,7 +58,7 @@ func main() {
 	cabang := &handler.CabangHandler{Svc: cabangSvc, View: view}
 	produk := &handler.ProdukHandler{Svc: produkSvc, View: view}
 	member := &handler.MemberHandler{Svc: memberSvc, View: view}
-	promo := &handler.PromoHandler{Svc: promoSvc, View: view}
+	promo := &handler.PromoHandler{Svc: promoSvc, CabangSvc: cabangSvc, ProdukSvc: produkSvc, View: view}
 	transaksi := &handler.TransaksiHandler{Svc: transaksiSvc, View: view}
 	laporan := &handler.LaporanHandler{Svc: laporanSvc, View: view}
 
@@ -83,6 +83,9 @@ func main() {
 
 	mux.HandleFunc("GET /kategori", mw.Admin(produk.DaftarKategori))
 	mux.HandleFunc("POST /kategori", mw.Admin(produk.SimpanKategori))
+	mux.HandleFunc("GET /kategori/{id}/edit", mw.Admin(produk.FormEditKategori))
+	mux.HandleFunc("POST /kategori/{id}/edit", mw.Admin(produk.UpdateKategori))
+	mux.HandleFunc("POST /kategori/{id}/hapus", mw.Admin(produk.HapusKategori))
 	mux.HandleFunc("GET /produk", mw.Admin(produk.Daftar))
 	mux.HandleFunc("GET /produk/form", mw.Admin(produk.FormTambah))
 	mux.HandleFunc("POST /produk", mw.Admin(produk.Simpan))

@@ -1,9 +1,28 @@
 {{define "konten"}}
-<h1 class="h4">Kategori</h1>
-<!-- TODO M2 (F-02): form tambah kategori (POST /kategori) + tabel daftar kategori -->
-<form method="post" action="/kategori" class="d-flex gap-2 mb-3" style="max-width:420px">
-  <input class="form-control" name="nama" placeholder="Nama kategori">
-  <button class="btn btn-coffee">Tambah</button>
-</form>
-<table class="table"><thead><tr><th>Nama</th></tr></thead><tbody>{{range .Data}}<tr><td>{{.Nama}}</td></tr>{{end}}</tbody></table>
+<div class="title-row"><div><h1>Kategori</h1><p class="sub">{{len .Data.Daftar}} kategori · dipakai untuk mengelompokkan menu dan promo beli 2 gratis 1</p></div></div>
+<div class="grid" style="grid-template-columns:1fr 360px">
+  <div class="panel">
+    {{if .Data.Daftar}}
+    <table class="table">
+      <tr><th>Nama</th><th class="num">Produk</th><th class="num"><span class="sr-only">Aksi</span></th></tr>
+      {{range .Data.Daftar}}
+      <tr class="{{if eq .ID $.Data.Form.ID}}sel{{end}}"><td class="id">{{.Nama}}</td><td class="num">{{.JumlahProduk}}</td>
+        <td class="num"><a href="/kategori/{{.ID}}/edit">Ubah</a></td></tr>
+      {{end}}
+    </table>
+    {{else}}<p class="empty">Belum ada kategori.</p>{{end}}
+  </div>
+  <form class="panel" method="post" action="{{.Data.Action}}">
+    <h2 style="margin-bottom:16px">{{if .Data.Form.ID}}Ubah kategori{{else}}Tambah kategori{{end}}</h2>
+    <div class="field"><label for="nama">Nama</label>
+      <input id="nama" name="nama" class="input{{if index .Errors "nama"}} invalid{{end}}" value="{{.Data.Form.Nama}}" maxlength="100" required>
+      {{with index .Errors "nama"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
+    <div class="actions"><button class="btn">Simpan</button>
+      {{if .Data.Form.ID}}<a class="btn ghost" href="/kategori">Batal</a>{{end}}</div>
+  </form>
+</div>
+{{if .Data.Form.ID}}
+<form method="post" action="/kategori/{{.Data.Form.ID}}/hapus" data-confirm="Hapus kategori {{.Data.Form.Nama}}?" style="margin-top:16px">
+  <button class="link-btn bad">Hapus kategori ini</button>{{if .Data.Form.JumlahProduk}} <span class="small">(berisi {{.Data.Form.JumlahProduk}} produk, tidak bisa dihapus)</span>{{end}}</form>
+{{end}}
 {{end}}

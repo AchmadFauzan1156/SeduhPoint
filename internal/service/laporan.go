@@ -15,7 +15,7 @@ type LaporanService struct {
 
 func (s *LaporanService) BiayaPromo(ctx context.Context, dari, sampai time.Time, cabangID int) ([]repository.BarisBiayaPromo, error) {
 	if sampai.Before(dari) {
-		return nil, &ValidasiError{"Tanggal 'sampai' tidak boleh sebelum 'dari'"}
+		return nil, salah("sampai", "Tanggal 'sampai' tidak boleh sebelum 'dari'")
 	}
 	return s.Repo.BiayaPromo(ctx, dari, sampai, cabangID)
 }

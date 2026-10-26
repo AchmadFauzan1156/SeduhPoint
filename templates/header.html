@@ -1,11 +1,2 @@
-{{define "header"}}
-<nav class="navbar navbar-dark bg-coffee px-3">
-  <a class="navbar-brand fw-bold" href="/">☕ SeduhPoint</a>
-  {{if .Sesi.Username}}
-  <form method="post" action="/logout" class="d-flex align-items-center gap-2 text-white">
-    <span class="small">{{.Sesi.Username}} ({{.Sesi.Peran}})</span>
-    <button class="btn btn-sm btn-outline-light">Keluar</button>
-  </form>
-  {{end}}
-</nav>
-{{end}}
+{{define "header"}}{{end}}
+{{define "logo"}}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 72" role="img" aria-label="SeduhPoint">   <!-- Ikon: gelas kopi dengan uap, lingkar biji kopi di dalam gelas -->   <g fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">     <path d="M22 14c-3 4 3 6 0 10M32 10c-3 5 3 8 0 13"/>     <path d="M8 30h38v14a17 17 0 0 1-17 17h-4A17 17 0 0 1 8 44z" fill="currentColor"/>     <path d="M46 34h3a7 7 0 0 1 0 14h-4"/>     <path d="M4 66h48"/>   </g>   <ellipse cx="27" cy="44" rx="6" ry="8.5" fill="var(--logo-bg, #fff)" transform="rotate(25 27 44)"/>   <path d="M24.5 37.5c3.5 3 1.5 10 5 13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" transform="rotate(25 27 44)"/>   <!-- Teks: Seduh (atas) + P O I N T (bawah, berjarak) -->   <text x="66" y="40" font-family="Plus Jakarta Sans, Inter, sans-serif" font-weight="800" font-size="34" fill="currentColor" letter-spacing="-0.5">Seduh</text>   <text x="68" y="63" font-family="Plus Jakarta Sans, Inter, sans-serif" font-weight="700" font-size="13" fill="var(--logo-accent, #B07A4F)" letter-spacing="9.6">POINT</text> </svg> {{end}}

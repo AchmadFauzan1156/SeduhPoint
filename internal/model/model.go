@@ -27,8 +27,9 @@ type Pengguna struct {
 }
 
 type Kategori struct {
-	ID   int
-	Nama string
+	ID           int
+	Nama         string
+	JumlahProduk int
 }
 
 type Produk struct {
@@ -47,6 +48,10 @@ type Member struct {
 	NoHP      string
 	TglDaftar time.Time
 	Tingkat   string // SILVER | GOLD
+
+	// diisi query daftar/detail
+	PoinAktif     int
+	Belanja3Bulan int64
 }
 
 type Promo struct {
@@ -67,6 +72,8 @@ type Promo struct {
 	CabangIDs     []int
 	ProdukIDs     []int
 	KategoriIDs   []int
+	CabangNama    string // ringkasan untuk daftar, mis. "Sekaran, Banaran"
+	TargetNama    string // produk/kategori target, mis. "Cappuccino"
 }
 
 type Transaksi struct {

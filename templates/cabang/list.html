@@ -1,21 +1,39 @@
 {{define "konten"}}
-<div class="d-flex justify-content-between mb-3">
-  <h1 class="h4">Cabang</h1>
-  <a class="btn btn-coffee" href="/cabang/form">+ Tambah</a>
-</div>
-<table class="table">
-  <thead><tr><th>Nama</th><th>Alamat</th><th>Status</th><th></th></tr></thead>
-  <tbody>
-  {{range .Data}}
-    <tr>
-      <td>{{.Nama}}</td><td>{{.Alamat}}</td>
-      <td>{{if .Aktif}}<span class="badge bg-success">Aktif</span>{{else}}<span class="badge bg-secondary">Nonaktif</span>{{end}}</td>
-      <td class="d-flex gap-2"><a href="/cabang/{{.ID}}/edit">Ubah</a>
-        <form method="post" action="/cabang/{{.ID}}/hapus" onsubmit="return confirm('Hapus cabang {{.Nama}}?')"><button class="btn btn-link btn-sm p-0 text-danger">Hapus</button></form></td>
-    </tr>
-  {{else}}
-    <tr><td colspan="4" class="text-muted">Belum ada cabang.</td></tr>
+<div class="title-row"><div><h1>Cabang</h1><p class="sub">{{len .Data.Daftar}} cabang</p></div>
+  <a class="btn" href="/cabang">Tambah cabang</a></div>
+<div class="grid" style="grid-template-columns:1fr 360px">
+  <div class="panel">
+    {{if .Data.Daftar}}
+    <table class="table">
+      <tr><th>Nama</th><th>Alamat</th><th>Status</th><th class="num"><span class="sr-only">Aksi</span></th></tr>
+      {{range .Data.Daftar}}
+      <tr class="{{if eq .ID $.Data.Form.Cabang.ID}}sel{{end}}">
+        <td class="id">{{.Nama}}</td><td class="grey">{{if .Alamat}}{{.Alamat}}{{else}}–{{end}}</td>
+        <td>{{if .Aktif}}<span class="pill ok">Aktif</span>{{else}}<span class="pill off">Nonaktif</span>{{end}}</td>
+        <td class="num"><a href="/cabang/{{.ID}}/edit">Ubah</a></td>
+      </tr>
+      {{end}}
+    </table>
+    {{else}}<p class="empty">Belum ada cabang.</p>{{end}}
+  </div>
+  {{with .Data.Form}}
+  <form class="panel" method="post" action="{{.Action}}">
+    <h2 style="margin-bottom:16px">{{if .Cabang.ID}}Ubah {{.Cabang.Nama}}{{else}}Tambah cabang{{end}}</h2>
+    <div class="field"><label for="nama">Nama</label>
+      <input id="nama" name="nama" class="input{{if index $.Errors "nama"}} invalid{{end}}" value="{{.Cabang.Nama}}" maxlength="100" required>
+      {{with index $.Errors "nama"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
+    <div class="field"><label for="alamat">Alamat</label>
+      <input id="alamat" name="alamat" class="input" value="{{.Cabang.Alamat}}" maxlength="255"></div>
+    <label class="check"><input type="checkbox" class="cb" name="aktif" {{if .Cabang.Aktif}}checked{{end}}> Aktif</label>
+    <div class="actions"><button class="btn">Simpan</button>
+      {{if .Cabang.ID}}<a class="btn ghost" href="/cabang">Batal</a>{{end}}</div>
+  </form>
+  {{if .Cabang.ID}}
   {{end}}
-  </tbody>
-</table>
+  {{end}}
+</div>
+{{with .Data.Form}}{{if .Cabang.ID}}
+<form method="post" action="/cabang/{{.Cabang.ID}}/hapus" data-confirm="Hapus cabang {{.Cabang.Nama}}? Riwayat transaksinya tetap tersimpan." style="margin-top:16px">
+  <button class="link-btn bad">Hapus cabang ini</button></form>
+{{end}}{{end}}
 {{end}}
