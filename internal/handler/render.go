@@ -26,7 +26,8 @@ func rupiah(n int64) string {
 
 func addOne(n int) int { return n + 1 }
 
-func tgl(t time.Time) string { return t.Format("02 Jan 2006 15:04") }
+// tgl: "26 Okt 2026, 22.35"
+func tgl(t time.Time) string { return tglPendek(t) + ", " + t.Format("15.04") }
 
 // has: apakah id ada di daftar (untuk checkbox terpilih)
 func has(daftar []int, id int) bool {
@@ -68,7 +69,10 @@ func rentang(a, b time.Time) string {
 	return kiri + " – " + tglPendek(b)
 }
 
-var funcs = template.FuncMap{"rentang": rentang, "rupiah": rupiah, "add_one": addOne, "tgl": tgl, "upper": strings.ToUpper,
+// kali: harga × qty untuk subtotal baris
+func kali(h int64, q int) int64 { return h * int64(q) }
+
+var funcs = template.FuncMap{"rentang": rentang, "kali": kali, "rupiah": rupiah, "add_one": addOne, "tgl": tgl, "upper": strings.ToUpper,
 	"has": has, "jam": jam, "tglInput": tglInput, "tglPendek": tglPendek}
 
 type Renderer struct {

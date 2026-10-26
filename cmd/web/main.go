@@ -48,7 +48,7 @@ func main() {
 	promoSvc := &service.PromoService{Repo: promoRepo}
 	poinSvc := &service.PoinService{DB: db, PoinRepo: poinRepo, MemberRepo: memberRepo}
 	transaksiSvc := &service.TransaksiService{DB: db, Repo: transaksiRepo, PromoRepo: promoRepo,
-		PoinRepo: poinRepo, Member: memberSvc, Tingkat: poinSvc}
+		PoinRepo: poinRepo, ProdukRepo: produkRepo, MemberRepo: memberRepo, Tingkat: poinSvc}
 	laporanSvc := &service.LaporanService{Repo: laporanRepo}
 
 	// Handler
@@ -59,7 +59,7 @@ func main() {
 	produk := &handler.ProdukHandler{Svc: produkSvc, View: view}
 	member := &handler.MemberHandler{Svc: memberSvc, View: view}
 	promo := &handler.PromoHandler{Svc: promoSvc, CabangSvc: cabangSvc, ProdukSvc: produkSvc, View: view}
-	transaksi := &handler.TransaksiHandler{Svc: transaksiSvc, View: view}
+	transaksi := &handler.TransaksiHandler{Svc: transaksiSvc, ProdukSvc: produkSvc, MemberSvc: memberSvc, CabangSvc: cabangSvc, View: view}
 	laporan := &handler.LaporanHandler{Svc: laporanSvc, View: view}
 
 	// Job harian: kedaluwarsa poin & evaluasi tingkat (F-25, F-26)

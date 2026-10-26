@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 
 	"seduhpoint/internal/model"
 )
@@ -155,4 +156,31 @@ func (r *ProdukRepo) Hapus(ctx context.Context, id int) error {
 		return fmt.Errorf("hapus produk %d: %w", id, err)
 	}
 	return pastikanAdaBaris(res)
+}
+
+// DijualByID: produk yang masih dijual untuk id tertentu (harga diambil dari database, bukan dari form).
+func (r *ProdukRepo) DijualByID(ctx context.Context, ids []int) (map[int]model.Produk, error) {
+	hasil := map[int]model.Produk{}
+	if len(ids) == 0 {
+		return hasil, nil
+	}
+	ph := strings.TrimSuffix(strings.Repeat("?,", len(ids)), ",")
+	args := make([]any, len(ids))
+	for i, id := range ids {
+		args[i] = id
+	}
+	rows, err := r.DB.QueryContext(ctx, "SELECT "+kolomProduk+` FROM produk p JOIN kategori k ON k.id = p.kategori_id
+		WHERE p.deleted_at IS NULL AND p.aktif = TRUE AND p.id IN (`+ph+")", args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var p model.Produk
+		if err := scanProduk(rows, &p); err != nil {
+			return nil, err
+		}
+		hasil[p.ID] = p
+	}
+	return hasil, rows.Err()
 }

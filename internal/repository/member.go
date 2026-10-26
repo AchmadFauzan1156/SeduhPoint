@@ -112,3 +112,15 @@ func (r *MemberRepo) UbahTingkat(ctx context.Context, q Querier, memberID int, t
 		"INSERT INTO member_tingkat_riwayat (member_id, tingkat, berlaku_sejak) VALUES (?, ?, NOW())", memberID, tingkat)
 	return err
 }
+
+// Tingkat membaca tingkat member saat ini (di dalam tx, dikunci).
+func (r *MemberRepo) Tingkat(ctx context.Context, q Querier, memberID int) (string, error) {
+	var t string
+	err := q.QueryRowContext(ctx, "SELECT tingkat_saat_ini FROM member WHERE id = ? FOR UPDATE", memberID).Scan(&t)
+	return t, err
+}
+
+// SemuaID: id semua member aktif (untuk evaluasi tingkat harian).
+func (r *MemberRepo) SemuaID(ctx context.Context) ([]int, error) {
+	return ambilID(ctx, r.DB, "SELECT id FROM member WHERE deleted_at IS NULL")
+}

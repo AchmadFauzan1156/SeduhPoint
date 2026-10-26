@@ -1,4 +1,27 @@
-{{define "konten"}}
-<div class="title-row"><div><h1>Struk</h1></div></div>
-<p class="wip">Struk transaksi (F-19). Dikerjakan di M3. Rancangan tampilannya ada di docs/sketsa.</p>
-{{end}}
+{{define "konten"}}{{with .Data}}{{$t := .Transaksi}}
+<div class="title-row"><div><h1>{{$t.NoTransaksi}}</h1>
+  <p class="sub">{{if eq $t.Status "SELESAI"}}Selesai{{else}}<span class="pill bad">Dibatalkan</span>{{end}} · {{tgl $t.Waktu}} WIB</p></div>
+  <div style="display:flex;gap:8px">
+    <button class="btn ghost" onclick="window.print()">Cetak</button>
+    {{if eq $t.Status "SELESAI"}}<a class="btn ghost" style="color:var(--bad)" href="/transaksi/{{$t.ID}}/batal">Batalkan</a>{{end}}
+    {{if eq $.Sesi.Peran "KASIR"}}<a class="btn" href="/kasir">Transaksi baru</a>{{else}}<a class="btn" href="/transaksi">Riwayat</a>{{end}}
+  </div></div>
+{{if ne $t.Status "SELESAI"}}<div class="alert bad">Dibatalkan {{if $t.WaktuBatal.Valid}}{{tgl $t.WaktuBatal.Time}}{{end}}: {{$t.AlasanBatal.String}}</div>{{end}}
+<div class="receipt">
+  <span class="logo" style="height:36px;margin:0 0 16px">{{template "logo"}}</span>
+  <div class="kv grey"><span>{{$t.CabangNama}} · {{$t.KasirNama}}</span><span>{{if $t.MemberNama}}Member: {{$t.MemberNama}}{{else}}Non-member{{end}}</span></div>
+  <div class="sep"></div>
+  {{range .Item}}<div class="kv"><span>{{.Qty}} × {{.Nama}}</span><span class="num">{{rupiah (kali .Harga .Qty)}}</span></div>{{end}}
+  <div class="sep"></div>
+  <div class="kv grey"><span>Subtotal</span><span class="num">{{rupiah $t.Subtotal}}</span></div>
+  {{range .Promo}}<div class="kv grey"><span>{{.Nama}}</span><span class="num">−{{rupiah .Nilai}}</span></div>{{end}}
+  {{if $t.PoinDitukar}}<div class="kv grey"><span>Tukar {{$t.PoinDitukar}} poin</span><span class="num">−{{rupiah $t.PotonganPoin}}</span></div>{{end}}
+  <div class="sep"></div>
+  <div class="kv" style="font:700 20px/28px var(--head)"><span>Total</span><span class="num">{{rupiah $t.TotalBayar}}</span></div>
+  {{if $t.MemberID.Valid}}
+  <div class="kv"><span>Poin didapat</span><span class="num">+{{$t.PoinDiperoleh}}</span></div>
+  <div class="kv grey"><span>Saldo poin sekarang</span><span class="num">{{.SaldoPoin}}</span></div>
+  {{end}}
+  <div class="sep"></div><p class="small" style="text-align:center">Poin berlaku 6 bulan. Terima kasih sudah mampir.</p>
+</div>
+{{end}}{{end}}

@@ -152,13 +152,65 @@ func (r *PromoRepo) SetAktif(ctx context.Context, id int, aktif bool) error {
 	return pastikanAdaBaris(res)
 }
 
-// BerlakuUntuk: promo aktif pada cabang & tanggal tertentu (cek jam di service). TODO M3
+// BerlakuUntuk: promo aktif yang tanggalnya mencakup `t` dan berlaku di cabang ini, beserta targetnya.
+// Pengecekan jam dilakukan di service (PromoBerlaku) agar aturan WIB ada di satu tempat.
 func (r *PromoRepo) BerlakuUntuk(ctx context.Context, cabangID int, t time.Time) ([]model.Promo, error) {
-	return nil, nil
+	rows, err := r.DB.QueryContext(ctx, "SELECT "+kolomPromo+` FROM promo p
+		JOIN promo_cabang pc ON pc.promo_id = p.id AND pc.cabang_id = ?
+		WHERE p.deleted_at IS NULL AND p.aktif = TRUE AND ? BETWEEN p.tgl_mulai AND p.tgl_selesai
+		ORDER BY p.id`, cabangID, t.Format("2006-01-02"))
+	if err != nil {
+		return nil, fmt.Errorf("promo berlaku: %w", err)
+	}
+	var hasil []model.Promo
+	for rows.Next() {
+		var p model.Promo
+		if err := scanPromo(rows, &p); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		hasil = append(hasil, p)
+	}
+	rows.Close()
+	for i := range hasil {
+		if err := r.isiRelasi(ctx, r.DB, &hasil[i]); err != nil {
+			return nil, err
+		}
+	}
+	return hasil, nil
 }
 
-// VoucherForUpdate: SELECT ... WHERE kode_voucher = ? FOR UPDATE (kunci kuota). TODO M3
-func (r *PromoRepo) VoucherForUpdate(ctx context.Context, q Querier, kode string) (model.Promo, error) {
-	return model.Promo{}, model.ErrNotFound
+func (r *PromoRepo) isiRelasi(ctx context.Context, q Querier, p *model.Promo) error {
+	var err error
+	if p.CabangIDs, err = ambilID(ctx, q, "SELECT cabang_id FROM promo_cabang WHERE promo_id = ?", p.ID); err != nil {
+		return err
+	}
+	if p.ProdukIDs, err = ambilID(ctx, q, "SELECT produk_id FROM promo_produk WHERE promo_id = ?", p.ID); err != nil {
+		return err
+	}
+	p.KategoriIDs, err = ambilID(ctx, q, "SELECT kategori_id FROM promo_kategori WHERE promo_id = ?", p.ID)
+	return err
 }
-func (r *PromoRepo) TambahPemakaian(ctx context.Context, q Querier, id, delta int) error { return nil }
+
+// VoucherByKode: kunci = true memakai SELECT ... FOR UPDATE agar kuota aman saat checkout (F-14).
+func (r *PromoRepo) VoucherByKode(ctx context.Context, q Querier, kode string, kunci bool) (model.Promo, error) {
+	query := "SELECT " + kolomPromo + " FROM promo p WHERE p.kode_voucher = ? AND p.jenis = 'VOUCHER' AND p.deleted_at IS NULL"
+	if kunci {
+		query += " FOR UPDATE"
+	}
+	var p model.Promo
+	err := scanPromo(q.QueryRowContext(ctx, query, kode), &p)
+	if errors.Is(err, sql.ErrNoRows) {
+		return p, model.ErrNotFound
+	}
+	if err != nil {
+		return p, err
+	}
+	return p, r.isiRelasi(ctx, q, &p)
+}
+
+// TambahPemakaian: +1 saat voucher dipakai, -1 saat transaksinya dibatalkan.
+func (r *PromoRepo) TambahPemakaian(ctx context.Context, q Querier, id, delta int) error {
+	_, err := q.ExecContext(ctx, "UPDATE promo SET kuota_terpakai = GREATEST(kuota_terpakai + ?, 0) WHERE id = ?", delta, id)
+	return err
+}

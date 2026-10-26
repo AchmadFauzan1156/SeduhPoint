@@ -1,4 +1,44 @@
-{{define "konten"}}
-<div class="title-row"><div><h1>Riwayat transaksi</h1></div></div>
-<p class="wip">Daftar transaksi per cabang dengan status selesai/dibatalkan. Dikerjakan di M3. Rancangan tampilannya ada di docs/sketsa.</p>
-{{end}}
+{{define "konten"}}{{with .Data}}
+<div class="title-row"><div><h1>{{if eq $.Sesi.Peran "KASIR"}}Riwayat transaksi{{else}}Transaksi{{end}}</h1>
+  <p class="sub">{{tglPendek .Tgl}} · {{len .Daftar}} transaksi</p></div>
+  <form method="get" action="/transaksi" style="display:flex;gap:8px">
+    <label class="sr-only" for="tgl">Tanggal</label>
+    <input id="tgl" name="tgl" type="date" class="input" value="{{tglInput .Tgl}}" style="width:170px">
+    <button class="btn ghost">Tampilkan</button></form></div>
+<div class="grid" style="grid-template-columns:1fr {{if .Batal}}384px{{else}}0{{end}}">
+  <div class="panel">
+    {{if .Daftar}}
+    <table class="table">
+      <tr><th>Nomor</th><th class="num">Jam</th>{{if eq $.Sesi.Peran "ADMIN"}}<th>Cabang</th>{{end}}<th>Member</th><th class="num">Total</th><th>Status</th></tr>
+      {{range .Daftar}}
+      <tr class="{{if $.Data.Batal}}{{if eq .ID $.Data.Batal.Transaksi.ID}}sel{{end}}{{end}}">
+        <td class="id"><a class="row-link" href="/transaksi/{{.ID}}">{{.NoTransaksi}}</a></td>
+        <td class="num">{{.Waktu.Format "15.04"}}</td>
+        {{if eq $.Sesi.Peran "ADMIN"}}<td>{{.CabangNama}}</td>{{end}}
+        <td>{{if .MemberNama}}{{.MemberNama}}{{else}}<span class="grey">–</span>{{end}}</td>
+        <td class="num">{{rupiah .TotalBayar}}</td>
+        <td>{{if eq .Status "SELESAI"}}<span class="pill ok">Selesai</span>{{else}}<span class="pill bad">Dibatalkan</span>{{end}}</td>
+      </tr>
+      {{end}}
+    </table>
+    {{else}}<p class="empty">Belum ada transaksi pada tanggal ini.</p>{{end}}
+  </div>
+  {{with .Batal}}{{$t := .Transaksi}}
+  <form class="panel" method="post" action="/transaksi/{{$t.ID}}/batal">
+    <h2>Batalkan {{$t.NoTransaksi}}</h2>
+    <p class="sub" style="margin-bottom:14px">Total {{rupiah $t.TotalBayar}}{{if $t.MemberNama}} · {{$t.MemberNama}}{{end}}</p>
+    {{if eq $t.Status "SELESAI"}}
+    <div class="well" style="margin-bottom:16px">
+      <div class="kv"><span>Poin perolehan ditarik</span><span class="num">−{{.Dampak.PoinDitarik}}</span></div>
+      <div class="kv"><span>Poin tukar dikembalikan</span><span class="num">+{{.Dampak.PoinDikembalikan}}</span></div>
+      <div class="kv"><span>Kuota voucher dikembalikan</span><span class="num">{{if .Dampak.Voucher}}{{.Dampak.Voucher}} +1{{else}}–{{end}}</span></div>
+    </div>
+    <div class="field"><label for="alasan">Alasan</label>
+      <textarea id="alasan" name="alasan" class="input{{if index $.Errors "alasan"}} invalid{{end}}" rows="3" maxlength="255" required>{{$.Data.Alasan}}</textarea>
+      {{with index $.Errors "alasan"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
+    <div class="actions"><button class="btn bad">Batalkan transaksi</button><a class="btn ghost" href="/transaksi/{{$t.ID}}">Kembali</a></div>
+    {{else}}<p class="alert bad">Transaksi ini sudah dibatalkan.</p>{{end}}
+  </form>
+  {{end}}
+</div>
+{{end}}{{end}}

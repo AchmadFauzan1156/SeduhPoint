@@ -221,3 +221,10 @@ select.input { appearance: auto; }
 .panel { overflow-x: auto; }
 .pill-btn { min-height: 28px; display: inline-flex; align-items: center; }
 .table .two { white-space: normal; }
+.seg-btn { border: 0; background: none; padding: 5px 12px; border-radius: 6px; color: var(--ink-2); font: 500 14px var(--font); cursor: pointer; }
+.seg-btn.on { background: #fff; color: var(--ink); }
+.member-box { display: flex; justify-content: space-between; align-items: center; background: var(--ground); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; }
+.pilih-member { display: grid; gap: 4px; margin-bottom: 10px; }
+.pilih { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; padding: 8px 12px; border: 1px solid #D6D0CC; background: #fff; border-radius: var(--r-ctl); cursor: pointer; font: inherit; color: var(--ink); text-align: left; }
+.pilih:hover { background: var(--ground); }
+@media print { .side, .title-row > div:last-child, .alert { display: none !important; } .app { display: block; } .main { padding: 0; } .receipt { width: 80mm; padding: 0; } }

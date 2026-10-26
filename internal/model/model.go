@@ -91,6 +91,36 @@ type Transaksi struct {
 	PoinDiperoleh int
 	Status        string // SELESAI | DIBATALKAN
 	AlasanBatal   sql.NullString
+	WaktuBatal    sql.NullTime
+	Token         sql.NullString
+
+	// diisi query daftar/struk
+	CabangNama string
+	KasirNama  string
+	MemberNama string
+}
+
+// ItemStruk: baris item pada struk (harga = snapshot saat transaksi).
+type ItemStruk struct {
+	Nama  string
+	Qty   int
+	Harga int64
+}
+
+// PromoStruk: potongan per promo pada sebuah transaksi.
+type PromoStruk struct {
+	PromoID int
+	Nama    string
+	Jenis   string
+	Nilai   int64
+}
+
+// MutasiPoin: satu baris buku besar poin.
+type MutasiPoin struct {
+	ID     int
+	LotID  int
+	Jenis  string
+	Jumlah int
 }
 
 type PoinLot struct {

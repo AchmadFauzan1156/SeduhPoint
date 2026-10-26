@@ -31,7 +31,11 @@ static/  docs/  scripts/
 ```
 Alur request: **Handler → Service → Repository → MySQL**.
 
-**Fitur yang sudah jalan (M2):** login & peran, Cabang, Kategori, Produk (dengan unggah foto), Member
+**Fitur yang sudah jalan (M3):** kasir (menu bergambar, promo otomatis, voucher, tukar poin FIFO), checkout dalam
+satu DB transaction (anti bayar ganda), struk, riwayat, pembatalan (poin ditarik/dikembalikan, kuota voucher kembali),
+job harian kedaluwarsa poin & evaluasi Silver/Gold.
+
+**M2:** login & peran, Cabang, Kategori, Produk (dengan unggah foto), Member
 (daftar, cari, detail poin & lot, menuju Gold), Promo & voucher 4 jenis (cabang, jam, kuota, aktif/nonaktif).
 Akun contoh di `db/seed.sql`, termasuk 4 promo contoh (P1–P4 di `docs/data-uji.md`).
 
