@@ -1,0 +1,6 @@
+{{define "konten"}}
+<div class="d-flex justify-content-between mb-3"><h1 class="h4">Produk</h1><a class="btn btn-coffee" href="/produk/baru">+ Tambah</a></div>
+<!-- TODO M2 (F-02): kolom Nama, Kategori, Harga, Status, aksi Ubah -->
+<table class="table"><thead><tr><th>Nama</th><th>Kategori</th><th class="text-end">Harga</th><th>Status</th><th></th></tr></thead>
+<tbody>{{range .Data}}<tr><td>{{.Nama}}</td><td>{{.KategoriNama}}</td><td class="text-end">{{rupiah .Harga}}</td><td>{{if .Aktif}}Aktif{{else}}Nonaktif{{end}}</td><td><a href="/produk/{{.ID}}/edit">Ubah</a></td></tr>{{end}}</tbody></table>
+{{end}}

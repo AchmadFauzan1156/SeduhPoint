@@ -1,0 +1,10 @@
+{{define "konten"}}
+<div class="d-flex justify-content-between mb-3"><h1 class="h4">Member</h1><a class="btn btn-coffee" href="/member/baru">+ Daftar</a></div>
+<!-- F-04: pencarian nama / no HP (form GET, materi #4) -->
+<form method="get" action="/member" class="d-flex gap-2 mb-3" style="max-width:420px">
+  <input class="form-control" name="q" placeholder="Cari nama atau no. HP">
+  <button class="btn btn-outline-secondary">Cari</button>
+</form>
+<table class="table"><thead><tr><th>Nama</th><th>No. HP</th><th>Tingkat</th><th></th></tr></thead>
+<tbody>{{range .Data}}<tr><td>{{.Nama}}</td><td>{{.NoHP}}</td><td><span class="badge {{if eq .Tingkat "GOLD"}}bg-warning text-dark{{else}}bg-secondary{{end}}">{{.Tingkat}}</span></td><td><a href="/member/{{.ID}}">Detail</a></td></tr>{{end}}</tbody></table>
+{{end}}

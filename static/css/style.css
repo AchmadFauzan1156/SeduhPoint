@@ -1,0 +1,6 @@
+:root { --coffee: #6b4226; }
+.bg-coffee { background: var(--coffee); }
+.btn-coffee { background: var(--coffee); color: #fff; }
+.btn-coffee:hover { background: #553419; color: #fff; }
+.sidebar { width: 220px; min-height: calc(100vh - 56px); }
+@media (max-width: 768px) { .sidebar { display: none; } }

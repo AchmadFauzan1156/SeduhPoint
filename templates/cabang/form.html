@@ -1,0 +1,17 @@
+{{define "konten"}}
+<h1 class="h4">{{if .Data.ID}}Ubah{{else}}Tambah{{end}} Cabang</h1>
+<form method="post" action="/cabang" style="max-width:480px">
+  <input type="hidden" name="id" value="{{.Data.ID}}">
+  <label class="form-label">Nama</label>
+  <input class="form-control {{if index .Errors "nama"}}is-invalid{{end}}" name="nama" value="{{.Data.Nama}}">
+  <div class="invalid-feedback">{{index .Errors "nama"}}</div>
+  <label class="form-label mt-2">Alamat</label>
+  <input class="form-control" name="alamat" value="{{.Data.Alamat}}">
+  <div class="form-check mt-2">
+    <input class="form-check-input" type="checkbox" name="aktif" id="aktif" {{if .Data.Aktif}}checked{{end}}>
+    <label class="form-check-label" for="aktif">Aktif</label>
+  </div>
+  <button class="btn btn-coffee mt-3">Simpan</button>
+  <a class="btn btn-link mt-3" href="/cabang">Batal</a>
+</form>
+{{end}}

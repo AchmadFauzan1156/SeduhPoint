@@ -1,0 +1,23 @@
+{{define "sidebar"}}
+<aside class="sidebar border-end p-3">
+  <ul class="nav flex-column gap-1">
+    <li><a class="nav-link" href="/">Dashboard</a></li>
+    {{if eq .Sesi.Peran "KASIR"}}
+    <li><a class="nav-link" href="/kasir">Transaksi Baru</a></li>
+    {{end}}
+    <li><a class="nav-link" href="/transaksi">Riwayat Transaksi</a></li>
+    <li><a class="nav-link" href="/member">Member</a></li>
+    {{if eq .Sesi.Peran "ADMIN"}}
+    <li class="mt-2 small text-muted">MASTER</li>
+    <li><a class="nav-link" href="/cabang">Cabang</a></li>
+    <li><a class="nav-link" href="/kategori">Kategori</a></li>
+    <li><a class="nav-link" href="/produk">Produk</a></li>
+    <li><a class="nav-link" href="/promo">Promo & Voucher</a></li>
+    <li class="mt-2 small text-muted">LAPORAN</li>
+    <li><a class="nav-link" href="/laporan/promo">Biaya Promo</a></li>
+    <li><a class="nav-link" href="/laporan/poin">Poin Aktif</a></li>
+    <li><a class="nav-link" href="/laporan/member">Perkembangan Member</a></li>
+    {{end}}
+  </ul>
+</aside>
+{{end}}

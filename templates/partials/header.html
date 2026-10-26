@@ -1,0 +1,11 @@
+{{define "header"}}
+<nav class="navbar navbar-dark bg-coffee px-3">
+  <a class="navbar-brand fw-bold" href="/">☕ SeduhPoint</a>
+  {{if .Sesi.Username}}
+  <form method="post" action="/logout" class="d-flex align-items-center gap-2 text-white">
+    <span class="small">{{.Sesi.Username}} ({{.Sesi.Peran}})</span>
+    <button class="btn btn-sm btn-outline-light">Keluar</button>
+  </form>
+  {{end}}
+</nav>
+{{end}}

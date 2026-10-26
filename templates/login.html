@@ -1,0 +1,10 @@
+{{define "konten"}}
+<div class="mx-auto" style="max-width:360px">
+  <h1 class="h4 mb-3">Masuk</h1>
+  <form method="post" action="/login">
+    <input class="form-control mb-2" name="username" placeholder="Username" value="{{index .Form "username"}}" required>
+    <input class="form-control mb-3" name="password" type="password" placeholder="Password" required>
+    <button class="btn btn-coffee w-100">Masuk</button>
+  </form>
+</div>
+{{end}}

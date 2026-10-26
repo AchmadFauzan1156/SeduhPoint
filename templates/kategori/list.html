@@ -1,0 +1,9 @@
+{{define "konten"}}
+<h1 class="h4">Kategori</h1>
+<!-- TODO M2 (F-02): form tambah kategori (POST /kategori) + tabel daftar kategori -->
+<form method="post" action="/kategori" class="d-flex gap-2 mb-3" style="max-width:420px">
+  <input class="form-control" name="nama" placeholder="Nama kategori">
+  <button class="btn btn-coffee">Tambah</button>
+</form>
+<table class="table"><thead><tr><th>Nama</th></tr></thead><tbody>{{range .Data}}<tr><td>{{.Nama}}</td></tr>{{end}}</tbody></table>
+{{end}}

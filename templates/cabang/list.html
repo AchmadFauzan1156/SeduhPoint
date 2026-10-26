@@ -1,0 +1,20 @@
+{{define "konten"}}
+<div class="d-flex justify-content-between mb-3">
+  <h1 class="h4">Cabang</h1>
+  <a class="btn btn-coffee" href="/cabang/baru">+ Tambah</a>
+</div>
+<table class="table">
+  <thead><tr><th>Nama</th><th>Alamat</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {{range .Data}}
+    <tr>
+      <td>{{.Nama}}</td><td>{{.Alamat}}</td>
+      <td>{{if .Aktif}}<span class="badge bg-success">Aktif</span>{{else}}<span class="badge bg-secondary">Nonaktif</span>{{end}}</td>
+      <td><a href="/cabang/{{.ID}}/edit">Ubah</a></td>
+    </tr>
+  {{else}}
+    <tr><td colspan="4" class="text-muted">Belum ada cabang.</td></tr>
+  {{end}}
+  </tbody>
+</table>
+{{end}}
