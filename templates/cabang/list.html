@@ -1,7 +1,7 @@
 {{define "konten"}}
 <div class="d-flex justify-content-between mb-3">
   <h1 class="h4">Cabang</h1>
-  <a class="btn btn-coffee" href="/cabang/baru">+ Tambah</a>
+  <a class="btn btn-coffee" href="/cabang/form">+ Tambah</a>
 </div>
 <table class="table">
   <thead><tr><th>Nama</th><th>Alamat</th><th>Status</th><th></th></tr></thead>
@@ -10,7 +10,8 @@
     <tr>
       <td>{{.Nama}}</td><td>{{.Alamat}}</td>
       <td>{{if .Aktif}}<span class="badge bg-success">Aktif</span>{{else}}<span class="badge bg-secondary">Nonaktif</span>{{end}}</td>
-      <td><a href="/cabang/{{.ID}}/edit">Ubah</a></td>
+      <td class="d-flex gap-2"><a href="/cabang/{{.ID}}/edit">Ubah</a>
+        <form method="post" action="/cabang/{{.ID}}/hapus" onsubmit="return confirm('Hapus cabang {{.Nama}}?')"><button class="btn btn-link btn-sm p-0 text-danger">Hapus</button></form></td>
     </tr>
   {{else}}
     <tr><td colspan="4" class="text-muted">Belum ada cabang.</td></tr>

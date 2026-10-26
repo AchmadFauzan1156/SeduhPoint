@@ -1,56 +1,67 @@
 # SeduhPoint — Sistem Poin Member & Promo Kedai Kopi Seduh
 
 Project Akhir Pemrograman Web · Kelompok 5 · Topik 5
-Stack: **Go 1.22+ (`net/http`, `html/template`) + MySQL 8** + Bootstrap 5 (CDN)
+Stack: **Go 1.22+ (`net/http`, `html/template`) + MySQL 8** + Bootstrap 5 (CDN).
+Struktur mengikuti materi #10 *Struktur Aplikasi & Kickoff Project*.
 
-## Cara menjalankan
-1. Install Go 1.22+ dan MySQL 8 (Laragon/XAMPP).
-2. Import database (urut):
-   `database/migrations/001_schema.sql` lalu `database/migrations/002_seed.sql`
-3. Salin `.env.example` menjadi `.env` dan sesuaikan user/password MySQL.
-4. Jalankan:
-   ```
-   go mod tidy
-   go run .
-   ```
-5. Buka http://localhost:8080. Login: `admin` / `kasir1` / `kasir2` / `kasir3`, password `password`.
+## Cara menjalankan (Windows + Laragon)
+1. Nyalakan Laragon → **Start All**.
+2. Pertama kali (atau setelah skema berubah):
+   `powershell -ExecutionPolicy Bypass -File scripts\setup.ps1 -Reset`
+   (membuat database dari `db/schema.sql` + `db/seed.sql`, `.env`, lalu vet/test/build)
+3. Sehari-hari: double-click **`jalankan.bat`**, atau `go run ./cmd/web`
+   (auto reload: `wgo run ./cmd/web`).
+4. Buka http://localhost:8080 — login `admin` / `kasir1` / `kasir2` / `kasir3`, password `password`.
 
-Tes mesin perhitungan: `go test ./...`
+Tes aturan bisnis: `go test ./...`
 
-## Struktur folder
-| Folder | Isi | Rujukan laporan |
+## Struktur
+```
+cmd/web/main.go          hanya menyambung: config → db → repository → service → handler → route
+internal/
+  config/                baca .env (ADDR, DB_DSN), zona waktu WIB
+  model/                 struct data + ErrNotFound (tanpa business logic)
+  repository/            satu-satunya tempat SQL; satu struct per entitas (CabangRepo, ProdukRepo, ...)
+  service/               aturan bisnis + validasi (ValidasiError); hitung.go = mesin promo & poin + test
+  handler/               urusan HTTP; render.go (Renderer.Tampil), helper.go (gagal, idDariPath)
+  middleware/            logging, login & peran
+db/schema.sql, seed.sql  skema MySQL + data contoh
+templates/               layout, header, sidebar, footer + satu folder per modul
+static/  docs/  scripts/
+```
+Alur request: **Handler → Service → Repository → MySQL**.
+
+**Contoh lengkap = modul Cabang** (`repository/cabang.go`, `service/cabang.go`, `handler/cabang.go`,
+`templates/cabang/`): daftar, tambah, ubah, hapus (soft delete), validasi, Post/Redirect/Get.
+Bagian yang harus dikerjakan: cari teks `TODO M2`, `TODO M3`, `TODO M4`.
+
+## Pola route (sama untuk tiap modul)
+| Method | Path | Fungsi |
 |---|---|---|
-| `main.go` | Wiring & start server, job harian | — |
-| `config/` | Baca `.env`, zona waktu WIB | NF-06 |
-| `database/` | Koneksi MySQL, `WithTx`, file SQL | NF-02, Tabel 1.10 |
-| `models/` | Struct tabel | Tabel 1.10 |
-| `hitung/` | Mesin hitung promo & poin (tanpa DB) + test | 1.8, AB01–AB09 |
-| `store/` | Semua query SQL, satu file per modul | — |
-| `layanan/` | Checkout, pembatalan, poin & tingkat (pakai transaction) | F-12–F-27 |
-| `middleware/` | Session login, peran, logger | F-05, NF-03 |
-| `view/` | Loader template + fungsi `rupiah` | — |
-| `handler/` | Route & handler HTTP | F-01–F-30 |
-| `templates/` | `layout.html`, `partials/`, satu folder per modul | 1.12 |
-| `static/` | CSS & JS | — |
-
-**Contoh lengkap yang menjadi acuan:** modul **Cabang** (`store/cabang.go`, `handler/cabang.go`,
-`templates/cabang/`): list, form, validasi server, Post/Redirect/Get. Modul lain tinggal mengikuti polanya.
-Cari bagian yang harus dikerjakan dengan mencari teks `TODO M2`, `TODO M3`, `TODO M4`.
+| GET | `/cabang` | Daftar |
+| GET | `/cabang/form` | Form tambah |
+| POST | `/cabang` | Simpan |
+| GET | `/cabang/{id}/edit` | Form ubah (pre-fill) |
+| POST | `/cabang/{id}/edit` | Update |
+| POST | `/cabang/{id}/hapus` | Hapus (soft delete) |
 
 ## Usulan pembagian modul (silakan diubah)
 | Modul | File utama | Milestone |
 |---|---|---|
-| A. Login + Cabang + Kategori/Produk | `handler/auth.go`, `cabang.go`, `produk.go` | M1–M2 |
-| B. Member + saldo poin | `handler/member.go`, `store/member.go`, `templates/member/` | M2 |
-| C. Promo & voucher | `handler/promo.go`, `store/promo.go`, `templates/promo/` | M2 |
-| D. Mesin hitung + test | `hitung/` | M3 |
-| E. Kasir, checkout, pembatalan | `layanan/checkout.go`, `layanan/batal.go`, `handler/transaksi.go` | M3 |
-| F. Poin kedaluwarsa, tingkat, laporan | `layanan/poin.go`, `store/laporan.go`, `templates/laporan/` | M3–M4 |
+| A. Login + Cabang + Kategori/Produk | `handler|service|repository/{auth,cabang,produk}.go` | M1–M2 |
+| B. Member + saldo poin | `*/member.go`, `templates/member/` | M2 |
+| C. Promo & voucher | `*/promo.go`, `templates/promo/` | M2 |
+| D. Mesin hitung + test | `service/hitung.go`, `hitung_test.go` | M3 |
+| E. Kasir, checkout, pembatalan | `service/transaksi.go`, `handler/transaksi.go` | M3 |
+| F. Poin kedaluwarsa, tingkat, laporan | `service/poin.go`, `*/laporan.go` | M3–M4 |
 
 ## Aturan main kode
-- Uang selalu `int64` rupiah, tidak pernah `float` (NF-04). Gold 1,5× → `poin*3/2`.
-- Query selalu pakai placeholder `?`.
-- Perubahan poin/transaksi/kuota **wajib** di dalam `database.WithTx` + `SELECT ... FOR UPDATE`.
-- `poin_mutasi` hanya INSERT (tidak di-UPDATE/DELETE) agar bisa diaudit (NF-05).
-- Transaksi dibatalkan tidak dihapus, hanya status `DIBATALKAN` (F-20).
-- Setelah form POST berhasil → `http.Redirect(..., 303)` (Post/Redirect/Get).
+- Handler tidak berisi SQL; service tidak tahu `http.Request`; SQL hanya di repository.
+- Query selalu `...Context(ctx, ...)` dengan placeholder `?`.
+- Uang selalu `int64` rupiah (NF-04). Gold 1,5× → `poin*3/2`.
+- Perubahan poin/transaksi/kuota **wajib** dalam `repository.WithTx` + `SELECT ... FOR UPDATE`.
+- `poin_mutasi` hanya INSERT (NF-05). Transaksi batal tidak dihapus, status `DIBATALKAN` (F-20).
+- Data master dihapus dengan soft delete (`deleted_at`).
+- Setelah POST berhasil → `http.Redirect(..., 303)`.
+
+Dokumen pendukung: `docs/use-case.md`, `docs/data-uji.md`.

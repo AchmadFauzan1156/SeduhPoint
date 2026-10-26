@@ -1,6 +1,6 @@
 # Data Uji Perhitungan (M1.4)
 
-Dipakai untuk pengujian manual dan unit test (`hitung/hitung_test.go`).
+Dipakai untuk pengujian manual dan unit test (`internal/service/hitung_test.go`).
 Semua angka dihitung manual mengikuti alur 1.8 laporan dan asumsi 1–15.
 
 ## Data acuan (sama dengan `002_seed.sql`)

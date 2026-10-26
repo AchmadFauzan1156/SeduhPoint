@@ -45,19 +45,21 @@ $ada = & $mysql -u root -N -e "SHOW DATABASES LIKE 'seduhpoint';"
 if ($ada) {
   Write-Host "Database seduhpoint sudah ada, import dilewati (pakai -Reset untuk membuat ulang)."
 } else {
-  ImportSql "database\migrations\001_schema.sql"
-  ImportSql "database\migrations\002_seed.sql"
+  ImportSql "db\schema.sql"
+  ImportSql "db\seed.sql"
   Write-Host "Database seduhpoint dibuat + data contoh."
 }
 
 Langkah "File .env"
-if (-not (Test-Path .env)) { Copy-Item .env.example .env; Write-Host ".env dibuat dari .env.example" } else { Write-Host ".env sudah ada" }
+if (-not (Test-Path .env) -or -not (Select-String -Path .env -Pattern "^DB_DSN=" -Quiet)) {
+  Copy-Item .env.example .env -Force; Write-Host ".env dibuat dari .env.example"
+} else { Write-Host ".env sudah ada" }
 
 Langkah "Unduh library, vet, test, build"
 go mod tidy;            if ($LASTEXITCODE -ne 0) { throw "go mod tidy gagal" }
 go vet ./...;           if ($LASTEXITCODE -ne 0) { throw "go vet gagal" }
 go test ./...;          if ($LASTEXITCODE -ne 0) { throw "go test gagal" }
-go build -o seduhpoint.exe .; if ($LASTEXITCODE -ne 0) { throw "go build gagal" }
+go build -o seduhpoint.exe ./cmd/web; if ($LASTEXITCODE -ne 0) { throw "go build gagal" }
 
 Langkah "Uji jalan + login admin"
 $p = Start-Process .\seduhpoint.exe -WorkingDirectory (Get-Location) -PassThru -WindowStyle Hidden
@@ -74,9 +76,9 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
   if (-not (Test-Path .git)) { git init -b main | Out-Null; Write-Host "Repo git dibuat" }
   git add -A
   if (git config user.name) {
-    git commit -q -m "Kerangka awal SeduhPoint (M1)" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`nClaude-Session: https://claude.ai/code/session_01BoDXLG3ARMGdQ28S9Tn3rP"
+    git commit -q -m "Kerangka SeduhPoint (M1)" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`nClaude-Session: https://claude.ai/code/session_01BoDXLG3ARMGdQ28S9Tn3rP"
     git log --oneline -1
   } else { Write-Host "git user.name belum diatur: jalankan git config --global user.name/user.email lalu commit manual" -ForegroundColor Yellow }
 } else { Write-Host "git tidak ditemukan, langkah repo dilewati" -ForegroundColor Yellow }
 
-Write-Host "`nSELESAI. Jalankan aplikasi: go run .  lalu buka http://localhost:8080" -ForegroundColor Green
+Write-Host "`nSELESAI. Jalankan aplikasi: go run ./cmd/web  (atau double-click jalankan.bat) lalu buka http://localhost:8080" -ForegroundColor Green

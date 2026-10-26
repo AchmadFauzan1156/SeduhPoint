@@ -1,8 +1,7 @@
 {{define "konten"}}
 <h1 class="h4">Form Produk</h1>
-<!-- TODO M2 (F-02): input nama, select kategori, harga (angka bulat rupiah), checkbox aktif; tampilkan .Errors -->
+<!-- TODO M2 (F-02): input nama, select kategori, harga (angka bulat rupiah), checkbox aktif; tampilkan pesan .Error -->
 <form method="post" action="/produk" style="max-width:480px">
-  <input type="hidden" name="id">
   <input class="form-control mb-2" name="nama" placeholder="Nama produk">
   <select class="form-select mb-2" name="kategori_id"><option value="">— Kategori —</option></select>
   <input class="form-control mb-2" name="harga" type="number" min="0" step="500" placeholder="Harga (Rp)">

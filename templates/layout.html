@@ -1,3 +1,4 @@
+{{define "layout"}}
 <!doctype html>
 <html lang="id">
 <head>
@@ -12,7 +13,8 @@
   <div class="d-flex">
     {{if .Sesi.Username}}{{template "sidebar" .}}{{end}}
     <main class="flex-grow-1 p-4">
-      {{template "flash" .}}
+      {{if .Flash}}<div class="alert alert-success">{{.Flash}}</div>{{end}}
+      {{if .Error}}<div class="alert alert-danger">{{.Error}}</div>{{end}}
       {{template "konten" .}}
     </main>
   </div>
@@ -20,3 +22,4 @@
   <script src="/static/js/app.js"></script>
 </body>
 </html>
+{{end}}
