@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"seduhpoint/internal/config"
 	"strconv"
 	"strings"
 	"time"
@@ -80,6 +81,46 @@ func desimal1(f float64) string {
 	return strings.Replace(strconv.FormatFloat(f, 'f', 1, 64), ".", ",", 1)
 }
 
+// hariIni: "Selasa, 27 Okt 2026" (WIB); jamSekarang: "12.46" — diperbarui tiap menit oleh app.js
+func hariIni() string {
+	hari := [...]string{"Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"}
+	t := time.Now().In(config.WIB)
+	return hari[t.Weekday()] + ", " + tglPendek(t)
+}
+
+func jamSekarang() string { return time.Now().In(config.WIB).Format("15.04") }
+
+// dict: pasangan kunci-nilai untuk memanggil template bagian dengan beberapa argumen.
+func dict(kv ...any) map[string]any {
+	m := make(map[string]any, len(kv)/2)
+	for i := 0; i+1 < len(kv); i += 2 {
+		m[kv[i].(string)] = kv[i+1]
+	}
+	return m
+}
+
+func toInt(f float64) int       { return int(f) }
+func mod(a, b int) int          { return a % b }
+func sisa100(f float64) float64 { return 100 - f }
+
+// add25: donat dimulai dari arah jam 12 (offset 25 dari keliling 100).
+func add25(f float64) float64 { return f + 25 }
+
+func bulanPendek(t time.Time) string {
+	return [...]string{"Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"}[t.Month()-1]
+}
+
+// rupiahPendek: 190 rb, 1,2 jt
+func rupiahPendek(n int64) string {
+	switch {
+	case n >= 1000000:
+		return strings.Replace(strconv.FormatFloat(float64(n)/1000000, 'f', 1, 64), ".", ",", 1) + " jt"
+	case n >= 1000:
+		return strconv.FormatInt(n/1000, 10) + " rb"
+	}
+	return strconv.FormatInt(n, 10)
+}
+
 func add(a, b int) int { return a + b }
 
 // nilaiPoin: poin × Rp1.000 (AB03)
@@ -89,7 +130,7 @@ func nilaiPoin(p int) int64 { return int64(p) * 1000 }
 func kali(h int64, q int) int64 { return h * int64(q) }
 
 var funcs = template.FuncMap{"rentang": rentang, "kali": kali, "rupiah": rupiah, "add_one": addOne, "tgl": tgl, "upper": strings.ToUpper,
-	"has": has, "tglBulan": tglBulan, "add": add, "desimal1": desimal1, "nilaiPoin": nilaiPoin, "jam": jam, "tglInput": tglInput, "tglPendek": tglPendek}
+	"has": has, "tglBulan": tglBulan, "add": add, "dict": dict, "int": toInt, "mod": mod, "sisa100": sisa100, "add25": add25, "bulanPendek": bulanPendek, "rupiahPendek": rupiahPendek, "hariIni": hariIni, "jamSekarang": jamSekarang, "desimal1": desimal1, "nilaiPoin": nilaiPoin, "jam": jam, "tglInput": tglInput, "tglPendek": tglPendek}
 
 type Renderer struct {
 	tpl map[string]*template.Template

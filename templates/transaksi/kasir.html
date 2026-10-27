@@ -1,58 +1,85 @@
+{{define "topbar"}}<label class="cari-top" for="q">{{template "ikon" "cari"}}<span class="sr-only">Cari menu</span>
+  <input id="q" name="q" form="kasir" placeholder="Cari menu, lalu tekan Enter" value="{{.Data.Q}}"></label>
+  <span class="scope">{{template "ikon" "lokasi"}}{{.Data.Cabang}}</span>{{end}}
 {{define "konten"}}{{with .Data}}
-<form method="post" action="/kasir/hitung" id="kasir">
+<form method="post" action="/kasir/hitung" id="kasir" class="pos">
   <!-- tombol bawaan saat Enter ditekan di kolom teks -->
-  <button type="submit" name="aksi" value="hitung" style="position:absolute;left:-9999px" tabindex="-1" aria-hidden="true">Hitung</button>
+  <button type="submit" name="aksi" value="hitung" class="sr-only" tabindex="-1" aria-hidden="true">Hitung</button>
   <input type="hidden" name="token" value="{{.Token}}">
   <input type="hidden" name="kat_aktif" value="{{.Kat}}">
   <input type="hidden" name="member_id" value="{{.MemberID}}">
   {{range .Pr.Items}}<input type="hidden" name="item" value="{{.ProdukID}}:{{.Qty}}">{{end}}
 
-  <div class="title-row"><div><h1>Transaksi baru</h1><p class="sub">{{.Cabang}}</p></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <div class="seg" role="group" aria-label="Kategori">
-        <button class="seg-btn{{if eq .Kat 0}} on{{end}}" name="kat" value="0">Semua</button>
-        {{range .Kategori}}<button class="seg-btn{{if eq .ID $.Data.Kat}} on{{end}}" name="kat" value="{{.ID}}">{{.Nama}}</button>{{end}}
+  <section class="pos-menu" aria-labelledby="judul-menu">
+    <div class="banner">
+      <div class="banner-teks">
+        <h1 id="judul-menu">Transaksi baru</h1>
+        <p>{{if .PromoHari}}{{len .PromoHari}} promo berlaku sekarang di {{.Cabang}}. Promo dihitung otomatis saat menu ditambahkan.{{else}}Belum ada promo yang berlaku saat ini di {{.Cabang}}.{{end}}</p>
+        {{if .PromoHari}}<button type="button" class="btn banner-btn" popovertarget="promo-berlaku">Lihat ketentuan promo {{template "ikon" "panah"}}</button>{{end}}
       </div>
-      <label class="sr-only" for="q">Cari menu</label>
-      <input id="q" name="q" class="input" style="width:220px" placeholder="Cari menu" value="{{.Q}}">
-    </div></div>
-
-  <div class="grid pos" style="grid-template-columns:1fr 384px">
-    <div>
-      {{if .PromoHari}}
-      <details class="promo-hari">
-        <summary>Promo berlaku sekarang <span class="pill">{{len .PromoHari}}</span></summary>
-        <div class="ket-grid">{{range .PromoHari}}{{template "ketentuan-promo" .}}{{end}}</div>
-      </details>
-      {{end}}
-      {{if .Produk}}
-      <div class="menu">
-        {{range .Produk}}
-        <div class="dish">
-          <button type="button" class="ph" popovertarget="dp-{{.ID}}" tabindex="-1" aria-hidden="true" {{if .Gambar}}style="background-image:url({{.Gambar}})"{{end}}>
-            {{with index $.Data.Label .ID}}<span class="pill">{{.}}</span>{{end}}</button>
-          <div class="meta"><div><button type="button" class="name link-btn" popovertarget="dp-{{.ID}}" aria-label="Detail {{.Nama}}">{{.Nama}}</button><div class="price">{{rupiah .Harga}}</div></div>
-            <button class="btn round" name="tambah" value="{{.ID}}" aria-label="Tambah {{.Nama}}">+</button></div>
-        </div>
-        {{end}}
-      </div>
-      {{range .Produk}}{{template "detail-produk" index $.Data.Detail .ID}}{{end}}
-      {{else}}<p class="wip">Tidak ada menu{{if .Q}} dengan nama "{{.Q}}"{{end}}.</p>{{end}}
+      <div class="banner-ranting" aria-hidden="true">{{template "ranting"}}</div>
+      <div class="banner-foto" aria-hidden="true"></div>
     </div>
 
-    <div class="panel order sticky">
-      <div class="panel-head"><h2>Pesanan</h2>{{if .Pr.Items}}<button class="link-btn" name="aksi" value="kosong">Kosongkan</button>{{end}}</div>
+    <div class="kategori" role="group" aria-label="Kategori menu">
+      <button class="chip{{if eq .Kat 0}} on{{end}}" name="kat" value="0"{{if eq .Kat 0}} aria-pressed="true"{{end}}>Semua</button>
+      {{range .Kategori}}<button class="chip{{if eq .ID $.Data.Kat}} on{{end}}" name="kat" value="{{.ID}}"{{if eq .ID $.Data.Kat}} aria-pressed="true"{{end}}>{{.Nama}}</button>{{end}}
+    </div>
 
+    {{if .Produk}}
+    <div class="menu">
+      {{range .Produk}}
+      <div class="dish">
+        <button type="button" class="ph" popovertarget="dp-{{.ID}}" tabindex="-1" aria-hidden="true" {{if .Gambar}}style="background-image:url({{.Gambar}})"{{end}}>
+          {{with index $.Data.Label .ID}}<span class="pill promo-tag">{{.}}</span>{{end}}</button>
+        <div class="meta"><div><button type="button" class="name link-btn" popovertarget="dp-{{.ID}}" aria-label="Detail {{.Nama}}">{{.Nama}}</button>
+          <div class="price">{{rupiah .Harga}}</div></div>
+          <button class="add" name="tambah" value="{{.ID}}" aria-label="Tambah {{.Nama}}">+</button></div>
+      </div>
+      {{end}}
+    </div>
+    {{range .Produk}}{{template "detail-produk" index $.Data.Detail .ID}}{{end}}
+    {{else}}<p class="wip">Tidak ada menu{{if .Q}} dengan nama "{{.Q}}"{{end}}.</p>{{end}}
+
+    {{if .PromoHari}}
+    <div id="promo-berlaku" popover class="dp promo-pop" role="dialog" aria-labelledby="promo-berlaku-t">
+      <div class="dp-body">
+        <div class="dp-head"><h3 id="promo-berlaku-t">Promo berlaku sekarang</h3><span class="small">{{.Cabang}}</span></div>
+        <p class="small" style="margin:4px 0 14px">Kode voucher tidak ditampilkan; pelanggan menyebutkan kodenya sendiri.</p>
+        {{range .PromoHari}}{{template "ketentuan-promo" .}}{{end}}
+        <div class="actions"><button type="button" class="btn ghost" popovertarget="promo-berlaku" popovertargetaction="hide">Tutup</button></div>
+      </div>
+    </div>
+    {{end}}
+  </section>
+
+  <aside class="pos-order" aria-labelledby="judul-pesanan">
+    <div class="order-card">
+      <div class="panel-head"><h2 id="judul-pesanan">Pesanan</h2>{{if .Pr.Items}}<button class="link-btn small" name="aksi" value="kosong">Kosongkan</button>{{end}}</div>
+      {{if .Pr.Items}}
+        {{range .Pr.Items}}
+        <div class="line">
+          <span class="thumb" {{with index $.Data.Gambar .ProdukID}}style="background-image:url({{.}})"{{end}}></span>
+          <div class="line-info"><b>{{.Nama}}</b><span>{{rupiah .Harga}}</span></div>
+          <span class="stepper"><button name="kurang" value="{{.ProdukID}}" aria-label="Kurangi {{.Nama}}">−</button><b>{{.Qty}}</b><button name="tambah" value="{{.ProdukID}}" aria-label="Tambah {{.Nama}}">+</button></span>
+          <span class="num line-total">{{rupiah (kali .Harga .Qty)}}</span>
+        </div>
+        {{end}}
+      {{else}}<p class="empty-order">Belum ada pesanan.<br><span>Tekan + pada menu untuk menambahkan.</span></p>{{end}}
+    </div>
+
+    <div class="order-card">
+      <h2 class="mini-h">Member</h2>
       {{with .Pr.Member}}
       <div class="member-box">
-        <div><div style="font-weight:600">{{.Nama}}</div><div class="small">{{.NoHP}} · {{.PoinAktif}} poin</div></div>
-        <div style="display:flex;gap:8px;align-items:center">
-          {{if eq .Tingkat "GOLD"}}<span class="pill gold">Gold</span>{{else}}<span class="pill silver">Silver</span>{{end}}
-          <button class="link-btn small" name="aksi" value="lepas_member" aria-label="Lepas member">Ganti</button></div>
+        <span class="avatar soft" aria-hidden="true">{{slice .Nama 0 1 | upper}}</span>
+        <div class="member-info"><b>{{.Nama}}</b><span>{{.NoHP}}</span><span>{{.PoinAktif}} poin aktif</span></div>
+        {{if eq .Tingkat "GOLD"}}<span class="pill gold">Gold</span>{{else}}<span class="pill silver">Silver</span>{{end}}
+        <button class="link-btn small" name="aksi" value="lepas_member" aria-label="Ganti member">Ganti</button>
       </div>
       {{else}}
-      <div class="field" style="margin-bottom:8px"><label for="cari_member">Member <span class="small">opsional</span></label>
-        <div style="display:flex;gap:8px"><input id="cari_member" name="cari_member" class="input" placeholder="Nama atau nomor HP" value="{{.CariMember}}">
+      <div class="field"><label class="sr-only" for="cari_member">Cari member</label>
+        <div class="input-row"><input id="cari_member" name="cari_member" class="input" placeholder="Nama atau nomor HP (opsional)" value="{{.CariMember}}">
           <button class="btn ghost" name="aksi" value="cari_member">Cari</button></div>
         {{with index $.Errors "member"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
       {{if .CariMember}}
@@ -62,37 +89,31 @@
       {{end}}
       {{end}}
 
-      {{if .Pr.Items}}
-        {{range .Pr.Items}}
-        <div class="line"><span>{{.Nama}}</span>
-          <span class="stepper"><button name="kurang" value="{{.ProdukID}}" aria-label="Kurangi {{.Nama}}">−</button><b>{{.Qty}}</b><button name="tambah" value="{{.ProdukID}}" aria-label="Tambah {{.Nama}}">+</button></span>
-          <span class="num">{{rupiah (kali .Harga .Qty)}}</span></div>
-        {{end}}
-      {{else}}<p class="empty" style="padding:24px 0">Belum ada pesanan. Tekan + pada menu.</p>{{end}}
-
-      <div class="field" style="margin:14px 0 10px"><label class="sr-only" for="kode_voucher">Kode voucher</label>
-        <div style="display:flex;gap:8px">
-          <input id="kode_voucher" name="kode_voucher" class="input{{if index $.Errors "kode_voucher"}} invalid{{end}}" placeholder="Kode voucher" value="{{.Kode}}" style="text-transform:uppercase">
-          {{if .Kode}}<button class="btn ghost" name="aksi" value="hapus_voucher">Hapus</button>{{else}}<button class="btn ghost" name="aksi" value="voucher">Pakai</button>{{end}}</div>
+      <h2 class="mini-h">Voucher</h2>
+      <div class="field"><label class="sr-only" for="kode_voucher">Kode voucher</label>
+        <div class="input-row">
+          <input id="kode_voucher" name="kode_voucher" class="input{{if index $.Errors "kode_voucher"}} invalid{{end}}" placeholder="Masukkan kode voucher" value="{{.Kode}}" style="text-transform:uppercase">
+          {{if .Kode}}<button class="btn ghost" name="aksi" value="hapus_voucher">Hapus</button>{{else}}<button class="btn dark" name="aksi" value="voucher">Pakai</button>{{end}}</div>
         {{with index $.Errors "kode_voucher"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
 
       {{if .Pr.Member}}
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px">
-        <label for="poin" style="margin:0">Tukar poin <span class="small">maks {{.Pr.Hasil.MaksPoin}}</span></label>
-        <div style="display:flex;gap:8px"><input id="poin" name="poin" class="input" inputmode="numeric" style="width:80px;text-align:right" value="{{if .Poin}}{{.Poin}}{{end}}" placeholder="0">
-          <button class="btn ghost" name="aksi" value="poin">Pakai</button></div></div>
+      <h2 class="mini-h">Tukar poin <span class="small">maks {{.Pr.Hasil.MaksPoin}} poin (50% total)</span></h2>
+      <div class="input-row"><label class="sr-only" for="poin">Poin yang ditukar</label>
+        <input id="poin" name="poin" class="input" type="number" min="0" max="{{.Pr.Hasil.MaksPoin}}" inputmode="numeric" value="{{if .Poin}}{{.Poin}}{{end}}" placeholder="0">
+        <button class="btn ghost" name="aksi" value="poin">Pakai</button></div>
       {{end}}
+    </div>
 
-      <div class="well">
-        <div class="kv"><span>Subtotal</span><span class="num">{{rupiah .Pr.Hasil.Subtotal}}</span></div>
-        {{range .Pr.Hasil.RincianPromo}}<div class="kv"><span>{{.Nama}}</span><span class="num">−{{rupiah .Nilai}}</span></div>{{end}}
-        {{if .Pr.Hasil.PoinDitukar}}<div class="kv"><span>Tukar {{.Pr.Hasil.PoinDitukar}} poin</span><span class="num">−{{rupiah .Pr.Hasil.PotonganPoin}}</span></div>{{end}}
-      </div>
-      <div class="total"><span class="grey">Total bayar</span><b>{{rupiah .Pr.Hasil.TotalBayar}}</b></div>
-      {{range .Pr.Catatan}}<p class="note" style="margin-bottom:8px">{{.}}</p>{{end}}
-      {{if and .Pr.Member .Pr.Hasil.PoinDiperoleh}}<p class="note" style="margin-bottom:14px">{{.Pr.Member.Nama}} mendapat {{.Pr.Hasil.PoinDiperoleh}} poin dari transaksi ini.</p>{{end}}
+    <div class="order-card bayar">
+      <h2 class="mini-h">Ringkasan pembayaran</h2>
+      <div class="kv"><span>Subtotal</span><span class="num">{{rupiah .Pr.Hasil.Subtotal}}</span></div>
+      {{range .Pr.Hasil.RincianPromo}}<div class="kv potong"><span>{{.Nama}}</span><span class="num">−{{rupiah .Nilai}}</span></div>{{end}}
+      {{if .Pr.Hasil.PoinDitukar}}<div class="kv potong"><span>Tukar {{.Pr.Hasil.PoinDitukar}} poin</span><span class="num">−{{rupiah .Pr.Hasil.PotonganPoin}}</span></div>{{end}}
+      <div class="total"><span>Total bayar</span><b>{{rupiah .Pr.Hasil.TotalBayar}}</b></div>
+      {{range .Pr.Catatan}}<p class="note">{{.}}</p>{{end}}
+      {{if and .Pr.Member .Pr.Hasil.PoinDiperoleh}}<p class="note">{{.Pr.Member.Nama}} mendapat {{.Pr.Hasil.PoinDiperoleh}} poin dari transaksi ini.</p>{{end}}
       <button class="btn block" formaction="/kasir/bayar" {{if not .Pr.Items}}disabled{{end}}>Bayar {{rupiah .Pr.Hasil.TotalBayar}}</button>
     </div>
-  </div>
+  </aside>
 </form>
 {{end}}{{end}}

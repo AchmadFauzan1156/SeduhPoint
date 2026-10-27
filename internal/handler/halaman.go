@@ -21,6 +21,7 @@ type DashboardPage struct {
 	MemberTotal int
 	MemberGold  int
 	Terakhir    []model.Transaksi
+	Poin        service.LaporanPoin
 }
 
 // Dashboard: kasir langsung ke halaman transaksi baru; admin ke ringkasan (hari ini / 7 / 30 hari).
@@ -45,8 +46,12 @@ func (h *HalamanHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 		gagal(w, err)
 		return
 	}
-	if len(pg.Terakhir) > 5 {
-		pg.Terakhir = pg.Terakhir[:5]
+	if pg.Poin, err = h.LaporanSvc.Poin(ctx); err != nil {
+		gagal(w, err)
+		return
+	}
+	if len(pg.Terakhir) > 6 {
+		pg.Terakhir = pg.Terakhir[:6]
 	}
 	h.View.Tampil(w, "dashboard.html", halaman(r, "Ringkasan", "ringkasan", pg))
 }

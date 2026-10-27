@@ -1,15 +1,28 @@
 {{define "konten"}}
-<main class="login">
-  <div class="photo" style="background-image:url(/static/img/login.jpg)" role="img" aria-label="Meja barista dan menu kedai kopi"></div>
-  <div class="form"><form method="post" action="/login" style="width:340px">
-    <span class="logo" style="height:52px;margin:0 0 40px">{{template "logo"}}</span>
-    <h1>Masuk</h1><p class="sub" style="margin-bottom:24px">Akun admin atau kasir cabang.</p>
-    {{if .Error}}<div class="alert bad" role="alert">{{.Error}}</div>{{end}}
-    <div class="field"><label for="username">Username</label>
-      <input id="username" name="username" class="input" autocomplete="username" required value="{{index .Form "username"}}" autofocus></div>
-    <div class="field"><label for="password">Password</label>
-      <input id="password" name="password" type="password" class="input" autocomplete="current-password" required></div>
-    <button class="btn block" style="margin-top:8px">Masuk</button>
-  </form></div>
+<main class="login-page">
+  <div class="login-pola" aria-hidden="true"></div>
+  <div class="login-card">
+    <div class="login-art">
+      <span class="logo">{{template "logo"}}</span>
+      <div class="blob-latar" aria-hidden="true"></div>
+      <div class="blob-foto" role="img" aria-label="Barista menyeduh espresso di mesin kopi" style="background-image:url(/static/img/login.jpg)"></div>
+      <div class="art-ranting" aria-hidden="true">{{template "ranting"}}</div>
+      <div class="art-biji" aria-hidden="true">{{template "biji"}}</div>
+    </div>
+    <div class="login-form">
+      <form method="post" action="/login">
+        <h1>Selamat datang kembali</h1>
+        <p class="login-sub">Masuk ke SeduhPoint, sistem poin member dan promo Kedai Kopi Seduh.</p>
+        {{if .Error}}<div class="alert bad" role="alert">{{.Error}}</div>{{end}}
+        <div class="field"><label for="username">Username</label>
+          <input id="username" name="username" class="input" autocomplete="username" required value="{{index .Form "username"}}" placeholder="mis. kasir1" autofocus></div>
+        <div class="field"><label for="password">Password</label>
+          <input id="password" name="password" type="password" class="input" autocomplete="current-password" required placeholder="Masukkan password"></div>
+        <button class="btn block">Masuk</button>
+        <p class="login-note">Admin mengelola data &amp; laporan; kasir mencatat transaksi di cabangnya.</p>
+      </form>
+      <svg class="login-gelombang" viewBox="0 0 600 260" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M0 250c40-60 90-110 170-96s120 90 210 70 120-130 220-200"/></svg>
+    </div>
+  </div>
 </main>
 {{end}}

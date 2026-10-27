@@ -40,3 +40,30 @@ func TestPersenBatang(t *testing.T) {
 		t.Error("persen batang salah")
 	}
 }
+
+func TestBandingkan(t *testing.T) {
+	if p := bandingkan(120, 100); !p.Ada || !p.Naik || p.Persen != 20 {
+		t.Errorf("naik 20%%: %+v", p)
+	}
+	if p := bandingkan(50, 200); p.Naik || p.Persen != 75 {
+		t.Errorf("turun 75%%: %+v", p)
+	}
+	if p := bandingkan(10, 0); p.Ada {
+		t.Error("tanpa pembanding harus Ada=false")
+	}
+}
+
+func TestGrafikDanDonat(t *testing.T) {
+	akhir := tg("2026-10-27 00:00")
+	g := BuatGrafik(map[string]int64{"2026-10-27": 190000, "2026-10-25": 50000}, akhir, 7, 640, 200)
+	if len(g.Titik) != 7 || g.Total != 240000 || !g.Titik[6].HariIni || g.Titik[6].Omzet != 190000 {
+		t.Fatalf("grafik salah: %+v", g)
+	}
+	if g.GarisY[4].Label != "200 rb" || g.Titik[0].Y != 200 {
+		t.Errorf("skala Y salah: atas %s, titik nol y=%v", g.GarisY[4].Label, g.Titik[0].Y)
+	}
+	d := BuatDonat([]CabangBiaya{{BarisCabang: repository.BarisCabang{Nama: "A", Omzet: 75}}, {BarisCabang: repository.BarisCabang{Nama: "B", Omzet: 25}}})
+	if d[0].Persen != 75 || d[1].Offset != -75 {
+		t.Errorf("donat salah: %+v", d)
+	}
+}

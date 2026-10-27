@@ -5,6 +5,7 @@ package service
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"seduhpoint/internal/config"
@@ -239,6 +240,70 @@ func (s *LaporanService) Member(ctx context.Context, tahun int) (LaporanMember, 
 
 // ---------- Ringkasan dashboard ----------
 
+// Perubahan: nilai periode ini dibanding periode sebelumnya yang sama panjang.
+type Perubahan struct {
+	Ada    bool    // false jika periode sebelumnya 0 (tidak ada pembanding)
+	Persen float64 // dibulatkan 0,1
+	Naik   bool
+	Datar  bool
+}
+
+func bandingkan(kini, lalu int64) Perubahan {
+	if lalu == 0 {
+		return Perubahan{}
+	}
+	p := float64(kini-lalu) * 100 / float64(lalu)
+	p = float64(int64(p*10+copysign(0.5, p))) / 10
+	return Perubahan{Ada: true, Persen: abs(p), Naik: p > 0, Datar: p == 0}
+}
+
+func copysign(v, tanda float64) float64 {
+	if tanda < 0 {
+		return -v
+	}
+	return v
+}
+
+func abs(f float64) float64 {
+	if f < 0 {
+		return -f
+	}
+	return f
+}
+
+// TitikGrafik: satu titik grafik omzet harian, koordinat sudah dihitung untuk SVG.
+type TitikGrafik struct {
+	Tanggal time.Time
+	Omzet   int64
+	X, Y    float64
+	HariIni bool
+}
+
+type GarisY struct {
+	Y     float64
+	Label string
+}
+
+type Grafik struct {
+	Lebar, Tinggi float64
+	Titik         []TitikGrafik
+	Garis         string // atribut points polyline
+	Area          string // atribut points polygon (area di bawah garis)
+	GarisY        []GarisY
+	Total         int64
+	Kosong        bool
+}
+
+// IrisanDonat: satu cabang pada donat omzet; Panjang/Offset untuk stroke-dasharray (keliling 100).
+type IrisanDonat struct {
+	Nama    string
+	Omzet   int64
+	Persen  float64
+	Panjang float64
+	Offset  float64
+	Warna   string
+}
+
 type Ringkasan struct {
 	Hari         int // 1, 7 atau 30
 	Dari, Sampai time.Time
@@ -248,9 +313,112 @@ type Ringkasan struct {
 	BiayaPromo   int64
 	Cabang       []CabangBiaya
 	PromoTeratas []PromoBiaya
+	// Pembanding periode sebelumnya (panjang sama)
+	DariLalu, SampaiLalu time.Time
+	POmzet, PTransaksi   Perubahan
+	PBiayaPromo          Perubahan
+	Grafik               Grafik
+	Donat                []IrisanDonat
 }
 
-// Ringkasan: angka untuk dashboard admin pada `hari` hari terakhir (termasuk hari ini).
+var warnaCabang = []string{"#723E29", "#C08A5B", "#E3CBB4", "#9C6B4E", "#5A2E1C"}
+
+// skalaAtas: batas atas sumbu Y yang "bulat" (1, 2, 2,5 atau 5 × 10^n) di atas nilai maksimum.
+func skalaAtas(maks int64) int64 {
+	if maks <= 0 {
+		return 100000
+	}
+	langkah := int64(1)
+	for langkah*10 <= maks {
+		langkah *= 10
+	}
+	for _, k := range []int64{1, 2, 5, 10} {
+		if langkah*k >= maks {
+			// beri ruang 4 garis
+			return langkah * k
+		}
+	}
+	return langkah * 10
+}
+
+func labelRupiahPendek(v int64) string {
+	switch {
+	case v >= 1000000:
+		jt := float64(v) / 1000000
+		if jt == float64(int64(jt)) {
+			return strconvFormat(int64(jt)) + " jt"
+		}
+		return trimKoma(jt) + " jt"
+	case v >= 1000:
+		return strconvFormat(v/1000) + " rb"
+	}
+	return strconvFormat(v)
+}
+
+// BuatGrafik menyusun grafik omzet harian `hari` hari sampai tanggal `akhir` (inklusif).
+func BuatGrafik(omzet map[string]int64, akhir time.Time, hari int, lebar, tinggi float64) Grafik {
+	g := Grafik{Lebar: lebar, Tinggi: tinggi}
+	var maks int64
+	for i := hari - 1; i >= 0; i-- {
+		t := akhir.AddDate(0, 0, -i)
+		v := omzet[t.Format("2006-01-02")]
+		g.Titik = append(g.Titik, TitikGrafik{Tanggal: t, Omzet: v, HariIni: i == 0})
+		g.Total += v
+		maks = max(maks, v)
+	}
+	g.Kosong = g.Total == 0
+	atas := skalaAtas(maks)
+	const kiri, bawah, atasPad = 0.0, 0.0, 8.0
+	tinggiPlot := tinggi - bawah - atasPad
+	for i := range g.Titik {
+		x := kiri
+		if hari > 1 {
+			x = kiri + (lebar-kiri)*float64(i)/float64(hari-1)
+		}
+		y := atasPad + tinggiPlot*(1-float64(g.Titik[i].Omzet)/float64(atas))
+		g.Titik[i].X, g.Titik[i].Y = bulat1(x), bulat1(y)
+	}
+	for k := 0; k <= 4; k++ {
+		v := atas * int64(k) / 4
+		g.GarisY = append(g.GarisY, GarisY{Y: bulat1(atasPad + tinggiPlot*(1-float64(k)/4)), Label: labelRupiahPendek(v)})
+	}
+	var b, a []byte
+	for _, t := range g.Titik {
+		b = append(b, []byte(fmtTitik(t.X, t.Y))...)
+	}
+	g.Garis = string(b)
+	if len(g.Titik) > 0 {
+		a = append(a, []byte(fmtTitik(g.Titik[0].X, tinggi-bawah))...)
+		a = append(a, b...)
+		a = append(a, []byte(fmtTitik(g.Titik[len(g.Titik)-1].X, tinggi-bawah))...)
+	}
+	g.Area = string(a)
+	return g
+}
+
+// BuatDonat membagi keliling 100 menurut omzet tiap cabang.
+func BuatDonat(cabang []CabangBiaya) []IrisanDonat {
+	var total int64
+	for _, c := range cabang {
+		total += c.Omzet
+	}
+	var hasil []IrisanDonat
+	offset := 0.0
+	for i, c := range cabang {
+		d := IrisanDonat{Nama: c.Nama, Omzet: c.Omzet, Warna: warnaCabang[i%len(warnaCabang)]}
+		if total > 0 {
+			d.Persen = bulat1(float64(c.Omzet) * 100 / float64(total))
+			d.Panjang = float64(c.Omzet) * 100 / float64(total)
+		}
+		d.Offset = -offset
+		offset += d.Panjang
+		hasil = append(hasil, d)
+	}
+	return hasil
+}
+
+// Ringkasan: angka untuk dashboard admin pada `hari` hari terakhir (termasuk hari ini),
+// dibanding periode sebelumnya yang sama panjang.
 func (s *LaporanService) Ringkasan(ctx context.Context, hari int) (Ringkasan, error) {
 	if hari != 7 && hari != 30 {
 		hari = 1
@@ -258,7 +426,8 @@ func (s *LaporanService) Ringkasan(ctx context.Context, hari int) (Ringkasan, er
 	now := s.sekarang()
 	sampai := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	dari := sampai.AddDate(0, 0, 1-hari)
-	rk := Ringkasan{Hari: hari, Dari: dari, Sampai: sampai}
+	rk := Ringkasan{Hari: hari, Dari: dari, Sampai: sampai,
+		DariLalu: dari.AddDate(0, 0, -hari), SampaiLalu: dari.AddDate(0, 0, -1)}
 	lp, err := s.BiayaPromo(ctx, dari, sampai, 0)
 	if err != nil {
 		return rk, err
@@ -271,5 +440,36 @@ func (s *LaporanService) Ringkasan(ctx context.Context, hari int) (Ringkasan, er
 		lp.Promo = lp.Promo[:3]
 	}
 	rk.PromoTeratas = lp.Promo
+	rk.Donat = BuatDonat(lp.Cabang)
+
+	lalu, err := s.BiayaPromo(ctx, rk.DariLalu, rk.SampaiLalu, 0)
+	if err != nil {
+		return rk, err
+	}
+	rk.POmzet = bandingkan(rk.Omzet, lalu.TotalOmzet)
+	rk.PTransaksi = bandingkan(int64(rk.Transaksi), int64(lalu.TotalTrx))
+	rk.PBiayaPromo = bandingkan(rk.BiayaPromo, lalu.TotalPotongan)
+
+	// Grafik: 7 hari terakhir untuk "hari ini" & "7 hari", 30 hari untuk "30 hari".
+	nGrafik := max(hari, 7)
+	awal := sampai.AddDate(0, 0, 1-nGrafik)
+	harian, err := s.Repo.OmzetHarian(ctx, awal.Format("2006-01-02"), sampai.AddDate(0, 0, 1).Format("2006-01-02"))
+	if err != nil {
+		return rk, err
+	}
+	rk.Grafik = BuatGrafik(harian, sampai, nGrafik, 640, 200)
 	return rk, nil
+}
+
+func bulat1(f float64) float64 { return float64(int64(f*10+0.5)) / 10 }
+
+func strconvFormat(v int64) string { return strconv.FormatInt(v, 10) }
+
+func trimKoma(f float64) string {
+	s := strconv.FormatFloat(f, 'f', 1, 64)
+	return s[:len(s)-2] + "," + s[len(s)-1:]
+}
+
+func fmtTitik(x, y float64) string {
+	return strconv.FormatFloat(x, 'f', -1, 64) + "," + strconv.FormatFloat(y, 'f', -1, 64) + " "
 }

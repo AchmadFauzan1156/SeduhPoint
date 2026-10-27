@@ -1,29 +1,34 @@
 {{define "sidebar"}}
 <aside class="side" aria-label="Navigasi">
   <a class="logo" href="/" aria-label="SeduhPoint, ke beranda">{{template "logo"}}</a>
+  <nav class="nav" id="nav">
   {{if eq .Sesi.Peran "ADMIN"}}
-    <a class="nav-item{{if eq .Aktif "ringkasan"}} on{{end}}" href="/">Ringkasan</a>
-    <a class="nav-item{{if eq .Aktif "transaksi"}} on{{end}}" href="/transaksi">Transaksi</a>
-    <a class="nav-item{{if eq .Aktif "member"}} on{{end}}" href="/member">Member</a>
+    <a class="nav-item{{if eq .Aktif "ringkasan"}} on{{end}}" href="/"{{if eq .Aktif "ringkasan"}} aria-current="page"{{end}}>{{template "ikon" "ringkasan"}}Ringkasan</a>
+    <a class="nav-item{{if eq .Aktif "transaksi"}} on{{end}}" href="/transaksi"{{if eq .Aktif "transaksi"}} aria-current="page"{{end}}>{{template "ikon" "transaksi"}}Transaksi</a>
+    <a class="nav-item{{if eq .Aktif "member"}} on{{end}}" href="/member"{{if eq .Aktif "member"}} aria-current="page"{{end}}>{{template "ikon" "member"}}Member</a>
     <div class="nav-group">Data master</div>
-    <a class="nav-item{{if eq .Aktif "cabang"}} on{{end}}" href="/cabang">Cabang</a>
-    <a class="nav-item{{if eq .Aktif "kategori"}} on{{end}}" href="/kategori">Kategori</a>
-    <a class="nav-item{{if eq .Aktif "produk"}} on{{end}}" href="/produk">Produk</a>
-    <a class="nav-item{{if eq .Aktif "promo"}} on{{end}}" href="/promo">Promo &amp; voucher</a>
+    <a class="nav-item{{if eq .Aktif "cabang"}} on{{end}}" href="/cabang"{{if eq .Aktif "cabang"}} aria-current="page"{{end}}>{{template "ikon" "cabang"}}Cabang</a>
+    <a class="nav-item{{if eq .Aktif "kategori"}} on{{end}}" href="/kategori"{{if eq .Aktif "kategori"}} aria-current="page"{{end}}>{{template "ikon" "kategori"}}Kategori</a>
+    <a class="nav-item{{if eq .Aktif "produk"}} on{{end}}" href="/produk"{{if eq .Aktif "produk"}} aria-current="page"{{end}}>{{template "ikon" "produk"}}Produk</a>
+    <a class="nav-item{{if eq .Aktif "promo"}} on{{end}}" href="/promo"{{if eq .Aktif "promo"}} aria-current="page"{{end}}>{{template "ikon" "promo"}}Promo &amp; voucher</a>
     <div class="nav-group">Laporan</div>
-    <a class="nav-item{{if eq .Aktif "lap-promo"}} on{{end}}" href="/laporan/promo">Biaya promo</a>
-    <a class="nav-item{{if eq .Aktif "lap-poin"}} on{{end}}" href="/laporan/poin">Poin aktif</a>
-    <a class="nav-item{{if eq .Aktif "lap-member"}} on{{end}}" href="/laporan/member">Perkembangan member</a>
+    <a class="nav-item{{if eq .Aktif "lap-promo"}} on{{end}}" href="/laporan/promo"{{if eq .Aktif "lap-promo"}} aria-current="page"{{end}}>{{template "ikon" "lap-promo"}}Biaya promo</a>
+    <a class="nav-item{{if eq .Aktif "lap-poin"}} on{{end}}" href="/laporan/poin"{{if eq .Aktif "lap-poin"}} aria-current="page"{{end}}>{{template "ikon" "lap-poin"}}Poin aktif</a>
+    <a class="nav-item{{if eq .Aktif "lap-member"}} on{{end}}" href="/laporan/member"{{if eq .Aktif "lap-member"}} aria-current="page"{{end}}>{{template "ikon" "lap-member"}}Perkembangan member</a>
   {{else}}
-    <a class="nav-item{{if eq .Aktif "kasir"}} on{{end}}" href="/kasir">Transaksi baru</a>
-    <a class="nav-item{{if eq .Aktif "transaksi"}} on{{end}}" href="/transaksi">Riwayat transaksi</a>
-    <a class="nav-item{{if eq .Aktif "member"}} on{{end}}" href="/member">Member</a>
+    <a class="nav-item{{if eq .Aktif "kasir"}} on{{end}}" href="/kasir"{{if eq .Aktif "kasir"}} aria-current="page"{{end}}>{{template "ikon" "kasir"}}Transaksi baru</a>
+    <a class="nav-item{{if eq .Aktif "transaksi"}} on{{end}}" href="/transaksi"{{if eq .Aktif "transaksi"}} aria-current="page"{{end}}>{{template "ikon" "transaksi"}}Riwayat transaksi</a>
+    <a class="nav-item{{if eq .Aktif "member"}} on{{end}}" href="/member"{{if eq .Aktif "member"}} aria-current="page"{{end}}>{{template "ikon" "member"}}Member</a>
   {{end}}
+  </nav>
   <a class="btn ghost menu-btn" href="#nav">Menu</a>
-  <div class="me">
-    <span class="avatar" aria-hidden="true">{{slice .Sesi.Username 0 1 | upper}}</span>
-    <div><div style="font-weight:600">{{.Sesi.Username}}</div>
-      <form method="post" action="/logout" class="inline-form"><button class="link-btn small">Keluar</button></form></div>
+  <div class="side-foot">
+    <div class="ornamen" aria-hidden="true">{{template "ranting"}}<span class="slogan">Seduh hangat,<br>poin mengalir</span></div>
+    <div class="me">
+      <span class="avatar" aria-hidden="true">{{slice .Sesi.Username 0 1 | upper}}</span>
+      <div class="me-nama"><b>{{.Sesi.Username}}</b><span>{{if eq .Sesi.Peran "ADMIN"}}Admin · pemilik{{else}}Kasir{{end}}</span></div>
+      <form method="post" action="/logout" class="inline-form"><button class="icon-btn" aria-label="Keluar" title="Keluar">{{template "ikon" "keluar"}}</button></form>
+    </div>
   </div>
 </aside>
 {{end}}

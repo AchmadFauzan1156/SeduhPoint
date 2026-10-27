@@ -219,3 +219,26 @@ func (r *LaporanRepo) RiwayatMember(ctx context.Context) ([]MemberTingkat, error
 	}
 	return hasil, rows.Err()
 }
+
+// OmzetHarian: omzet transaksi SELESAI per tanggal (semua cabang). Kunci peta "YYYY-MM-DD".
+func (r *LaporanRepo) OmzetHarian(ctx context.Context, dari, sampai string) (map[string]int64, error) {
+	rows, err := r.DB.QueryContext(ctx, `
+		SELECT DATE_FORMAT(t.waktu, '%Y-%m-%d') AS tgl, SUM(t.total_bayar)
+		FROM transaksi t
+		WHERE t.status = 'SELESAI' AND t.waktu >= ? AND t.waktu < ?
+		GROUP BY tgl`, dari, sampai)
+	if err != nil {
+		return nil, fmt.Errorf("omzet harian: %w", err)
+	}
+	defer rows.Close()
+	hasil := map[string]int64{}
+	for rows.Next() {
+		var tgl string
+		var v int64
+		if err := rows.Scan(&tgl, &v); err != nil {
+			return nil, err
+		}
+		hasil[tgl] = v
+	}
+	return hasil, rows.Err()
+}

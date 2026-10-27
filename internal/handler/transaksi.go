@@ -43,6 +43,7 @@ type KasirPage struct {
 	Token      string
 	Detail     map[int]DetailProduk
 	PromoHari  []PromoInfo
+	Gambar     map[int]string // foto produk untuk baris pesanan
 }
 
 // keranjang dibaca dari form kasir.
@@ -140,6 +141,10 @@ func (h *TransaksiHandler) tampilKasir(w http.ResponseWriter, r *http.Request, k
 	if pg.Kategori, err = h.ProdukSvc.DaftarKategori(ctx); err != nil {
 		gagal(w, err)
 		return
+	}
+	pg.Gambar = make(map[int]string, len(semua))
+	for _, p := range semua {
+		pg.Gambar[p.ID] = p.Gambar
 	}
 	for _, p := range semua {
 		if (k.Kat == 0 || p.KategoriID == k.Kat) && (k.Q == "" || strings.Contains(strings.ToLower(p.Nama), strings.ToLower(k.Q))) {

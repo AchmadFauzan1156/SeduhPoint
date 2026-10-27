@@ -12,3 +12,7 @@ Semua foto dari Unsplash (https://unsplash.com/license), bebas dipakai.
 | menu\croissant.jpg | https://unsplash.com/photos/VzUE5RtCuBA |
 | menu\roti-bakar.jpg | https://unsplash.com/photos/AlX2WLwPKXk |
 | login.jpg | https://unsplash.com/photos/21tOEaJPM_o |
+
+## Logo (27 Okt 2026)
+- Ikon cangkir: ilustrasi pilihan tim, latarnya dibuang lalu dijadikan vektor (potrace) agar tajam di semua ukuran dan bisa berganti warna.
+- Tulisan "seduh" memakai huruf Lexend ExtraBold, "POINT" memakai Montserrat Bold; keduanya berlisensi SIL Open Font License dan sudah diubah menjadi garis (path), jadi logo tidak bergantung pada font yang terpasang.
