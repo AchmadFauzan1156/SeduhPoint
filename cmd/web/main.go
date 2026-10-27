@@ -1,4 +1,4 @@
-// SeduhPoint — Sistem Poin Member & Promo Kedai Kopi Seduh (Kelompok 5)
+// SeduhPoint: sistem poin member dan promo kedai kopi.
 // Jalankan dari root project:  go run ./cmd/web   (atau: wgo run ./cmd/web)
 package main
 

@@ -81,7 +81,7 @@ func desimal1(f float64) string {
 	return strings.Replace(strconv.FormatFloat(f, 'f', 1, 64), ".", ",", 1)
 }
 
-// hariIni: "Selasa, 27 Okt 2026" (WIB); jamSekarang: "12.46" — diperbarui tiap menit oleh app.js
+// hariIni: "Selasa, 27 Okt 2026" (WIB); jamSekarang: "12.46", diperbarui tiap menit oleh app.js
 func hariIni() string {
 	hari := [...]string{"Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"}
 	t := time.Now().In(config.WIB)

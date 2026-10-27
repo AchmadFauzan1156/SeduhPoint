@@ -1,5 +1,5 @@
 -- =====================================================================
--- SeduhPoint — seluruh query database dalam satu file
+-- SeduhPoint: seluruh query database dalam satu file
 --   Bagian 1: membuat database & 15 tabel
 --   Bagian 2: data contoh (3 cabang, akun admin/kasir, menu, member, 4 promo)
 --
