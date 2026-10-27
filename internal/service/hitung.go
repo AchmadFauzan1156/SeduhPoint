@@ -1,7 +1,7 @@
 package service
 
 // hitung.go: mesin perhitungan transaksi (alur Laporan 1.8).
-// Murni tanpa database, sehingga bisa diuji dengan go test (lihat hitung_test.go & docs/data-uji.md).
+// Murni tanpa database, sehingga bisa diuji dengan go test (lihat hitung_test.go).
 
 import (
 	"errors"

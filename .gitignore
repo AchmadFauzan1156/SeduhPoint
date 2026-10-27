@@ -9,4 +9,3 @@ CLAUDE.local.md
 # Foto unggahan admin (hanya di laptop/server masing-masing)
 static/img/upload/*
 !static/img/upload/.gitkeep
-scripts/hasil-cek.txt

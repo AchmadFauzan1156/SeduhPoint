@@ -1,17 +1,28 @@
 # SeduhPoint — Sistem Poin Member & Promo Kedai Kopi Seduh
 
 Project Akhir Pemrograman Web · Kelompok 5 · Topik 5
-Stack: **Go 1.22+ (`net/http`, `html/template`) + MySQL 8** + Bootstrap 5 (CDN).
+Stack: **Go 1.22+ (`net/http`, `html/template`) + MySQL 8**, CSS & JS sendiri tanpa framework.
 Struktur mengikuti materi #10 *Struktur Aplikasi & Kickoff Project*.
 
-## Cara menjalankan (Windows + Laragon)
+## Cara menjalankan (Windows + Laragon, lewat terminal)
+Semua perintah dijalankan dari folder `SeduhPoint`.
+
 1. Nyalakan Laragon → **Start All**.
-2. Pertama kali (atau setelah skema berubah):
-   `powershell -ExecutionPolicy Bypass -File scripts\setup.ps1 -Reset`
-   (membuat database dari `db/schema.sql` + `db/seed.sql`, `.env`, lalu vet/test/build)
-3. Sehari-hari: double-click **`jalankan.bat`**, atau `go run ./cmd/web`
-   (auto reload: `wgo run ./cmd/web`).
-4. Buka http://localhost:8080 — login `admin` / `kasir1` / `kasir2` / `kasir3`, password `password`.
+2. Buat database (pertama kali, atau untuk mengulang dari awal):
+   ```
+   mysql -u root -e "DROP DATABASE IF EXISTS seduhpoint"
+   mysql -u root --default-character-set=utf8mb4 -e "source db/seduhpoint.sql"
+   ```
+   Jika `mysql` tidak dikenali, pakai Terminal Laragon (Menu → Terminal) atau path lengkapnya,
+   mis. `E:\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe`.
+3. Salin konfigurasi: `copy .env.example .env` (isi `DB_DSN` jika password MySQL tidak kosong).
+4. Jalankan aplikasi:
+   ```
+   go run ./cmd/web
+   ```
+   atau dengan auto reload (materi #6): `wgo run -file .html -file .css ./cmd/web`
+   (pasang dulu: `go install github.com/bokwoon95/wgo@latest`).
+5. Buka http://localhost:8080 — login `admin` / `kasir1` / `kasir2` / `kasir3`, password `password`.
 
 Tes aturan bisnis: `go test ./...`
 
@@ -25,34 +36,24 @@ internal/
   service/               aturan bisnis + validasi (ValidasiError); hitung.go = mesin promo & poin + test
   handler/               urusan HTTP; render.go (Renderer.Tampil), helper.go (gagal, idDariPath)
   middleware/            logging, login & peran
-db/schema.sql, seed.sql  skema MySQL + data contoh
+db/seduhpoint.sql        seluruh query database: membuat database + 15 tabel + data contoh
 templates/               layout, header, sidebar, footer + satu folder per modul
-static/  docs/  scripts/
+static/                  css, js, logo, foto menu
 ```
 Alur request: **Handler → Service → Repository → MySQL**.
 
-**M4 (27 Okt):** ringkasan admin (omzet, transaksi, biaya promo, member Gold; hari ini / 7 / 30 hari),
-laporan biaya promo per promo & per cabang dengan filter tanggal & cabang (F-28), laporan poin aktif & yang akan
-kedaluwarsa ≤ 30 hari (F-29), laporan perkembangan member per bulan (F-30). Semua hanya menghitung transaksi selesai.
-
-**M4.0 (27 Okt):** deskripsi produk (klik nama/foto menu → kartu detail di kasir & admin), panel
-"Promo berlaku sekarang" berisi ketentuan tiap promo (kode voucher disembunyikan dari kasir), catatan promo untuk kasir.
-Aturan baru: diskon 1–90%, jam promo tidak boleh melewati tengah malam, beli 2 gratis 1 tidak boleh tumpang tindih
-di kategori & cabang yang sama, promo yang sudah dipakai transaksi terkunci jenis/nilai/kode/targetnya, dan jika
-potongan minimal belanja & voucher sama-sama memenuhi syarat sistem memakai yang lebih besar (voucher tidak terpakai).
-**Perlu reset DB** (`scripts\cek.bat`) karena ada kolom baru `produk.deskripsi` dan `promo.catatan`.
-
-**Fitur yang sudah jalan (M3):** kasir (menu bergambar, promo otomatis, voucher, tukar poin FIFO), checkout dalam
-satu DB transaction (anti bayar ganda), struk, riwayat, pembatalan (poin ditarik/dikembalikan, kuota voucher kembali),
-job harian kedaluwarsa poin & evaluasi Silver/Gold.
-
-**M2:** login & peran, Cabang, Kategori, Produk (dengan unggah foto), Member
-(daftar, cari, detail poin & lot, menuju Gold), Promo & voucher 4 jenis (cabang, jam, kuota, aktif/nonaktif).
-Akun contoh di `db/seed.sql`, termasuk 4 promo contoh (P1–P4 di `docs/data-uji.md`).
-
-**Contoh lengkap = modul Cabang** (`repository/cabang.go`, `service/cabang.go`, `handler/cabang.go`,
-`templates/cabang/`): daftar, tambah, ubah, hapus (soft delete), validasi, Post/Redirect/Get.
-Bagian yang harus dikerjakan: cari teks `TODO M2`, `TODO M3`, `TODO M4`.
+## Fitur
+- **Login & peran:** admin (pemilik) dan kasir per cabang.
+- **Data master:** cabang, kategori, produk (foto & deskripsi), member (cari, detail poin & lot, menuju Gold).
+- **Promo & voucher 4 jenis:** diskon persen, potongan minimal belanja, beli 2 gratis 1, voucher berkode
+  (periode, cabang, jam, kuota). Diskon 1–90%, jam promo tidak boleh lewat tengah malam, beli 2 gratis 1 tidak boleh
+  tumpang tindih, promo yang sudah dipakai terkunci jenis/nilai/kode/targetnya.
+- **Kasir:** menu bergambar, kartu detail menu, ketentuan promo berlaku, promo dihitung otomatis; minimal belanja
+  dan voucher tidak digabung, sistem memakai potongan yang lebih besar; tukar poin FIFO (maks 50%).
+- **Checkout** dalam satu DB transaction (anti bayar ganda), struk, riwayat, pembatalan (poin ditarik/dikembalikan,
+  kuota voucher kembali), job harian kedaluwarsa poin & evaluasi Silver/Gold.
+- **Ringkasan admin** (hari ini / 7 / 30 hari, grafik omzet, omzet per cabang) dan **laporan pemilik**:
+  biaya promo (F-28), poin aktif (F-29), perkembangan member (F-30). Hanya transaksi selesai yang dihitung.
 
 ## Pola route (sama untuk tiap modul)
 | Method | Path | Fungsi |
@@ -83,4 +84,3 @@ Bagian yang harus dikerjakan: cari teks `TODO M2`, `TODO M3`, `TODO M4`.
 - Data master dihapus dengan soft delete (`deleted_at`).
 - Setelah POST berhasil → `http.Redirect(..., 303)`.
 
-Dokumen pendukung: `docs/use-case.md`, `docs/data-uji.md`.

@@ -48,7 +48,7 @@ func TestMinBelanjaDanVoucherDitolak(t *testing.T) {
 	}
 }
 
-// Skenario dari docs/data-uji.md bagian A.
+// Skenario perhitungan promo & poin (data uji bagian A di laporan).
 func TestHitungSkenario(t *testing.T) {
 
 	americano := Item{ProdukID: 1, KategoriID: 1, Harga: 18000}
@@ -103,7 +103,7 @@ func TestHitungSkenario(t *testing.T) {
 	}
 }
 
-// V04–V06 di docs/data-uji.md: promo dibatasi jam dan cabang.
+// V04–V06: promo dibatasi jam dan cabang.
 func TestPromoBerlaku(t *testing.T) {
 	wib := time.FixedZone("WIB", 7*3600)
 	mulai, selesai := time.Date(2026, 11, 1, 0, 0, 0, 0, wib), time.Date(2026, 11, 30, 0, 0, 0, 0, wib)

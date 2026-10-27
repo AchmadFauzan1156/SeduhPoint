@@ -95,7 +95,7 @@ func (r *MemberRepo) Ubah(ctx context.Context, m model.Member) error {
 	return pastikanAdaBaris(res)
 }
 
-// TotalBelanjaSejak: SUM(subtotal - total_promo) transaksi SELESAI sejak `sejak` (AB06, asumsi 4). TODO M3 dipakai Evaluasi.
+// TotalBelanjaSejak: SUM(subtotal - total_promo) transaksi SELESAI sejak `sejak` (AB06, asumsi 4). Dipakai evaluasi tingkat.
 func (r *MemberRepo) TotalBelanjaSejak(ctx context.Context, q Querier, memberID int, sejak time.Time) (int64, error) {
 	var total int64
 	err := q.QueryRowContext(ctx, `SELECT COALESCE(SUM(subtotal - total_promo), 0) FROM transaksi
@@ -103,7 +103,7 @@ func (r *MemberRepo) TotalBelanjaSejak(ctx context.Context, q Querier, memberID 
 	return total, err
 }
 
-// UbahTingkat: update tingkat_saat_ini + INSERT member_tingkat_riwayat. TODO M3 dipakai Evaluasi.
+// UbahTingkat: update tingkat_saat_ini + INSERT member_tingkat_riwayat. Dipakai evaluasi tingkat.
 func (r *MemberRepo) UbahTingkat(ctx context.Context, q Querier, memberID int, tingkat string) error {
 	if _, err := q.ExecContext(ctx, "UPDATE member SET tingkat_saat_ini = ?, updated_at = NOW() WHERE id = ?", tingkat, memberID); err != nil {
 		return err
