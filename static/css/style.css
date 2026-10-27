@@ -28,6 +28,7 @@
     --gap: 20px;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 button, input, select, textarea { font-family: inherit; }
 body { margin: 0; background: var(--ground); color: var(--ink); font: 400 14px/20px var(--font); font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
 h1, h2, h3 { font-family: var(--head); margin: 0; color: var(--ink); }

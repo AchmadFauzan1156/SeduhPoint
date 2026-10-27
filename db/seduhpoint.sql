@@ -132,7 +132,7 @@ CREATE TABLE promo_kategori (
 CREATE TABLE transaksi (
   id             INT AUTO_INCREMENT PRIMARY KEY,
   no_transaksi   VARCHAR(30) NOT NULL UNIQUE,   -- format: SP-<cabang>-<yyyymmdd>-<urut>
-  token          VARCHAR(64) NULL UNIQUE,       -- anti submit ganda (V08)
+  token          VARCHAR(64) NULL UNIQUE,       -- mencegah transaksi ganda saat Bayar ditekan dua kali
   cabang_id      INT NOT NULL,
   pengguna_id    INT NOT NULL,
   member_id      INT NULL,
