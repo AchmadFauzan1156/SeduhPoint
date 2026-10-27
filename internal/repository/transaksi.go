@@ -1,6 +1,6 @@
 package repository
 
-// F-12 – F-24 Transaksi. Method tulis menerima Querier agar dipanggil di dalam satu transaction.
+// Transaksi. Method tulis menerima Querier agar dipanggil di dalam satu transaction.
 
 import (
 	"context"
@@ -29,7 +29,7 @@ func scanTransaksi(s interface{ Scan(...any) error }, t *model.Transaksi) error 
 		&t.CabangNama, &t.KasirNama, &t.MemberNama)
 }
 
-// CariByToken: dipakai mencegah transaksi ganda saat tombol Bayar ditekan dua kali (V08).
+// CariByToken: dipakai mencegah transaksi ganda saat tombol Bayar ditekan dua kali.
 func (r *TransaksiRepo) CariByToken(ctx context.Context, q Querier, token string) (int64, bool, error) {
 	var id int64
 	err := q.QueryRowContext(ctx, "SELECT id FROM transaksi WHERE token = ?", token).Scan(&id)

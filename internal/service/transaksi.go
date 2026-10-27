@@ -1,6 +1,6 @@
 package service
 
-// F-12 – F-24 Transaksi: pratinjau (tombol Hitung), checkout, pembatalan.
+// Transaksi: pratinjau (tombol Hitung), checkout, pembatalan.
 
 import (
 	"context"
@@ -29,11 +29,11 @@ type TransaksiService struct {
 type PermintaanCheckout struct {
 	CabangID    int
 	PenggunaID  int
-	MemberID    int         // 0 = non-member (asumsi 11)
+	MemberID    int         // 0 = non-member
 	Qty         map[int]int // produk_id -> jumlah
 	KodeVoucher string
 	PoinDiminta int
-	Token       string // anti submit ganda (V08)
+	Token       string // anti submit ganda
 }
 
 // Pratinjau: hasil hitung + data pendukung untuk ditampilkan di halaman kasir.
@@ -143,7 +143,7 @@ func (s *TransaksiService) siapkan(ctx context.Context, q repository.Querier, p 
 		in.PoinDiminta = p.PoinDiminta
 	}
 
-	// Voucher (F-14): ada, aktif, berlaku di cabang & jam ini, kuota masih ada.
+	// Voucher: ada, aktif, berlaku di cabang & jam ini, kuota masih ada.
 	if kode := strings.ToUpper(strings.TrimSpace(p.KodeVoucher)); kode != "" {
 		v, err := s.PromoRepo.VoucherByKode(ctx, q, kode, kunci)
 		switch {
@@ -161,7 +161,7 @@ func (s *TransaksiService) siapkan(ctx context.Context, q repository.Querier, p 
 	}
 
 	// Potongan minimal belanja: pilih yang paling besar yang syaratnya terpenuhi,
-	// kecuali ada voucher (AB09: tidak bisa digabung).
+	// kecuali ada voucher.
 	dasar, err := Hitung(Input{Items: in.Items, PromoProduk: in.PromoProduk})
 	if err != nil {
 		return pr, err
@@ -180,7 +180,7 @@ func (s *TransaksiService) siapkan(ctx context.Context, q repository.Querier, p 
 	}
 	switch {
 	case terbaik != nil && in.Voucher != nil:
-		// AB09: tidak bisa digabung. Sistem memilih potongan yang lebih besar (keputusan tim, 27 Okt);
+		// Tidak bisa digabung: sistem memilih potongan yang lebih besar;
 		// jika sama besar, minimal belanja dipakai agar voucher pelanggan tidak terpakai sia-sia.
 		potMin := min(terbaik.NilaiNominal.Int64, totalProduk)
 		potVoucher := min(in.Voucher.Nominal, totalProduk)
@@ -215,11 +215,11 @@ func (s *TransaksiService) Pratinjau(ctx context.Context, p PermintaanCheckout) 
 	return s.siapkan(ctx, s.DB, p, false)
 }
 
-// Checkout menyimpan transaksi (Laporan 1.8 langkah 8) dalam satu database transaction.
+// Checkout menyimpan transaksi dalam satu database transaction.
 func (s *TransaksiService) Checkout(ctx context.Context, p PermintaanCheckout) (int64, error) {
 	var trxID int64
 	err := repository.WithTx(ctx, s.DB, func(tx *sql.Tx) error {
-		// Tombol Bayar ditekan dua kali: kembalikan transaksi yang sudah ada (V08).
+		// Tombol Bayar ditekan dua kali: kembalikan transaksi yang sudah ada.
 		if p.Token != "" {
 			if id, ada, err := s.Repo.CariByToken(ctx, tx, p.Token); err != nil || ada {
 				trxID = id
@@ -266,7 +266,7 @@ func (s *TransaksiService) Checkout(ctx context.Context, p PermintaanCheckout) (
 			return nil
 		}
 		mid := pr.Member.ID
-		// Tukar poin: kurangi lot paling dekat kedaluwarsa dulu (AB04, F-17).
+		// Tukar poin: kurangi lot paling dekat kedaluwarsa dulu.
 		perlu := h.PoinDitukar
 		for _, l := range pr.lot {
 			if perlu == 0 {
@@ -285,7 +285,7 @@ func (s *TransaksiService) Checkout(ctx context.Context, p PermintaanCheckout) (
 			}
 			perlu -= ambil
 		}
-		// Perolehan poin: lot baru berlaku 6 bulan (AB01, AB02, F-18).
+		// Perolehan poin: lot baru berlaku 6 bulan.
 		if h.PoinDiperoleh > 0 {
 			lotID, err := s.PoinRepo.TambahLot(ctx, tx, model.PoinLot{MemberID: mid, TransaksiID: int(trxID),
 				PoinAwal: h.PoinDiperoleh, PoinSisa: h.PoinDiperoleh, TglPerolehan: now, TglKedaluwarsa: TanggalKedaluwarsa(now)})
@@ -296,7 +296,7 @@ func (s *TransaksiService) Checkout(ctx context.Context, p PermintaanCheckout) (
 				return err
 			}
 		}
-		// Tingkat dievaluasi setelah poin dihitung, jadi berlaku untuk transaksi berikutnya (asumsi 12).
+		// Tingkat dievaluasi setelah poin dihitung, jadi berlaku untuk transaksi berikutnya.
 		return s.Tingkat.Evaluasi(ctx, tx, mid)
 	})
 	return trxID, err
@@ -373,7 +373,7 @@ func (s *TransaksiService) DampakBatal(ctx context.Context, id int) (Dampak, err
 	return d, nil
 }
 
-// Batalkan (F-20 – F-24, AB10): transaksi tidak dihapus, hanya berstatus DIBATALKAN.
+// Batalkan: transaksi tidak dihapus, hanya berstatus DIBATALKAN.
 func (s *TransaksiService) Batalkan(ctx context.Context, id int, alasan string) error {
 	alasan = strings.TrimSpace(alasan)
 	if alasan == "" {
@@ -405,7 +405,7 @@ func (s *TransaksiService) Batalkan(ctx context.Context, id int, alasan string) 
 				return err
 			}
 			switch m.Jenis {
-			case "PEROLEHAN": // F-21: tarik poin yang diperoleh; yang sudah terpakai tidak bisa ditarik (asumsi 8)
+			case "PEROLEHAN": // tarik poin yang diperoleh; yang sudah terpakai tidak bisa ditarik
 				if l.PoinSisa > 0 {
 					if err := s.PoinRepo.TambahMutasi(ctx, tx, l.MemberID, l.ID, &trx, "TARIK", -l.PoinSisa); err != nil {
 						return err
@@ -414,7 +414,7 @@ func (s *TransaksiService) Batalkan(ctx context.Context, id int, alasan string) 
 				if err := s.PoinRepo.UbahSisaLot(ctx, tx, l.ID, 0, "DITARIK"); err != nil {
 					return err
 				}
-			case "TUKAR": // F-22: kembalikan ke lot asal; lot yang sudah lewat masa berlaku tetap kedaluwarsa (asumsi 9)
+			case "TUKAR": // kembalikan ke lot asal; lot yang sudah lewat masa berlaku tetap kedaluwarsa
 				status := "AKTIF"
 				if !l.TglKedaluwarsa.After(now) || l.Status == "KEDALUWARSA" {
 					status = "KEDALUWARSA"
@@ -427,7 +427,7 @@ func (s *TransaksiService) Batalkan(ctx context.Context, id int, alasan string) 
 				}
 			}
 		}
-		// F-23: kembalikan kuota voucher
+		// kembalikan kuota voucher
 		promo, err := s.Repo.Promo(ctx, tx, id)
 		if err != nil {
 			return err
@@ -439,7 +439,7 @@ func (s *TransaksiService) Batalkan(ctx context.Context, id int, alasan string) 
 				}
 			}
 		}
-		// F-24: transaksi batal tidak dihitung lagi untuk tingkat member
+		// transaksi batal tidak dihitung lagi untuk tingkat member
 		if t.MemberID.Valid {
 			return s.Tingkat.Evaluasi(ctx, tx, int(t.MemberID.Int64))
 		}

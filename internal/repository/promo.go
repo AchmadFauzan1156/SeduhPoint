@@ -1,6 +1,6 @@
 package repository
 
-// F-06 – F-11 Promo & voucher (F-13, F-14 dipakai kasir di M3)
+// Promo & voucher
 
 import (
 	"context"
@@ -201,7 +201,7 @@ func (r *PromoRepo) isiRelasi(ctx context.Context, q Querier, p *model.Promo) er
 	return err
 }
 
-// VoucherByKode: kunci = true memakai SELECT ... FOR UPDATE agar kuota aman saat checkout (F-14).
+// VoucherByKode: kunci = true memakai SELECT ... FOR UPDATE agar kuota aman saat checkout.
 func (r *PromoRepo) VoucherByKode(ctx context.Context, q Querier, kode string, kunci bool) (model.Promo, error) {
 	query := "SELECT " + kolomPromo + " FROM promo p WHERE p.kode_voucher = ? AND p.jenis = 'VOUCHER' AND p.deleted_at IS NULL"
 	if kunci {

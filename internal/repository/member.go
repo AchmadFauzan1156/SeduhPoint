@@ -1,6 +1,6 @@
 package repository
 
-// F-03, F-04, F-26, F-27 Member
+// Member
 
 import (
 	"context"
@@ -26,7 +26,7 @@ func scanMember(s interface{ Scan(...any) error }, m *model.Member) error {
 	return s.Scan(&m.ID, &m.Nama, &m.NoHP, &m.TglDaftar, &m.Tingkat, &m.PoinAktif, &m.Belanja3Bulan)
 }
 
-// Cari: nama atau nomor HP (F-04). q kosong = semua member.
+// Cari: nama atau nomor HP. q kosong = semua member.
 func (r *MemberRepo) Cari(ctx context.Context, q string) ([]model.Member, error) {
 	pola := "%" + q + "%"
 	rows, err := r.DB.QueryContext(ctx, "SELECT "+kolomMember+` FROM member m
@@ -95,7 +95,7 @@ func (r *MemberRepo) Ubah(ctx context.Context, m model.Member) error {
 	return pastikanAdaBaris(res)
 }
 
-// TotalBelanjaSejak: SUM(subtotal - total_promo) transaksi SELESAI sejak `sejak` (AB06, asumsi 4). Dipakai evaluasi tingkat.
+// TotalBelanjaSejak: SUM(subtotal - total_promo) transaksi SELESAI sejak `sejak`. Dipakai evaluasi tingkat.
 func (r *MemberRepo) TotalBelanjaSejak(ctx context.Context, q Querier, memberID int, sejak time.Time) (int64, error) {
 	var total int64
 	err := q.QueryRowContext(ctx, `SELECT COALESCE(SUM(subtotal - total_promo), 0) FROM transaksi

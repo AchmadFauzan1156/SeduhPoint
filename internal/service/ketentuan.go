@@ -1,6 +1,6 @@
 package service
 
-// Ketentuan promo yang dibaca kasir dirakit otomatis dari data promo (F-32),
+// Ketentuan promo yang dibaca kasir dirakit otomatis dari data promo,
 // sehingga selalu sama dengan yang dihitung sistem dan tidak basi saat promo diubah.
 
 import (

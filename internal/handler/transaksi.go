@@ -1,6 +1,6 @@
 package handler
 
-// F-12 – F-24 Kasir, struk, riwayat, pembatalan.
+// Kasir, struk, riwayat, pembatalan.
 // Halaman kasir sepenuhnya server-side: setiap tombol mengirim form, keranjang disimpan di input tersembunyi.
 
 import (

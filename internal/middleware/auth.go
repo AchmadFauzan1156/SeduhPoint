@@ -1,7 +1,6 @@
 package middleware
 
-// SEMENTARA: session sederhana di memori. Akan disesuaikan dengan materi
-// Authentication & Authorization dari dosen (lihat RPS) pada M2.1.
+// Session sederhana yang disimpan di memori server.
 
 import (
 	"context"
@@ -19,7 +18,7 @@ type Sesi struct {
 }
 
 var (
-	mu   sync.Mutex // materi #4: lindungi map dari data race
+	mu   sync.Mutex // lindungi map dari data race
 	sesi = map[string]Sesi{}
 )
 

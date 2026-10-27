@@ -1,6 +1,6 @@
 package handler
 
-// F-06 – F-11 Promo & voucher
+// Promo & voucher
 
 import (
 	"database/sql"
@@ -110,7 +110,7 @@ func (h *PromoHandler) simpan(w http.ResponseWriter, r *http.Request, id int) {
 	redirect(w, r, "/promo", "Promo "+p.Nama+" disimpan")
 }
 
-// Toggle mengaktifkan/menonaktifkan promo tanpa menghapus riwayatnya (F-11).
+// Toggle mengaktifkan/menonaktifkan promo tanpa menghapus riwayatnya.
 func (h *PromoHandler) Toggle(w http.ResponseWriter, r *http.Request) {
 	id, ok := idDariPath(w, r)
 	if !ok {

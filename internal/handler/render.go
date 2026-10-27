@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// rupiah memformat angka jadi "Rp39.000.000" (sama dengan materi #10, versi int64)
+// rupiah memformat angka jadi "Rp39.000.000"
 func rupiah(n int64) string {
 	s := strconv.FormatInt(n, 10)
 	hasil := ""
@@ -123,7 +123,7 @@ func rupiahPendek(n int64) string {
 
 func add(a, b int) int { return a + b }
 
-// nilaiPoin: poin × Rp1.000 (AB03)
+// nilaiPoin: poin × Rp1.000
 func nilaiPoin(p int) int64 { return int64(p) * 1000 }
 
 // kali: harga × qty untuk subtotal baris

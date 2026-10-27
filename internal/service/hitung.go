@@ -1,6 +1,6 @@
 package service
 
-// hitung.go: mesin perhitungan transaksi (alur Laporan 1.8).
+// hitung.go: mesin perhitungan transaksi.
 // Murni tanpa database, sehingga bisa diuji dengan go test (lihat hitung_test.go).
 
 import (
@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	NilaiPoin     int64 = 1000  // 1 poin = Rp1.000 (AB03)
-	KelipatanPoin int64 = 10000 // 1 poin tiap Rp10.000 (AB01)
+	NilaiPoin     int64 = 1000  // 1 poin = Rp1.000
+	KelipatanPoin int64 = 10000 // 1 poin tiap Rp10.000
 )
 
 type Item struct {
@@ -63,10 +63,10 @@ type Hasil struct {
 	MinTidakTercapai  bool // promo minimal belanja dipilih tapi syaratnya belum terpenuhi
 }
 
-// ErrMinDanVoucher: AB09 / F-15.
+// ErrMinDanVoucher: potongan minimal belanja tidak bisa digabung dengan voucher.
 var ErrMinDanVoucher = &ValidasiError{Field: "kode_voucher", Pesan: "Potongan minimal belanja tidak dapat digabung dengan voucher"}
 
-// Hitung menjalankan langkah 1–7 pada Laporan 1.8.
+// Hitung menjalankan langkah 1–7 perhitungan transaksi.
 func Hitung(in Input) (Hasil, error) {
 	var h Hasil
 	if in.PromoMin != nil && in.Voucher != nil {
@@ -80,7 +80,7 @@ func Hitung(in Input) (Hasil, error) {
 		h.Subtotal += it.Harga * int64(it.Qty)
 	}
 
-	// 2. Promo produk: diskon persen dulu, lalu beli 2 gratis 1 pada item yang tidak didiskon (asumsi 13).
+	// 2. Promo produk: diskon persen dulu, lalu beli 2 gratis 1 pada item yang tidak didiskon.
 	// Diskon terbesar didahulukan, sehingga jika satu menu kena beberapa diskon yang dipakai adalah yang terbesar.
 	diskon := make([]PromoAktif, 0, len(in.PromoProduk))
 	for _, p := range in.PromoProduk {
@@ -115,7 +115,7 @@ func Hitung(in Input) (Hasil, error) {
 	total := h.Subtotal - promoProduk
 
 	// 3. Satu promo tingkat transaksi: minimal belanja ATAU voucher.
-	//    Syarat minimal belanja dihitung dari subtotal setelah promo produk (asumsi 7).
+	//    Syarat minimal belanja dihitung dari subtotal setelah promo produk.
 	if p := in.PromoMin; p != nil {
 		if total >= p.MinBelanja {
 			v := min(p.Nominal, total)
@@ -137,7 +137,7 @@ func Hitung(in Input) (Hasil, error) {
 	}
 	h.TotalSetelahPromo = h.Subtotal - h.TotalPromo
 
-	// 5. Tukar poin (member saja); permintaan di atas batas dibatasi otomatis (asumsi 15).
+	// 5. Tukar poin (member saja); permintaan di atas batas dibatasi otomatis.
 	if in.IsMember {
 		h.MaksPoin = MaksPoinTukar(in.SaldoPoin, h.TotalSetelahPromo)
 		h.PoinDitukar = max(0, min(in.PoinDiminta, h.MaksPoin))
@@ -147,14 +147,14 @@ func Hitung(in Input) (Hasil, error) {
 	// 6. Total bayar
 	h.TotalBayar = h.TotalSetelahPromo - h.PotonganPoin
 
-	// 7. Poin diperoleh dari total setelah promo, sebelum potongan poin (asumsi 1)
+	// 7. Poin diperoleh dari total setelah promo, sebelum potongan poin
 	if in.IsMember {
 		h.PoinDiperoleh = PoinDiperoleh(h.TotalSetelahPromo, in.IsGold)
 	}
 	return h, nil
 }
 
-// DiskonPersen: diskon % untuk produk target (AB07a), dibulatkan ke bawah per baris (asumsi 14).
+// DiskonPersen: diskon % untuk produk target, dibulatkan ke bawah per baris.
 // Produk yang sudah kena diskon dicatat di `didiskon` (boleh nil) agar tidak didiskon dua kali.
 func DiskonPersen(items []Item, p PromoAktif, didiskon map[int]bool) int64 {
 	var total int64
@@ -169,7 +169,7 @@ func DiskonPersen(items []Item, p PromoAktif, didiskon map[int]bool) int64 {
 	return total
 }
 
-// BeliDuaGratisSatu: tiap 3 item dari kategori target, 1 item termurah gratis (asumsi 6).
+// BeliDuaGratisSatu: tiap 3 item dari kategori target, 1 item termurah gratis.
 func BeliDuaGratisSatu(items []Item, p PromoAktif) int64 {
 	var harga []int64
 	for _, it := range items {
@@ -187,13 +187,13 @@ func BeliDuaGratisSatu(items []Item, p PromoAktif) int64 {
 	return gratis
 }
 
-// MaksPoinTukar = min(saldo, 50% × totalSetelahPromo / 1.000) (AB03).
+// MaksPoinTukar = min(saldo, 50% × totalSetelahPromo / 1.000).
 func MaksPoinTukar(saldo int, totalSetelahPromo int64) int {
 	return max(0, min(saldo, int(totalSetelahPromo/2/NilaiPoin)))
 }
 
-// PoinDiperoleh = floor(total/10.000) × pengali; Gold 1,5× dibulatkan ke bawah (AB01, AB06, asumsi 2).
-// Integer saja (NF-04): poin*3/2.
+// PoinDiperoleh = floor(total/10.000) × pengali; Gold 1,5× dibulatkan ke bawah.
+// Integer saja: poin*3/2.
 func PoinDiperoleh(totalSetelahPromo int64, gold bool) int {
 	poin := int(totalSetelahPromo / KelipatanPoin)
 	if gold {
@@ -202,12 +202,12 @@ func PoinDiperoleh(totalSetelahPromo int64, gold bool) int {
 	return poin
 }
 
-// TanggalKedaluwarsa = tanggal perolehan + 6 bulan (AB02).
+// TanggalKedaluwarsa = tanggal perolehan + 6 bulan.
 func TanggalKedaluwarsa(t time.Time) time.Time {
 	return t.AddDate(0, 6, 0)
 }
 
-// PromoBerlaku mengecek periode (tanggal), jam (WIB, opsional) dan cabang sebuah promo (AB08, F-13, F-14).
+// PromoBerlaku mengecek periode (tanggal), jam (WIB, opsional) dan cabang sebuah promo.
 // jamMulai/jamSelesai "" = sepanjang hari. `sekarang` harus sudah dalam WIB.
 func PromoBerlaku(sekarang time.Time, mulai, selesai time.Time, jamMulai, jamSelesai string,
 	cabangPromo []int, cabangID int) bool {

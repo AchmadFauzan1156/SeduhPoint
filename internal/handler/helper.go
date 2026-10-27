@@ -71,7 +71,7 @@ func formGagal(w http.ResponseWriter, view *Renderer, file string, hal Halaman, 
 	view.Tampil(w, file, hal)
 }
 
-// redirect dengan pesan sukses (Post/Redirect/Get, materi #4).
+// redirect dengan pesan sukses.
 func redirect(w http.ResponseWriter, r *http.Request, url, pesan string) {
 	sep := "?"
 	if strings.Contains(url, "?") {

@@ -1,8 +1,7 @@
-/* SeduhPoint — UI kasir & admin (v2, 27 Okt 2026).
-   Arah: sidebar espresso gelap + kanvas krem hangat + kartu putih bergaris tipis (mengikuti contoh
-   tim), warna cokelat SeduhPoint. Ornamen botani digambar sendiri (garis, bukan gambar raster).
-   Dipoles dengan TasteSkill (app-screens) & UI/UX Pro Max: warna penuh hanya pada data, status dan
-   satu aksi utama; angka tabular & rata kanan; kontras teks ≥ 4.5:1; fokus terlihat; tanpa emoji. */
+/* SeduhPoint — tampilan kasir & admin.
+   Sidebar espresso gelap, kanvas krem hangat, kartu putih bergaris tipis, aksen cokelat.
+   Warna penuh hanya pada data, status, dan satu aksi utama; angka tabular & rata kanan;
+   kontras teks minimal 4.5:1; fokus selalu terlihat. */
 :root {
   --ground: #F4F1EE;      /* kanvas batu hangat (kroma rendah) */
   --surface: #FFFFFF;

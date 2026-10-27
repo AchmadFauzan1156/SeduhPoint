@@ -1,6 +1,6 @@
 package handler
 
-// CONTOH LENGKAP (F-01) — handler lain mengikuti pola ini:
+// Pola handler:
 // daftar + panel form di halaman yang sama, validasi di service, Post/Redirect/Get.
 
 import (

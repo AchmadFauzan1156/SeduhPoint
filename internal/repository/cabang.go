@@ -1,7 +1,5 @@
 package repository
 
-// CONTOH LENGKAP (F-01) — repo lain mengikuti pola ini.
-
 import (
 	"context"
 	"database/sql"

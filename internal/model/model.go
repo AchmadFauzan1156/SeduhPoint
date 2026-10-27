@@ -1,5 +1,5 @@
 // Package model berisi struct data yang dipakai bersama oleh repository,
-// service, dan handler. Tidak berisi business logic (materi #10).
+// service, dan handler. Tidak berisi business logic.
 package model
 
 import (

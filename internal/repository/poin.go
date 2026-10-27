@@ -1,6 +1,6 @@
 package repository
 
-// Poin per lot (FIFO & kedaluwarsa) + buku besar mutasi (NF-05: hanya INSERT).
+// Poin per lot (FIFO & kedaluwarsa) + buku besar mutasi.
 
 import (
 	"context"
@@ -38,7 +38,7 @@ func ambilLot(ctx context.Context, q Querier, query string, args ...any) ([]mode
 	return hasil, rows.Err()
 }
 
-// LotAktifFIFO: lot aktif yang belum kedaluwarsa, paling dekat kedaluwarsa dulu, dikunci (AB04).
+// LotAktifFIFO: lot aktif yang belum kedaluwarsa, paling dekat kedaluwarsa dulu, dikunci.
 func (r *PoinRepo) LotAktifFIFO(ctx context.Context, q Querier, memberID int, sekarang time.Time) ([]model.PoinLot, error) {
 	return ambilLot(ctx, q, "SELECT "+kolomLot+` FROM poin_lot
 		WHERE member_id = ? AND status = 'AKTIF' AND poin_sisa > 0 AND tgl_kedaluwarsa > ?
@@ -94,7 +94,7 @@ func (r *PoinRepo) MutasiTransaksi(ctx context.Context, q Querier, trxID int) ([
 	return hasil, rows.Err()
 }
 
-// KedaluwarsakanSemua: lot AKTIF yang lewat masa berlaku -> KEDALUWARSA, sisa dicatat sebagai mutasi (F-25).
+// KedaluwarsakanSemua: lot AKTIF yang lewat masa berlaku -> KEDALUWARSA, sisa dicatat sebagai mutasi.
 func (r *PoinRepo) KedaluwarsakanSemua(ctx context.Context, sekarang time.Time) (int, error) {
 	n := 0
 	err := WithTx(ctx, r.DB, func(tx *sql.Tx) error {
@@ -118,7 +118,7 @@ func (r *PoinRepo) KedaluwarsakanSemua(ctx context.Context, sekarang time.Time) 
 	return n, err
 }
 
-// LotMember: semua lot poin member, yang aktif & paling dekat kedaluwarsa di atas (F-27).
+// LotMember: semua lot poin member, yang aktif & paling dekat kedaluwarsa di atas.
 func (r *PoinRepo) LotMember(ctx context.Context, memberID int) ([]model.PoinLot, error) {
 	return ambilLot(ctx, r.DB, `SELECT id, member_id, transaksi_id, poin_awal, poin_sisa, tgl_perolehan, tgl_kedaluwarsa,
 		CASE WHEN status = 'AKTIF' AND tgl_kedaluwarsa <= NOW() THEN 'KEDALUWARSA' ELSE status END

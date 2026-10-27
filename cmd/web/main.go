@@ -62,7 +62,7 @@ func main() {
 	transaksi := &handler.TransaksiHandler{Svc: transaksiSvc, ProdukSvc: produkSvc, MemberSvc: memberSvc, CabangSvc: cabangSvc, View: view}
 	laporan := &handler.LaporanHandler{Svc: laporanSvc, CabangSvc: cabangSvc, View: view}
 
-	// Job harian: kedaluwarsa poin & evaluasi tingkat (F-25, F-26)
+	// Job harian: kedaluwarsa poin & evaluasi tingkat
 	go poinSvc.JalankanJobHarian()
 
 	mux := http.NewServeMux()
@@ -73,7 +73,7 @@ func main() {
 	mux.HandleFunc("POST /logout", auth.Logout)
 	mux.HandleFunc("GET /{$}", mw.Login(halaman.Dashboard))
 
-	// Data master (F-01 – F-04)
+	// Data master
 	mux.HandleFunc("GET /cabang", mw.Admin(cabang.Daftar))
 	mux.HandleFunc("GET /cabang/form", mw.Admin(cabang.FormTambah))
 	mux.HandleFunc("POST /cabang", mw.Admin(cabang.Simpan))
@@ -100,7 +100,7 @@ func main() {
 	mux.HandleFunc("GET /member/{id}/edit", mw.Login(member.FormEdit))
 	mux.HandleFunc("POST /member/{id}/edit", mw.Login(member.Update))
 
-	// Promo & voucher (F-06 – F-11)
+	// Promo & voucher
 	mux.HandleFunc("GET /promo", mw.Admin(promo.Daftar))
 	mux.HandleFunc("GET /promo/form", mw.Admin(promo.FormTambah))
 	mux.HandleFunc("POST /promo", mw.Admin(promo.Simpan))
@@ -108,7 +108,7 @@ func main() {
 	mux.HandleFunc("POST /promo/{id}/edit", mw.Admin(promo.Update))
 	mux.HandleFunc("POST /promo/{id}/toggle", mw.Admin(promo.Toggle))
 
-	// Transaksi & pembatalan (F-12 – F-24)
+	// Transaksi & pembatalan
 	mux.HandleFunc("GET /kasir", mw.Kasir(transaksi.Kasir))
 	mux.HandleFunc("POST /kasir/hitung", mw.Kasir(transaksi.Hitung))
 	mux.HandleFunc("POST /kasir/bayar", mw.Kasir(transaksi.Bayar))
@@ -117,7 +117,7 @@ func main() {
 	mux.HandleFunc("GET /transaksi/{id}/batal", mw.Login(transaksi.FormBatal))
 	mux.HandleFunc("POST /transaksi/{id}/batal", mw.Login(transaksi.Batal))
 
-	// Laporan pemilik (F-28 – F-30)
+	// Laporan pemilik
 	mux.HandleFunc("GET /laporan/promo", mw.Admin(laporan.Promo))
 	mux.HandleFunc("GET /laporan/poin", mw.Admin(laporan.Poin))
 	mux.HandleFunc("GET /laporan/member", mw.Admin(laporan.Member))

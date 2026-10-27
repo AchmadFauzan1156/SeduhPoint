@@ -1,6 +1,6 @@
 package service
 
-// F-05, NF-03 (SEMENTARA — disesuaikan dengan materi Authentication dari dosen)
+// Login: cek username & password (bcrypt).
 
 import (
 	"context"

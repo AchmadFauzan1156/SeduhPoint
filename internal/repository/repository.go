@@ -1,4 +1,4 @@
-// Package repository: satu-satunya tempat ada SQL (materi #10).
+// Package repository: satu-satunya tempat ada SQL.
 // Setiap repo berupa struct yang menyimpan *sql.DB.
 package repository
 
@@ -10,7 +10,7 @@ import (
 )
 
 // Querier dipenuhi *sql.DB dan *sql.Tx, sehingga method tulis
-// bisa dipanggil di dalam database transaction (NF-02).
+// bisa dipanggil di dalam database transaction.
 type Querier interface {
 	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
 	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)

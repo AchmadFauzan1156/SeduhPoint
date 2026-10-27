@@ -13,7 +13,6 @@ type PenggunaRepo struct {
 	DB *sql.DB
 }
 
-// F-05
 func (r *PenggunaRepo) CariByUsername(ctx context.Context, username string) (model.Pengguna, error) {
 	var p model.Pengguna
 	err := r.DB.QueryRowContext(ctx,

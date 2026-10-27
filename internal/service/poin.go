@@ -1,6 +1,6 @@
 package service
 
-// F-25 – F-27 Kedaluwarsa poin & tingkat member.
+// Kedaluwarsa poin & tingkat member.
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 	"seduhpoint/internal/repository"
 )
 
-const BatasGold int64 = 1_500_000 // AB06
+const BatasGold int64 = 1_500_000 // belanja 3 bulan minimal untuk Gold
 
 type PoinService struct {
 	DB         *sql.DB
@@ -23,7 +23,7 @@ type PoinService struct {
 }
 
 // Evaluasi: total belanja SELESAI 3 bulan terakhir >= Rp1.500.000 -> GOLD, selain itu SILVER.
-// Riwayat hanya dicatat jika tingkat berubah (AB06, F-26, asumsi 4–5).
+// Riwayat hanya dicatat jika tingkat berubah.
 func (s *PoinService) Evaluasi(ctx context.Context, q repository.Querier, memberID int) error {
 	sekarang := time.Now().In(config.WIB)
 	total, err := s.MemberRepo.TotalBelanjaSejak(ctx, q, memberID, sekarang.AddDate(0, -3, 0))

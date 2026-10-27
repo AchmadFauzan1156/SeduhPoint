@@ -1,7 +1,7 @@
 package repository
 
-// laporan.go: query laporan pemilik (F-28 – F-30) dan ringkasan dashboard.
-// Hanya transaksi berstatus SELESAI yang dihitung (F-24). Rentang tanggal dikirim sebagai
+// laporan.go: query laporan pemilik dan ringkasan dashboard.
+// Hanya transaksi berstatus SELESAI yang dihitung. Rentang tanggal dikirim sebagai
 // string "YYYY-MM-DD" dengan batas atas eksklusif, sehingga tidak ada konversi zona waktu.
 
 import (
@@ -15,7 +15,7 @@ type LaporanRepo struct {
 	DB *sql.DB
 }
 
-// BarisBiayaPromo: satu baris laporan biaya promo (F-28).
+// BarisBiayaPromo: satu baris laporan biaya promo.
 type BarisBiayaPromo struct {
 	PromoID       int
 	Nama          string
@@ -51,7 +51,7 @@ type PoinPerBulan struct {
 	Poin  int
 }
 
-// MemberTingkat: data mentah untuk laporan perkembangan member (F-30).
+// MemberTingkat: data mentah untuk laporan perkembangan member.
 type MemberTingkat struct {
 	MemberID  int
 	TglDaftar time.Time
@@ -65,7 +65,7 @@ type RiwayatTingkat struct {
 
 const fmtWaktu = "2006-01-02 15:04:05"
 
-// BiayaPromo: total potongan & jumlah transaksi per promo (F-28).
+// BiayaPromo: total potongan & jumlah transaksi per promo.
 func (r *LaporanRepo) BiayaPromo(ctx context.Context, dari, sampai string, cabangID int) ([]BarisBiayaPromo, error) {
 	q := `
 		SELECT p.id, p.nama, p.jenis, COUNT(DISTINCT tp.transaksi_id), COALESCE(SUM(tp.nilai_potongan), 0)
@@ -128,7 +128,7 @@ func (r *LaporanRepo) PerCabang(ctx context.Context, dari, sampai string, cabang
 	return hasil, rows.Err()
 }
 
-// PoinAktif: total poin yang masih berlaku dan jumlah member pemiliknya (F-29).
+// PoinAktif: total poin yang masih berlaku dan jumlah member pemiliknya.
 func (r *LaporanRepo) PoinAktif(ctx context.Context, sekarang time.Time) (poin, member int, err error) {
 	err = r.DB.QueryRowContext(ctx, `
 		SELECT COALESCE(SUM(l.poin_sisa), 0), COUNT(DISTINCT l.member_id)
@@ -165,7 +165,7 @@ func (r *LaporanRepo) AkanKedaluwarsa(ctx context.Context, sekarang, batas time.
 	return hasil, rows.Err()
 }
 
-// PoinPerBulanKedaluwarsa: sebaran poin aktif per bulan kedaluwarsa (paling jauh 6 bulan ke depan, AB02).
+// PoinPerBulanKedaluwarsa: sebaran poin aktif per bulan kedaluwarsa.
 func (r *LaporanRepo) PoinPerBulanKedaluwarsa(ctx context.Context, sekarang time.Time) ([]PoinPerBulan, error) {
 	rows, err := r.DB.QueryContext(ctx, `
 		SELECT DATE_FORMAT(l.tgl_kedaluwarsa, '%Y-%m-01') AS bln, SUM(l.poin_sisa)
@@ -189,7 +189,7 @@ func (r *LaporanRepo) PoinPerBulanKedaluwarsa(ctx context.Context, sekarang time
 	return hasil, rows.Err()
 }
 
-// RiwayatMember: semua member (belum dihapus) beserta riwayat tingkatnya, untuk F-30.
+// RiwayatMember: semua member (belum dihapus) beserta riwayat tingkatnya, untuk laporan perkembangan member.
 func (r *LaporanRepo) RiwayatMember(ctx context.Context) ([]MemberTingkat, error) {
 	rows, err := r.DB.QueryContext(ctx, `
 		SELECT m.id, m.tgl_daftar, h.tingkat, h.berlaku_sejak

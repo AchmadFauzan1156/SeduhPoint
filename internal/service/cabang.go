@@ -1,7 +1,5 @@
 package service
 
-// CONTOH LENGKAP (F-01) — service lain mengikuti pola ini.
-
 import (
 	"context"
 	"strings"

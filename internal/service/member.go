@@ -1,6 +1,6 @@
 package service
 
-// F-03, F-04, F-27 Member
+// Member
 
 import (
 	"context"
@@ -18,7 +18,7 @@ type MemberService struct {
 	PoinRepo *repository.PoinRepo
 }
 
-// DetailMember: data untuk panel detail (F-27).
+// DetailMember: data untuk panel detail.
 type DetailMember struct {
 	Member     model.Member
 	Lot        []model.PoinLot
@@ -83,7 +83,7 @@ func (s *MemberService) validasi(ctx context.Context, m *model.Member) error {
 	return nil
 }
 
-// Daftar: member baru otomatis SILVER (F-03).
+// Daftar: member baru otomatis SILVER.
 func (s *MemberService) Daftar(ctx context.Context, m model.Member) (int64, error) {
 	if err := s.validasi(ctx, &m); err != nil {
 		return 0, err

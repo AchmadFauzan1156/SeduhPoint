@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Skenario uji dari Laporan 1.10 & 1.11. Hapus t.Skip setelah fungsi diisi.
+// Skenario uji perhitungan promo & poin.
 func TestPoinDiperoleh(t *testing.T) {
 	cases := []struct {
 		total int64
@@ -44,11 +44,11 @@ func TestBeliDuaGratisSatu(t *testing.T) {
 func TestMinBelanjaDanVoucherDitolak(t *testing.T) {
 	_, err := Hitung(Input{PromoMin: &PromoAktif{}, Voucher: &PromoAktif{}})
 	if err == nil {
-		t.Error("harus error: AB09")
+		t.Error("harus error: minimal belanja tidak bisa digabung dengan voucher")
 	}
 }
 
-// Skenario perhitungan promo & poin (data uji bagian A di laporan).
+// Skenario perhitungan promo & poin.
 func TestHitungSkenario(t *testing.T) {
 
 	americano := Item{ProdukID: 1, KategoriID: 1, Harga: 18000}
@@ -103,7 +103,7 @@ func TestHitungSkenario(t *testing.T) {
 	}
 }
 
-// V04–V06: promo dibatasi jam dan cabang.
+// Promo dibatasi jam dan cabang.
 func TestPromoBerlaku(t *testing.T) {
 	wib := time.FixedZone("WIB", 7*3600)
 	mulai, selesai := time.Date(2026, 11, 1, 0, 0, 0, 0, wib), time.Date(2026, 11, 30, 0, 0, 0, 0, wib)
@@ -114,10 +114,10 @@ func TestPromoBerlaku(t *testing.T) {
 		cabang int
 		want   bool
 	}{
-		{"V04 13.59 sebelum jam", jam(13, 59), 1, false},
-		{"V05 15.00 dalam jam", jam(15, 0), 1, true},
+		{"13.59 sebelum jam", jam(13, 59), 1, false},
+		{"15.00 dalam jam", jam(15, 0), 1, true},
 		{"17.00 sudah lewat", jam(17, 0), 1, false},
-		{"V06 cabang lain", jam(15, 0), 2, false},
+		{"cabang lain", jam(15, 0), 2, false},
 		{"sebelum periode", time.Date(2026, 10, 31, 15, 0, 0, 0, wib), 1, false},
 		{"hari terakhir periode", time.Date(2026, 11, 30, 15, 0, 0, 0, wib), 1, true},
 	}
@@ -131,7 +131,7 @@ func TestPromoBerlaku(t *testing.T) {
 	}
 }
 
-// T14: diskon persen dibulatkan ke bawah per baris (asumsi 14).
+// Diskon persen dibulatkan ke bawah per baris.
 func TestDiskonDibulatkan(t *testing.T) {
 	p := PromoAktif{Persen: 15, ProdukTarget: map[int]bool{3: true}}
 	if got := DiskonPersen([]Item{{ProdukID: 3, Harga: 25000, Qty: 1}}, p, nil); got != 3750 {

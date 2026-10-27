@@ -1,6 +1,6 @@
 package handler
 
-// F-03, F-04, F-27 Member: daftar + cari, panel detail (saldo & lot poin) atau panel form.
+// Member: daftar + cari, panel detail (saldo & lot poin) atau panel form.
 
 import (
 	"fmt"

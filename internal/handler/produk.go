@@ -1,6 +1,6 @@
 package handler
 
-// F-02 Kategori & Produk (pola sama dengan cabang.go) + unggah foto produk
+// Kategori & Produk (pola sama dengan cabang.go) + unggah foto produk
 
 import (
 	"crypto/rand"

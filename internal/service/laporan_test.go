@@ -9,7 +9,7 @@ import (
 
 func tg(s string) time.Time { t, _ := time.Parse("2006-01-02 15:04", s); return t }
 
-// F-30: member baru, naik Gold, turun Silver, dan jumlah per tingkat di akhir bulan.
+// Perkembangan member: member baru, naik Gold, turun Silver, dan jumlah per tingkat di akhir bulan.
 func TestPerkembanganMember(t *testing.T) {
 	data := []repository.MemberTingkat{
 		{MemberID: 1, TglDaftar: tg("2026-08-05 00:00"), Riwayat: []repository.RiwayatTingkat{

@@ -1,6 +1,6 @@
 package service
 
-// F-02 Kategori & Produk
+// Kategori & Produk
 
 import (
 	"context"

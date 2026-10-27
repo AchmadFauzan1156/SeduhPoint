@@ -1,7 +1,7 @@
 package service
 
-// laporan.go: laporan pemilik (F-28 biaya promo, F-29 poin aktif, F-30 perkembangan member)
-// dan ringkasan dashboard admin. Semua hanya menghitung transaksi SELESAI (F-24).
+// laporan.go: laporan pemilik
+// dan ringkasan dashboard admin. Semua hanya menghitung transaksi SELESAI.
 
 import (
 	"context"
@@ -24,7 +24,7 @@ func (s *LaporanService) sekarang() time.Time {
 	return time.Now().In(config.WIB)
 }
 
-// HariKedaluwarsaDekat: batas "akan kedaluwarsa dalam waktu dekat" (F-29).
+// HariKedaluwarsaDekat: batas "akan kedaluwarsa dalam waktu dekat".
 const HariKedaluwarsaDekat = 30
 
 // persen menghitung lebar batang grafik (0–100) terhadap nilai terbesar.
@@ -35,7 +35,7 @@ func persen(nilai, maks int64) int {
 	return max(2, int(nilai*100/maks))
 }
 
-// ---------- F-28 Biaya promo ----------
+// ---------- Biaya promo ----------
 
 type PromoBiaya struct {
 	repository.BarisBiayaPromo
@@ -104,7 +104,7 @@ func (s *LaporanService) BiayaPromo(ctx context.Context, dari, sampai time.Time,
 	return lp, nil
 }
 
-// ---------- F-29 Poin aktif ----------
+// ---------- Poin aktif ----------
 
 type BulanPoin struct {
 	Bulan  time.Time
@@ -153,7 +153,7 @@ func (s *LaporanService) Poin(ctx context.Context) (LaporanPoin, error) {
 	return lp, nil
 }
 
-// ---------- F-30 Perkembangan member ----------
+// ---------- Perkembangan member ----------
 
 type BarisMember struct {
 	Bulan       time.Time
@@ -172,7 +172,7 @@ type LaporanMember struct {
 	TotalTurun int
 }
 
-// PerkembanganMember menghitung F-30 dari riwayat tingkat member. Murni tanpa database (lihat laporan_test.go).
+// PerkembanganMember menghitung perkembangan member dari riwayat tingkatnya. Murni tanpa database (lihat laporan_test.go).
 // Bulan yang belum terjadi (setelah `sekarang`) tidak ditampilkan.
 func PerkembanganMember(data []repository.MemberTingkat, tahun int, sekarang time.Time) []BarisMember {
 	var hasil []BarisMember

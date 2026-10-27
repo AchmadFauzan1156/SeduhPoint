@@ -1,4 +1,4 @@
-// Package service: aturan bisnis. Tidak tahu http.Request dan tidak ada SQL (materi #10).
+// Package service: aturan bisnis. Tidak tahu http.Request dan tidak ada SQL.
 package service
 
 // ValidasiError: salah input dari pengguna (handler -> 422 + pesan di dekat field),

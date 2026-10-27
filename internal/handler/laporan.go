@@ -1,6 +1,6 @@
 package handler
 
-// laporan.go: halaman laporan pemilik (F-28 – F-30), hanya untuk admin.
+// laporan.go: halaman laporan pemilik, hanya untuk admin.
 
 import (
 	"net/http"
@@ -26,7 +26,7 @@ type LaporanPromoPage struct {
 	Sampai  string
 }
 
-// Promo: GET /laporan/promo?dari=YYYY-MM-DD&sampai=YYYY-MM-DD&cabang=ID (F-28).
+// Promo: GET /laporan/promo?dari=YYYY-MM-DD&sampai=YYYY-MM-DD&cabang=ID.
 func (h *LaporanHandler) Promo(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	now := time.Now().In(config.WIB)
@@ -69,7 +69,7 @@ func (h *LaporanHandler) Promo(w http.ResponseWriter, r *http.Request) {
 	h.View.Tampil(w, "laporan/promo.html", hal)
 }
 
-// Poin: GET /laporan/poin (F-29).
+// Poin: GET /laporan/poin.
 func (h *LaporanHandler) Poin(w http.ResponseWriter, r *http.Request) {
 	lap, err := h.Svc.Poin(r.Context())
 	if err != nil {
@@ -84,7 +84,7 @@ type LaporanMemberPage struct {
 	Tahun []int
 }
 
-// Member: GET /laporan/member?tahun=YYYY (F-30).
+// Member: GET /laporan/member?tahun=YYYY.
 func (h *LaporanHandler) Member(w http.ResponseWriter, r *http.Request) {
 	now := time.Now().In(config.WIB)
 	tahun, err := strconv.Atoi(r.URL.Query().Get("tahun"))

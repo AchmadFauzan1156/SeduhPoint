@@ -1,6 +1,6 @@
 package service
 
-// F-06 – F-11 Promo & voucher
+// Promo & voucher
 
 import (
 	"context"
@@ -69,7 +69,7 @@ var reJam = regexp.MustCompile(`^([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$`)
 
 func kosong() sql.NullInt64 { return sql.NullInt64{} }
 
-// Validasi menormalkan field sesuai jenis (field jenis lain dikosongkan) lalu memeriksa aturan F-06 – F-10.
+// Validasi menormalkan field sesuai jenis (field jenis lain dikosongkan) lalu memeriksa aturan tiap jenis promo.
 func (s *PromoService) Validasi(ctx context.Context, p *model.Promo) error {
 	p.Nama = strings.TrimSpace(p.Nama)
 	if p.Nama == "" {
@@ -145,7 +145,7 @@ func (s *PromoService) Validasi(ctx context.Context, p *model.Promo) error {
 	if p.TglSelesai.Before(p.TglMulai) {
 		return salah("tgl_selesai", "Tanggal selesai tidak boleh sebelum tanggal mulai")
 	}
-	// Jam opsional, tapi harus berpasangan dan mulai < selesai (F-07).
+	// Jam opsional, tapi harus berpasangan dan mulai < selesai.
 	if p.JamMulai.Valid != p.JamSelesai.Valid {
 		return salah("jam_selesai", "Isi jam mulai dan jam selesai, atau kosongkan keduanya")
 	}

@@ -11,7 +11,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// WIB dipakai untuk pengecekan jam promo (NF-06).
+// WIB dipakai untuk pengecekan jam promo.
 var WIB, _ = time.LoadLocation("Asia/Jakarta")
 
 type Config struct {
