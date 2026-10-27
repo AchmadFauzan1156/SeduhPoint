@@ -69,11 +69,27 @@ func rentang(a, b time.Time) string {
 	return kiri + " – " + tglPendek(b)
 }
 
+// tglBulan: "Oktober 2026"
+func tglBulan(t time.Time) string {
+	bulan := [...]string{"Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"}
+	return bulan[t.Month()-1] + " " + strconv.Itoa(t.Year())
+}
+
+// desimal1: 30,6 (koma desimal Indonesia)
+func desimal1(f float64) string {
+	return strings.Replace(strconv.FormatFloat(f, 'f', 1, 64), ".", ",", 1)
+}
+
+func add(a, b int) int { return a + b }
+
+// nilaiPoin: poin × Rp1.000 (AB03)
+func nilaiPoin(p int) int64 { return int64(p) * 1000 }
+
 // kali: harga × qty untuk subtotal baris
 func kali(h int64, q int) int64 { return h * int64(q) }
 
 var funcs = template.FuncMap{"rentang": rentang, "kali": kali, "rupiah": rupiah, "add_one": addOne, "tgl": tgl, "upper": strings.ToUpper,
-	"has": has, "jam": jam, "tglInput": tglInput, "tglPendek": tglPendek}
+	"has": has, "tglBulan": tglBulan, "add": add, "desimal1": desimal1, "nilaiPoin": nilaiPoin, "jam": jam, "tglInput": tglInput, "tglPendek": tglPendek}
 
 type Renderer struct {
 	tpl map[string]*template.Template

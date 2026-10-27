@@ -53,14 +53,14 @@ func main() {
 
 	// Handler
 	view := handler.NewRenderer()
-	halaman := &handler.HalamanHandler{View: view}
+	halaman := &handler.HalamanHandler{LaporanSvc: laporanSvc, MemberSvc: memberSvc, TransaksiSvc: transaksiSvc, View: view}
 	auth := &handler.AuthHandler{Svc: authSvc, View: view}
 	cabang := &handler.CabangHandler{Svc: cabangSvc, View: view}
-	produk := &handler.ProdukHandler{Svc: produkSvc, View: view}
+	produk := &handler.ProdukHandler{Svc: produkSvc, PromoSvc: promoSvc, View: view}
 	member := &handler.MemberHandler{Svc: memberSvc, View: view}
 	promo := &handler.PromoHandler{Svc: promoSvc, CabangSvc: cabangSvc, ProdukSvc: produkSvc, View: view}
 	transaksi := &handler.TransaksiHandler{Svc: transaksiSvc, ProdukSvc: produkSvc, MemberSvc: memberSvc, CabangSvc: cabangSvc, View: view}
-	laporan := &handler.LaporanHandler{Svc: laporanSvc, View: view}
+	laporan := &handler.LaporanHandler{Svc: laporanSvc, CabangSvc: cabangSvc, View: view}
 
 	// Job harian: kedaluwarsa poin & evaluasi tingkat (F-25, F-26)
 	go poinSvc.JalankanJobHarian()

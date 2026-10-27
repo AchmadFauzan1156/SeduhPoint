@@ -1,4 +1,30 @@
-{{define "konten"}}
-<div class="title-row"><div><h1>Perkembangan member</h1></div></div>
-<p class="wip">Jumlah member Silver dan Gold per bulan (F-30). Dikerjakan di M4. Rancangan tampilannya ada di docs/sketsa.</p>
-{{end}}
+{{define "konten"}}{{with .Data}}
+<div class="title-row"><div><h1>Perkembangan member</h1>
+  <p class="sub">Tahun {{.Lap.Tahun}} · jumlah Silver dan Gold dihitung pada akhir bulan</p></div>
+  <form class="filter" method="get" action="/laporan/member">
+    <div><label for="tahun">Tahun</label><select id="tahun" name="tahun" class="input">
+      {{range .Tahun}}<option value="{{.}}" {{if eq . $.Data.Lap.Tahun}}selected{{end}}>{{.}}</option>{{end}}</select></div>
+    <button class="btn">Tampilkan</button>
+  </form></div>
+
+<div class="kpis" style="grid-template-columns:repeat(3,1fr);margin-bottom:var(--gap)">
+  <div class="kpi"><div class="label">Member baru</div><div class="val lead">{{.Lap.TotalBaru}}</div></div>
+  <div class="kpi"><div class="label">Naik ke Gold</div><div class="val">{{.Lap.TotalNaik}} <span class="unit">kali</span></div></div>
+  <div class="kpi"><div class="label">Turun ke Silver</div><div class="val">{{.Lap.TotalTurun}} <span class="unit">kali</span></div></div>
+</div>
+
+<div class="panel">
+  {{if .Lap.Baris}}
+  <table class="table">
+    <tr><th>Bulan</th><th class="num">Member baru</th><th class="num">Naik ke Gold</th><th class="num">Turun ke Silver</th><th class="num">Silver</th><th class="num">Gold</th><th class="num">Total member</th></tr>
+    {{range .Lap.Baris}}
+    <tr><td class="id">{{tglBulan .Bulan}}</td><td class="num">{{.MemberBaru}}</td>
+      <td class="num">{{if .NaikGold}}+{{.NaikGold}}{{else}}<span class="grey">0</span>{{end}}</td>
+      <td class="num">{{if .TurunSilver}}−{{.TurunSilver}}{{else}}<span class="grey">0</span>{{end}}</td>
+      <td class="num">{{.Silver}}</td><td class="num">{{.Gold}}</td><td class="num">{{add .Silver .Gold}}</td></tr>
+    {{end}}
+  </table>
+  <p class="hint" style="margin-top:12px">Tingkat dievaluasi otomatis dari belanja 3 bulan terakhir (Gold mulai Rp1.500.000). Member yang dihapus tidak dihitung.</p>
+  {{else}}<p class="empty">Belum ada data untuk tahun ini.</p>{{end}}
+</div>
+{{end}}{{end}}

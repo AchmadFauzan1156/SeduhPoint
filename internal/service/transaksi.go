@@ -178,14 +178,26 @@ func (s *TransaksiService) siapkan(ctx context.Context, q repository.Querier, p 
 			berikut = pm
 		}
 	}
-	if terbaik != nil {
-		if in.Voucher != nil {
-			pr.Catatan = append(pr.Catatan, terbaik.Nama+" tidak digabung dengan voucher (potongan minimal belanja dan voucher pilih salah satu).")
-		} else {
+	switch {
+	case terbaik != nil && in.Voucher != nil:
+		// AB09: tidak bisa digabung. Sistem memilih potongan yang lebih besar (keputusan tim, 27 Okt);
+		// jika sama besar, minimal belanja dipakai agar voucher pelanggan tidak terpakai sia-sia.
+		potMin := min(terbaik.NilaiNominal.Int64, totalProduk)
+		potVoucher := min(in.Voucher.Nominal, totalProduk)
+		if potMin >= potVoucher {
 			a := keAktif(*terbaik)
-			in.PromoMin = &a
+			in.PromoMin, in.Voucher = &a, nil
+			pr.Catatan = append(pr.Catatan, "Voucher "+pr.voucher.KodeVoucher.String+" tidak dipakai: "+terbaik.Nama+
+				" memberi potongan lebih besar ("+rupiah(potMin)+" ≥ "+rupiah(potVoucher)+"). Voucher tetap bisa dipakai lain kali.")
+			pr.voucher = nil
+		} else {
+			pr.Catatan = append(pr.Catatan, "Memakai voucher karena potongannya lebih besar dari "+terbaik.Nama+
+				" ("+rupiah(potVoucher)+" > "+rupiah(potMin)+").")
 		}
-	} else if berikut != nil && len(in.Items) > 0 && in.Voucher == nil {
+	case terbaik != nil:
+		a := keAktif(*terbaik)
+		in.PromoMin = &a
+	case berikut != nil && len(in.Items) > 0 && in.Voucher == nil:
 		pr.Catatan = append(pr.Catatan, "Belanja "+rupiah(berikut.MinBelanja.Int64-totalProduk)+" lagi untuk "+berikut.Nama+".")
 	}
 

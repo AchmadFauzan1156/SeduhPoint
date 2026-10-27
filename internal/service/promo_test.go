@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -73,5 +74,33 @@ func TestNormalisasiHP(t *testing.T) {
 		if got := NormalisasiHP(in); got != want {
 			t.Errorf("%q -> %q, harap %q", in, got, want)
 		}
+	}
+}
+
+func TestValidasiBatasBaru(t *testing.T) {
+	s := &PromoService{}
+	m := time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC)
+	p := model.Promo{Nama: "X", Jenis: JenisDiskon, NilaiPersen: n(95), ProdukIDs: []int{1}, TglMulai: m, TglSelesai: m, CabangIDs: []int{1}}
+	var ve *ValidasiError
+	if err := s.Validasi(context.Background(), &p); !errors.As(err, &ve) || ve.Field != "nilai_persen" {
+		t.Errorf("diskon 95%% harus ditolak, dapat %v", err)
+	}
+	q := model.Promo{Nama: "Malam", Jenis: JenisB2G1, KategoriIDs: []int{1}, TglMulai: m, TglSelesai: m, CabangIDs: []int{1},
+		JamMulai: sql.NullString{String: "22:00", Valid: true}, JamSelesai: sql.NullString{String: "02:00", Valid: true}}
+	if err := s.Validasi(context.Background(), &q); !errors.As(err, &ve) || ve.Field != "jam_selesai" {
+		t.Errorf("jam lewat tengah malam harus ditolak, dapat %v", err)
+	}
+}
+
+func TestKetentuan(t *testing.T) {
+	m := time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)
+	v := model.Promo{Jenis: JenisVoucher, NilaiNominal: n(10000), KodeVoucher: sql.NullString{String: "SEDUH10", Valid: true},
+		Kuota: n(100), KuotaTerpakai: 37, TglMulai: m, TglSelesai: m.AddDate(0, 2, 30), CabangNama: "Seduh Sekaran"}
+	kasir := strings.Join(Ketentuan(v, false), " ")
+	if strings.Contains(kasir, "SEDUH10") || !strings.Contains(kasir, "Sisa kuota 63 dari 100") || !strings.Contains(kasir, "1 Okt – 31 Des 2026") {
+		t.Errorf("ketentuan kasir: %s", kasir)
+	}
+	if !strings.Contains(strings.Join(Ketentuan(v, true), " "), "kode SEDUH10") {
+		t.Error("admin harus melihat kode")
 	}
 }

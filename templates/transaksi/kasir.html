@@ -19,17 +19,24 @@
 
   <div class="grid pos" style="grid-template-columns:1fr 384px">
     <div>
+      {{if .PromoHari}}
+      <details class="promo-hari">
+        <summary>Promo berlaku sekarang <span class="pill">{{len .PromoHari}}</span></summary>
+        <div class="ket-grid">{{range .PromoHari}}{{template "ketentuan-promo" .}}{{end}}</div>
+      </details>
+      {{end}}
       {{if .Produk}}
       <div class="menu">
         {{range .Produk}}
         <div class="dish">
-          <div class="ph" role="img" aria-label="Foto {{.Nama}}" {{if .Gambar}}style="background-image:url({{.Gambar}})"{{end}}>
-            {{with index $.Data.Label .ID}}<span class="pill">{{.}}</span>{{end}}</div>
-          <div class="meta"><div><div class="name">{{.Nama}}</div><div class="price">{{rupiah .Harga}}</div></div>
+          <button type="button" class="ph" popovertarget="dp-{{.ID}}" tabindex="-1" aria-hidden="true" {{if .Gambar}}style="background-image:url({{.Gambar}})"{{end}}>
+            {{with index $.Data.Label .ID}}<span class="pill">{{.}}</span>{{end}}</button>
+          <div class="meta"><div><button type="button" class="name link-btn" popovertarget="dp-{{.ID}}" aria-label="Detail {{.Nama}}">{{.Nama}}</button><div class="price">{{rupiah .Harga}}</div></div>
             <button class="btn round" name="tambah" value="{{.ID}}" aria-label="Tambah {{.Nama}}">+</button></div>
         </div>
         {{end}}
       </div>
+      {{range .Produk}}{{template "detail-produk" index $.Data.Detail .ID}}{{end}}
       {{else}}<p class="wip">Tidak ada menu{{if .Q}} dengan nama "{{.Q}}"{{end}}.</p>{{end}}
     </div>
 

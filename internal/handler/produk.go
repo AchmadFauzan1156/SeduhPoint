@@ -11,14 +11,17 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
+	"seduhpoint/internal/config"
 	"seduhpoint/internal/model"
 	"seduhpoint/internal/service"
 )
 
 type ProdukHandler struct {
-	Svc  *service.ProdukService
-	View *Renderer
+	Svc      *service.ProdukService
+	PromoSvc *service.PromoService
+	View     *Renderer
 }
 
 // ---------- Kategori ----------
@@ -101,6 +104,7 @@ type ProdukPage struct {
 	Kategori []model.Kategori
 	Action   string
 	Form     model.Produk
+	Detail   map[int]DetailProduk
 }
 
 func (h *ProdukHandler) tampil(w http.ResponseWriter, r *http.Request, judul, action string, p model.Produk, err error) {
@@ -114,7 +118,18 @@ func (h *ProdukHandler) tampil(w http.ResponseWriter, r *http.Request, judul, ac
 		gagal(w, e)
 		return
 	}
-	hal := halaman(r, judul, "produk", ProdukPage{Daftar: daftar, Kategori: kat, Action: action, Form: p})
+	// Promo yang masih aktif (belum berakhir) untuk kartu detail produk
+	var berjalan []model.Promo
+	if semua, e := h.PromoSvc.Daftar(r.Context()); e == nil {
+		hariIni := time.Now().In(config.WIB).Format("2006-01-02")
+		for _, pm := range semua {
+			if pm.Aktif && pm.TglSelesai.Format("2006-01-02") >= hariIni {
+				berjalan = append(berjalan, pm)
+			}
+		}
+	}
+	hal := halaman(r, judul, "produk", ProdukPage{Daftar: daftar, Kategori: kat, Action: action, Form: p,
+		Detail: detailProduk(daftar, berjalan, true, false)})
 	if err != nil {
 		formGagal(w, h.View, "produk/list.html", hal, err)
 		return
@@ -164,6 +179,7 @@ func (h *ProdukHandler) simpan(w http.ResponseWriter, r *http.Request, id int) {
 		KategoriID: atoi(r.PostFormValue("kategori_id")),
 		Harga:      angka(r.PostFormValue("harga")),
 		Gambar:     r.PostFormValue("gambar_lama"),
+		Deskripsi:  r.PostFormValue("deskripsi"),
 		Aktif:      r.PostFormValue("aktif") == "on",
 	}
 	path, err := simpanFoto(r, "gambar")

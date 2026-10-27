@@ -86,10 +86,10 @@ type ProdukRepo struct {
 	DB *sql.DB
 }
 
-const kolomProduk = "p.id, p.kategori_id, k.nama, p.nama, p.harga, COALESCE(p.gambar, ''), p.aktif"
+const kolomProduk = "p.id, p.kategori_id, k.nama, p.nama, p.harga, COALESCE(p.gambar, ''), COALESCE(p.deskripsi, ''), p.aktif"
 
 func scanProduk(s interface{ Scan(...any) error }, p *model.Produk) error {
-	return s.Scan(&p.ID, &p.KategoriID, &p.KategoriNama, &p.Nama, &p.Harga, &p.Gambar, &p.Aktif)
+	return s.Scan(&p.ID, &p.KategoriID, &p.KategoriNama, &p.Nama, &p.Harga, &p.Gambar, &p.Deskripsi, &p.Aktif)
 }
 
 // Semua: hanyaAktif = true untuk halaman kasir (produk yang dijual saja).
@@ -131,8 +131,8 @@ func nullStr(s string) sql.NullString { return sql.NullString{String: s, Valid: 
 
 func (r *ProdukRepo) Tambah(ctx context.Context, p model.Produk) (int64, error) {
 	res, err := r.DB.ExecContext(ctx,
-		"INSERT INTO produk (kategori_id, nama, harga, gambar, aktif) VALUES (?, ?, ?, ?, ?)",
-		p.KategoriID, p.Nama, p.Harga, nullStr(p.Gambar), p.Aktif)
+		"INSERT INTO produk (kategori_id, nama, harga, gambar, deskripsi, aktif) VALUES (?, ?, ?, ?, ?, ?)",
+		p.KategoriID, p.Nama, p.Harga, nullStr(p.Gambar), nullStr(p.Deskripsi), p.Aktif)
 	if err != nil {
 		return 0, fmt.Errorf("tambah produk: %w", err)
 	}
@@ -141,9 +141,9 @@ func (r *ProdukRepo) Tambah(ctx context.Context, p model.Produk) (int64, error) 
 
 func (r *ProdukRepo) Ubah(ctx context.Context, p model.Produk) error {
 	res, err := r.DB.ExecContext(ctx, `
-		UPDATE produk SET kategori_id = ?, nama = ?, harga = ?, gambar = ?, aktif = ?, updated_at = NOW()
+		UPDATE produk SET kategori_id = ?, nama = ?, harga = ?, gambar = ?, deskripsi = ?, aktif = ?, updated_at = NOW()
 		WHERE id = ? AND deleted_at IS NULL`,
-		p.KategoriID, p.Nama, p.Harga, nullStr(p.Gambar), p.Aktif, p.ID)
+		p.KategoriID, p.Nama, p.Harga, nullStr(p.Gambar), nullStr(p.Deskripsi), p.Aktif, p.ID)
 	if err != nil {
 		return fmt.Errorf("ubah produk %d: %w", p.ID, err)
 	}

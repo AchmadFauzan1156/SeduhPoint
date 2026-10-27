@@ -39,6 +39,7 @@ type Produk struct {
 	Nama         string
 	Harga        int64
 	Gambar       string // path foto; kosong = pakai gambar bawaan
+	Deskripsi    string
 	Aktif        bool
 }
 
@@ -68,6 +69,7 @@ type Promo struct {
 	TglSelesai    time.Time
 	JamMulai      sql.NullString
 	JamSelesai    sql.NullString
+	Catatan       string
 	Aktif         bool
 	CabangIDs     []int
 	ProdukIDs     []int

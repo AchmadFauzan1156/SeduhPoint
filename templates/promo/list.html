@@ -26,42 +26,45 @@
   {{with .Data}}
   <form class="panel" method="post" action="{{.Action}}" novalidate>
     <h2 style="margin-bottom:16px">{{if .Form.ID}}Ubah {{.Form.Nama}}{{else}}Tambah promo{{end}}</h2>
+    {{$kunci := gt .Dipakai 0}}
+    {{if $kunci}}<p class="note" style="margin-bottom:16px">Promo ini sudah dipakai di {{.Dipakai}} transaksi, jadi jenis, nilai, kode dan target tidak bisa diubah. Nama, periode, jam, cabang, kuota, catatan dan status tetap bisa diubah.</p>{{end}}
     {{with index $.Errors "jenis"}}<p class="field-error" role="alert">{{.}}</p>{{end}}
     <div class="field"><span id="lbl-jenis" style="display:block;font-weight:500;margin-bottom:6px">Jenis</span>
       <div class="seg" role="radiogroup" aria-labelledby="lbl-jenis" style="flex-wrap:wrap">
-        {{range .UrutJenis}}<input type="radio" id="j-{{.}}" name="jenis" value="{{.}}" {{if eq . $.Data.Form.Jenis}}checked{{end}}><label for="j-{{.}}">{{index $.Data.NamaJenis .}}</label>{{end}}
+        {{range .UrutJenis}}<input type="radio" id="j-{{.}}" name="jenis" value="{{.}}" {{if eq . $.Data.Form.Jenis}}checked{{end}} {{if $kunci}}disabled{{end}}><label for="j-{{.}}">{{index $.Data.NamaJenis .}}</label>{{end}}
       </div></div>
     <div class="field"><label for="nama">Nama promo</label>
       <input id="nama" name="nama" class="input{{if index $.Errors "nama"}} invalid{{end}}" value="{{.Form.Nama}}" maxlength="100">
+      <p class="hint" data-jenis="VOUCHER">Jangan tulis kode voucher di nama: nama promo tampil di layar kasir dan struk.</p>
       {{with index $.Errors "nama"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
 
     <div data-jenis="DISKON_PERSEN">
       <div class="field"><label for="nilai_persen">Diskon (%)</label>
-        <input id="nilai_persen" name="nilai_persen" class="input{{if index $.Errors "nilai_persen"}} invalid{{end}}" inputmode="numeric" style="width:120px" value="{{if .Form.NilaiPersen.Valid}}{{.Form.NilaiPersen.Int64}}{{end}}">
+        <input id="nilai_persen" name="nilai_persen" {{if $kunci}}disabled{{end}} class="input{{if index $.Errors "nilai_persen"}} invalid{{end}}" inputmode="numeric" style="width:120px" value="{{if .Form.NilaiPersen.Valid}}{{.Form.NilaiPersen.Int64}}{{end}}">
         {{with index $.Errors "nilai_persen"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
       <fieldset class="field" style="border:0;padding:0;margin:0 0 16px"><legend style="font-weight:500;margin-bottom:6px">Produk yang didiskon</legend>
-        <div class="checks">{{range .Produk}}<label class="check"><input type="checkbox" class="cb" name="produk" value="{{.ID}}" {{if has $.Data.Form.ProdukIDs .ID}}checked{{end}}> {{.Nama}}</label>{{end}}</div>
+        <div class="checks">{{range .Produk}}<label class="check"><input type="checkbox" class="cb" name="produk" value="{{.ID}}" {{if $kunci}}disabled{{end}} {{if has $.Data.Form.ProdukIDs .ID}}checked{{end}}> {{.Nama}}</label>{{end}}</div>
         {{with index $.Errors "produk"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</fieldset>
     </div>
     <div data-jenis="MIN_BELANJA" class="row2">
       <div class="field"><label for="min_belanja">Minimal belanja (Rp)</label>
-        <input id="min_belanja" name="min_belanja" class="input{{if index $.Errors "min_belanja"}} invalid{{end}}" inputmode="numeric" value="{{if .Form.MinBelanja.Valid}}{{.Form.MinBelanja.Int64}}{{end}}">
+        <input id="min_belanja" name="min_belanja" {{if $kunci}}disabled{{end}} class="input{{if index $.Errors "min_belanja"}} invalid{{end}}" inputmode="numeric" value="{{if .Form.MinBelanja.Valid}}{{.Form.MinBelanja.Int64}}{{end}}">
         {{with index $.Errors "min_belanja"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
     </div>
     <div data-jenis="B2G1">
       <fieldset class="field" style="border:0;padding:0;margin:0 0 16px"><legend style="font-weight:500;margin-bottom:6px">Kategori</legend>
-        <div class="checks">{{range .Kategori}}<label class="check"><input type="checkbox" class="cb" name="kategori" value="{{.ID}}" {{if has $.Data.Form.KategoriIDs .ID}}checked{{end}}> {{.Nama}}</label>{{end}}</div>
+        <div class="checks">{{range .Kategori}}<label class="check"><input type="checkbox" class="cb" name="kategori" value="{{.ID}}" {{if $kunci}}disabled{{end}} {{if has $.Data.Form.KategoriIDs .ID}}checked{{end}}> {{.Nama}}</label>{{end}}</div>
         <p class="hint">Setiap 3 item dari kategori ini, 1 item termurah gratis.</p>
         {{with index $.Errors "kategori"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</fieldset>
     </div>
     <div data-jenis="VOUCHER">
       <div class="field"><label for="kode_voucher">Kode voucher</label>
-        <input id="kode_voucher" name="kode_voucher" class="input{{if index $.Errors "kode_voucher"}} invalid{{end}}" style="text-transform:uppercase" value="{{.Form.KodeVoucher.String}}" maxlength="20">
+        <input id="kode_voucher" name="kode_voucher" {{if $kunci}}disabled{{end}} class="input{{if index $.Errors "kode_voucher"}} invalid{{end}}" style="text-transform:uppercase" value="{{.Form.KodeVoucher.String}}" maxlength="20">
         {{with index $.Errors "kode_voucher"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
     </div>
     <div class="row2">
       <div class="field" data-jenis="MIN_BELANJA VOUCHER"><label for="nilai_nominal">Potongan (Rp)</label>
-        <input id="nilai_nominal" name="nilai_nominal" class="input{{if index $.Errors "nilai_nominal"}} invalid{{end}}" inputmode="numeric" value="{{if .Form.NilaiNominal.Valid}}{{.Form.NilaiNominal.Int64}}{{end}}">
+        <input id="nilai_nominal" name="nilai_nominal" {{if $kunci}}disabled{{end}} class="input{{if index $.Errors "nilai_nominal"}} invalid{{end}}" inputmode="numeric" value="{{if .Form.NilaiNominal.Valid}}{{.Form.NilaiNominal.Int64}}{{end}}">
         {{with index $.Errors "nilai_nominal"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
       <div class="field" data-jenis="VOUCHER"><label for="kuota">Kuota pemakaian</label>
         <input id="kuota" name="kuota" class="input{{if index $.Errors "kuota"}} invalid{{end}}" inputmode="numeric" value="{{if .Form.Kuota.Valid}}{{.Form.Kuota.Int64}}{{end}}">
@@ -88,6 +91,9 @@
     <fieldset class="field" style="border:0;padding:0;margin:0 0 16px"><legend style="font-weight:500;margin-bottom:6px">Berlaku di cabang</legend>
       <div class="checks">{{range .Cabang}}<label class="check"><input type="checkbox" class="cb" name="cabang" value="{{.ID}}" {{if has $.Data.Form.CabangIDs .ID}}checked{{end}}> {{.Nama}}</label>{{end}}</div>
       {{with index $.Errors "cabang"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</fieldset>
+    <div class="field"><label for="catatan">Catatan untuk kasir <span class="small">opsional</span></label>
+      <input id="catatan" name="catatan" class="input{{if index $.Errors "catatan"}} invalid{{end}}" value="{{.Form.Catatan}}" maxlength="200" placeholder="Contoh: tawarkan ke pelanggan yang membeli 2 kopi">
+      {{with index $.Errors "catatan"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
     <label class="check"><input type="checkbox" class="cb" name="aktif" {{if .Form.Aktif}}checked{{end}}> Aktif</label>
     <div class="actions"><button class="btn">Simpan promo</button>{{if .Form.ID}}<a class="btn ghost" href="/promo">Batal</a>{{end}}</div>
   </form>

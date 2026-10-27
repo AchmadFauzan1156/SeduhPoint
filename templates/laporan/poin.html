@@ -1,4 +1,33 @@
-{{define "konten"}}
-<div class="title-row"><div><h1>Poin aktif</h1></div></div>
-<p class="wip">Poin yang masih berlaku dan nilainya dalam rupiah (F-29). Dikerjakan di M4. Rancangan tampilannya ada di docs/sketsa.</p>
-{{end}}
+{{define "konten"}}{{with .Data}}
+<div class="title-row"><div><h1>Poin aktif</h1>
+  <p class="sub">Per {{tgl .Per}} WIB · 1 poin = Rp1.000</p></div></div>
+
+<div class="kpis" style="grid-template-columns:repeat(3,1fr);margin-bottom:var(--gap)">
+  <div class="kpi"><div class="label">Poin masih berlaku</div><div class="val lead">{{.PoinAktif}} <span class="unit">poin</span></div></div>
+  <div class="kpi"><div class="label">Nilai rupiah</div><div class="val">{{rupiah .NilaiRupiah}}</div></div>
+  <div class="kpi"><div class="label">Kedaluwarsa ≤ {{.HariDekat}} hari</div><div class="val">{{.PoinDekat}} <span class="unit">poin · {{rupiah .NilaiDekat}}</span></div></div>
+</div>
+
+<div class="grid" style="grid-template-columns:1fr 1.4fr">
+  <div class="panel">
+    <div class="panel-head"><h2>Menurut bulan kedaluwarsa</h2><span class="small">{{.MemberBerpoin}} member punya poin</span></div>
+    {{range $i, $b := .PerBulan}}
+    <div class="bar-row"><div class="top"><span>{{tglBulan $b.Bulan}}</span><span class="num">{{$b.Poin}} poin</span></div>
+      <div class="bar{{if $i}} light{{end}}" style="width:{{$b.Persen}}%"></div></div>
+    {{else}}<p class="empty">Belum ada poin aktif.</p>{{end}}
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h2>Akan kedaluwarsa dalam {{.HariDekat}} hari</h2></div>
+    {{if .Dekat}}
+    <table class="table">
+      <tr><th>Member</th><th>Kedaluwarsa</th><th class="num">Poin</th><th class="num">Nilai</th></tr>
+      {{range .Dekat}}
+      <tr><td class="id"><a class="row-link" href="/member/{{.MemberID}}">{{.Nama}}</a><span class="two">{{.NoHP}}</span></td>
+        <td>{{tglPendek .Kedaluwarsa}}</td><td class="num">{{.Poin}}</td><td class="num">{{rupiah (nilaiPoin .Poin)}}</td></tr>
+      {{end}}
+    </table>
+    <p class="hint" style="margin-top:12px">Kasir bisa mengingatkan member ini untuk menukar poinnya.</p>
+    {{else}}<p class="empty">Tidak ada poin yang kedaluwarsa dalam {{.HariDekat}} hari ke depan.</p>{{end}}
+  </div>
+</div>
+{{end}}{{end}}

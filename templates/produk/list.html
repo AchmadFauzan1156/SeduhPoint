@@ -8,13 +8,14 @@
       <tr><th>Menu</th><th>Kategori</th><th class="num">Harga</th><th>Status</th><th class="num"><span class="sr-only">Aksi</span></th></tr>
       {{range .Data.Daftar}}
       <tr class="{{if eq .ID $.Data.Form.ID}}sel{{end}}">
-        <td><div class="cell-media"><span class="thumb" {{if .Gambar}}style="background-image:url({{.Gambar}})"{{end}} role="img" aria-label="Foto {{.Nama}}"></span><span class="id">{{.Nama}}</span></div></td>
+        <td><div class="cell-media"><span class="thumb" {{if .Gambar}}style="background-image:url({{.Gambar}})"{{end}} role="img" aria-label="Foto {{.Nama}}"></span><button type="button" class="id link-btn" popovertarget="dp-{{.ID}}" aria-label="Detail {{.Nama}}">{{.Nama}}</button></div></td>
         <td>{{.KategoriNama}}</td><td class="num">{{rupiah .Harga}}</td>
         <td>{{if .Aktif}}<span class="pill ok">Dijual</span>{{else}}<span class="pill off">Tidak dijual</span>{{end}}</td>
         <td class="num"><a href="/produk/{{.ID}}/edit">Ubah</a></td>
       </tr>
       {{end}}
     </table>
+    {{range .Data.Daftar}}{{template "detail-produk" index $.Data.Detail .ID}}{{end}}
     {{else}}<p class="empty">Belum ada produk.</p>{{end}}
   </div>
   {{with .Data}}
@@ -39,6 +40,9 @@
         <input id="harga" name="harga" class="input{{if index $.Errors "harga"}} invalid{{end}}" inputmode="numeric" value="{{if .Form.Harga}}{{.Form.Harga}}{{end}}" required>
         {{with index $.Errors "harga"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
     </div>
+    <div class="field"><label for="deskripsi">Deskripsi <span class="small">opsional, maks 300 karakter</span></label>
+      <textarea id="deskripsi" name="deskripsi" class="input{{if index $.Errors "deskripsi"}} invalid{{end}}" rows="3" maxlength="300">{{.Form.Deskripsi}}</textarea>
+      {{with index $.Errors "deskripsi"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
     <label class="check"><input type="checkbox" class="cb" name="aktif" {{if .Form.Aktif}}checked{{end}}> Dijual di kasir</label>
     <div class="actions"><button class="btn">Simpan</button>
       {{if .Form.ID}}<a class="btn ghost" href="/produk">Batal</a>{{end}}</div>

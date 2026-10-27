@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"regexp"
 	"strings"
+	"unicode/utf8"
 
 	"seduhpoint/internal/model"
 	"seduhpoint/internal/repository"
@@ -33,7 +34,26 @@ func (s *PromoService) Detail(ctx context.Context, id int) (model.Promo, error) 
 	return s.Repo.CariByID(ctx, id)
 }
 
+// Dipakai: jumlah transaksi yang memakai promo ini.
+func (s *PromoService) Dipakai(ctx context.Context, id int) (int, error) {
+	return s.Repo.Dipakai(ctx, id)
+}
+
 func (s *PromoService) Simpan(ctx context.Context, p model.Promo) (int64, error) {
+	// Promo yang sudah dipakai transaksi dikunci jenis, nilai, kode, dan targetnya agar laporan tetap jelas;
+	// yang boleh diubah: nama, catatan, tanggal, jam, cabang, kuota, status aktif.
+	if p.ID > 0 {
+		if n, err := s.Repo.Dipakai(ctx, p.ID); err != nil {
+			return 0, err
+		} else if n > 0 {
+			lama, err := s.Repo.CariByID(ctx, p.ID)
+			if err != nil {
+				return 0, err
+			}
+			p.Jenis, p.NilaiPersen, p.NilaiNominal, p.MinBelanja = lama.Jenis, lama.NilaiPersen, lama.NilaiNominal, lama.MinBelanja
+			p.KodeVoucher, p.ProdukIDs, p.KategoriIDs, p.KuotaTerpakai = lama.KodeVoucher, lama.ProdukIDs, lama.KategoriIDs, lama.KuotaTerpakai
+		}
+	}
 	if err := s.Validasi(ctx, &p); err != nil {
 		return 0, err
 	}
@@ -58,6 +78,9 @@ func (s *PromoService) Validasi(ctx context.Context, p *model.Promo) error {
 	if len([]rune(p.Nama)) > 100 {
 		return salah("nama", "Nama promo maksimal 100 karakter")
 	}
+	if utf8.RuneCountInString(p.Catatan) > 200 {
+		return salah("catatan", "Catatan maksimal 200 karakter")
+	}
 	if _, ok := NamaJenis[p.Jenis]; !ok {
 		return salah("jenis", "Pilih jenis promo")
 	}
@@ -66,8 +89,8 @@ func (s *PromoService) Validasi(ctx context.Context, p *model.Promo) error {
 	case JenisDiskon:
 		p.NilaiNominal, p.MinBelanja, p.Kuota = kosong(), kosong(), kosong()
 		p.KodeVoucher, p.KategoriIDs = sql.NullString{}, nil
-		if !p.NilaiPersen.Valid || p.NilaiPersen.Int64 < 1 || p.NilaiPersen.Int64 > 100 {
-			return salah("nilai_persen", "Diskon harus 1–100%")
+		if !p.NilaiPersen.Valid || p.NilaiPersen.Int64 < 1 || p.NilaiPersen.Int64 > 90 {
+			return salah("nilai_persen", "Diskon harus 1–90%")
 		}
 		if len(p.ProdukIDs) == 0 {
 			return salah("produk", "Pilih minimal satu produk yang didiskon")
@@ -131,11 +154,19 @@ func (s *PromoService) Validasi(ctx context.Context, p *model.Promo) error {
 			return salah("jam_mulai", "Format jam HH:MM")
 		}
 		if p.JamMulai.String[:5] >= p.JamSelesai.String[:5] {
-			return salah("jam_selesai", "Jam selesai harus setelah jam mulai")
+			return salah("jam_selesai", "Jam selesai harus setelah jam mulai (promo tidak bisa melewati tengah malam)")
 		}
 	}
 	if len(p.CabangIDs) == 0 {
 		return salah("cabang", "Pilih minimal satu cabang")
+	}
+	// Dua promo beli 2 gratis 1 untuk kategori & cabang yang sama di periode yang beririsan akan memberi gratis dobel.
+	if p.Jenis == JenisB2G1 && p.Aktif && s.Repo != nil {
+		if nama, err := s.Repo.B2G1Bentrok(ctx, *p); err != nil {
+			return err
+		} else if nama != "" {
+			return salah("kategori", "Bentrok dengan promo \""+nama+"\" (beli 2 gratis 1 untuk kategori dan cabang yang sama di periode yang beririsan)")
+		}
 	}
 	return nil
 }

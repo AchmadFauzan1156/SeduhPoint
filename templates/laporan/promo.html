@@ -1,4 +1,46 @@
-{{define "konten"}}
-<div class="title-row"><div><h1>Biaya promo</h1></div></div>
-<p class="wip">Total potongan per promo, filter tanggal dan cabang (F-28). Dikerjakan di M4. Rancangan tampilannya ada di docs/sketsa.</p>
-{{end}}
+{{define "konten"}}{{with .Data}}
+<div class="title-row"><div><h1>Biaya promo</h1>
+  <p class="sub">{{rentang .Lap.Dari .Lap.Sampai}} · {{.NamaCab}} · hanya transaksi selesai</p></div>
+  <form class="filter" method="get" action="/laporan/promo">
+    <div><label for="dari">Dari</label><input id="dari" name="dari" type="date" class="input{{if index $.Errors "dari"}} invalid{{end}}" value="{{.Dari}}"></div>
+    <div><label for="sampai">Sampai</label><input id="sampai" name="sampai" type="date" class="input{{if index $.Errors "sampai"}} invalid{{end}}" value="{{.Sampai}}"></div>
+    <div><label for="cabang">Cabang</label><select id="cabang" name="cabang" class="input">
+      <option value="0">Semua cabang</option>
+      {{range .Cabang}}<option value="{{.ID}}" {{if eq .ID $.Data.Lap.CabangID}}selected{{end}}>{{.Nama}}</option>{{end}}</select></div>
+    <button class="btn">Tampilkan</button>
+  </form></div>
+{{with index $.Errors "dari"}}<p class="field-error" role="alert">{{.}}</p>{{end}}
+{{with index $.Errors "sampai"}}<p class="field-error" role="alert">{{.}}</p>{{end}}
+
+<div class="kpis" style="grid-template-columns:repeat(4,1fr);margin-bottom:var(--gap)">
+  <div class="kpi"><div class="label">Total potongan promo</div><div class="val lead">{{rupiah .Lap.TotalPotongan}}</div></div>
+  <div class="kpi"><div class="label">Pemakaian promo</div><div class="val">{{.Lap.TotalPemakaian}} <span class="unit">kali</span></div></div>
+  <div class="kpi"><div class="label">Transaksi selesai</div><div class="val">{{.Lap.TotalTrx}}</div></div>
+  <div class="kpi"><div class="label">Omzet</div><div class="val">{{rupiah .Lap.TotalOmzet}}</div></div>
+</div>
+
+<div class="panel" style="margin-bottom:var(--gap)">
+  <div class="panel-head"><h2>Potongan per promo</h2><span class="small">jumlah pemakaian = transaksi yang memakai promo</span></div>
+  {{if .Lap.Promo}}
+  <table class="table">
+    <tr><th>Promo</th><th>Jenis</th><th class="num">Dipakai</th><th class="num">Total potongan</th><th style="width:30%"><span class="sr-only">Grafik</span></th></tr>
+    {{range $i, $p := .Lap.Promo}}
+    <tr><td class="id">{{$p.Nama}}</td><td>{{$p.NamaJenis}}</td><td class="num">{{$p.JumlahPakai}}×</td><td class="num">{{rupiah $p.TotalPotongan}}</td>
+      <td><div class="bar{{if $i}} light{{end}}" style="width:{{$p.Persen}}%"></div></td></tr>
+    {{end}}
+  </table>
+  {{else}}<p class="empty">Tidak ada promo yang terpakai pada rentang ini.</p>{{end}}
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>Per cabang</h2><span class="small">porsi = potongan promo ÷ penjualan sebelum potongan</span></div>
+  <table class="table">
+    <tr><th>Cabang</th><th class="num">Transaksi</th><th class="num">Batal</th><th class="num">Penjualan</th><th class="num">Potongan promo</th><th class="num">Porsi</th><th class="num">Omzet</th></tr>
+    {{range .Lap.Cabang}}
+    <tr><td class="id">{{.Nama}}</td><td class="num">{{.Transaksi}}</td><td class="num">{{.Batal}}</td><td class="num">{{rupiah .Subtotal}}</td>
+      <td class="num">{{rupiah .TotalPromo}}</td><td class="num">{{desimal1 .Porsi}}%</td><td class="num">{{rupiah .Omzet}}</td></tr>
+    {{end}}
+  </table>
+  <p class="hint" style="margin-top:12px">Omzet = total yang dibayar pelanggan, setelah potongan promo dan tukar poin.</p>
+</div>
+{{end}}{{end}}

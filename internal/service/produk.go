@@ -84,8 +84,10 @@ func (s *ProdukService) Simpan(ctx context.Context, p model.Produk) (int64, erro
 func (s *ProdukService) Hapus(ctx context.Context, id int) error { return s.Repo.Hapus(ctx, id) }
 
 func (s *ProdukService) validasi(ctx context.Context, p *model.Produk) error {
-	p.Nama = strings.TrimSpace(p.Nama)
+	p.Nama, p.Deskripsi = strings.TrimSpace(p.Nama), strings.TrimSpace(p.Deskripsi)
 	switch {
+	case len([]rune(p.Deskripsi)) > 300:
+		return salah("deskripsi", "Deskripsi maksimal 300 karakter")
 	case p.Nama == "":
 		return salah("nama", "Nama produk wajib diisi")
 	case len([]rune(p.Nama)) > 100:

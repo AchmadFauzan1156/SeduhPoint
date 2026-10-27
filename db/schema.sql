@@ -41,6 +41,7 @@ CREATE TABLE produk (
   nama        VARCHAR(100) NOT NULL,
   harga       BIGINT NOT NULL CHECK (harga >= 0),
   gambar      VARCHAR(255) NULL,            -- path foto, mis. /static/img/menu/cappuccino.jpg
+  deskripsi   VARCHAR(300) NULL,            -- penjelasan untuk kasir/pelanggan (F-31)
   aktif       BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NULL,
@@ -83,6 +84,7 @@ CREATE TABLE promo (
   tgl_selesai    DATE NOT NULL,
   jam_mulai      TIME NULL,         -- opsional (F-07)
   jam_selesai    TIME NULL,
+  catatan        VARCHAR(200) NULL,  -- kalimat tambahan dari admin; ketentuan utama dibuat otomatis (F-32)
   aktif          BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NULL,

@@ -31,6 +31,17 @@ static/  docs/  scripts/
 ```
 Alur request: **Handler → Service → Repository → MySQL**.
 
+**M4 (27 Okt):** ringkasan admin (omzet, transaksi, biaya promo, member Gold; hari ini / 7 / 30 hari),
+laporan biaya promo per promo & per cabang dengan filter tanggal & cabang (F-28), laporan poin aktif & yang akan
+kedaluwarsa ≤ 30 hari (F-29), laporan perkembangan member per bulan (F-30). Semua hanya menghitung transaksi selesai.
+
+**M4.0 (27 Okt):** deskripsi produk (klik nama/foto menu → kartu detail di kasir & admin), panel
+"Promo berlaku sekarang" berisi ketentuan tiap promo (kode voucher disembunyikan dari kasir), catatan promo untuk kasir.
+Aturan baru: diskon 1–90%, jam promo tidak boleh melewati tengah malam, beli 2 gratis 1 tidak boleh tumpang tindih
+di kategori & cabang yang sama, promo yang sudah dipakai transaksi terkunci jenis/nilai/kode/targetnya, dan jika
+potongan minimal belanja & voucher sama-sama memenuhi syarat sistem memakai yang lebih besar (voucher tidak terpakai).
+**Perlu reset DB** (`scripts\cek.bat`) karena ada kolom baru `produk.deskripsi` dan `promo.catatan`.
+
 **Fitur yang sudah jalan (M3):** kasir (menu bergambar, promo otomatis, voucher, tukar poin FIFO), checkout dalam
 satu DB transaction (anti bayar ganda), struk, riwayat, pembatalan (poin ditarik/dikembalikan, kuota voucher kembali),
 job harian kedaluwarsa poin & evaluasi Silver/Gold.

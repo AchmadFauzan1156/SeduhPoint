@@ -148,3 +148,13 @@ func TestNonMemberTidakDapatPoin(t *testing.T) {
 		t.Errorf("non-member: %+v", h)
 	}
 }
+
+// Temuan review #1: dua diskon persen untuk menu yang sama -> dipakai yang terbesar.
+func TestDiskonTerbesarDipakai(t *testing.T) {
+	kecil := PromoAktif{ID: 1, Nama: "10%", Jenis: JenisDiskon, Persen: 10, ProdukTarget: map[int]bool{3: true}}
+	besar := PromoAktif{ID: 2, Nama: "25%", Jenis: JenisDiskon, Persen: 25, ProdukTarget: map[int]bool{3: true}}
+	h, _ := Hitung(Input{Items: []Item{{ProdukID: 3, Harga: 20000, Qty: 1}}, PromoProduk: []PromoAktif{kecil, besar}})
+	if h.TotalPromo != 5000 || len(h.RincianPromo) != 1 || h.RincianPromo[0].PromoID != 2 {
+		t.Errorf("harus hanya diskon 25%% (Rp5.000), dapat %+v", h.RincianPromo)
+	}
+}

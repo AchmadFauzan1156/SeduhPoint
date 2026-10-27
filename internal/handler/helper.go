@@ -107,3 +107,34 @@ func pesanValidasi(err error) (string, bool) {
 	}
 	return "", false
 }
+
+// PromoInfo: promo beserta ketentuannya untuk ditampilkan (kartu produk, panel Promo hari ini).
+type PromoInfo struct {
+	Nama      string
+	Jenis     string
+	Ketentuan []string
+}
+
+// DetailProduk: isi kartu detail produk (popover) di kasir dan admin.
+type DetailProduk struct {
+	Produk     model.Produk
+	Promo      []PromoInfo
+	BisaTambah bool // tombol "Tambah ke pesanan" (hanya di kasir)
+}
+
+func infoPromo(daftar []model.Promo, tampilkanKode bool) []PromoInfo {
+	hasil := make([]PromoInfo, 0, len(daftar))
+	for _, p := range daftar {
+		hasil = append(hasil, PromoInfo{Nama: p.Nama, Jenis: service.NamaJenis[p.Jenis], Ketentuan: service.Ketentuan(p, tampilkanKode)})
+	}
+	return hasil
+}
+
+// detailProduk menyusun kartu detail untuk setiap produk beserta promo produk yang mengenainya.
+func detailProduk(produk []model.Produk, promo []model.Promo, kodeTerlihat, bisaTambah bool) map[int]DetailProduk {
+	hasil := make(map[int]DetailProduk, len(produk))
+	for _, pr := range produk {
+		hasil[pr.ID] = DetailProduk{Produk: pr, Promo: infoPromo(service.PromoUntukProduk(promo, pr), kodeTerlihat), BisaTambah: bisaTambah}
+	}
+	return hasil
+}

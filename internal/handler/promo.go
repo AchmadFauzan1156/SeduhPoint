@@ -29,6 +29,7 @@ type PromoPage struct {
 	Kategori  []model.Kategori
 	NamaJenis map[string]string
 	UrutJenis []string
+	Dipakai   int // jumlah transaksi yang memakai promo yang sedang diubah
 }
 
 func (h *PromoHandler) tampil(w http.ResponseWriter, r *http.Request, judul, action string, p model.Promo, err error) {
@@ -45,6 +46,9 @@ func (h *PromoHandler) tampil(w http.ResponseWriter, r *http.Request, judul, act
 	if e != nil {
 		gagal(w, e)
 		return
+	}
+	if p.ID > 0 {
+		pg.Dipakai, _ = h.Svc.Dipakai(ctx, p.ID)
 	}
 	hal := halaman(r, judul, "promo", pg)
 	if err != nil {
@@ -155,6 +159,7 @@ func promoDariForm(r *http.Request) model.Promo {
 		JamMulai:     nullTeks(r.PostFormValue("jam_mulai")),
 		JamSelesai:   nullTeks(r.PostFormValue("jam_selesai")),
 		Aktif:        r.PostFormValue("aktif") == "on",
+		Catatan:      strings.TrimSpace(r.PostFormValue("catatan")),
 		CabangIDs:    idsDariForm(r, "cabang"),
 		ProdukIDs:    idsDariForm(r, "produk"),
 		KategoriIDs:  idsDariForm(r, "kategori"),

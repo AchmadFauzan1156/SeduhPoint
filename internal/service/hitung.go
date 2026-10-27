@@ -81,12 +81,18 @@ func Hitung(in Input) (Hasil, error) {
 	}
 
 	// 2. Promo produk: diskon persen dulu, lalu beli 2 gratis 1 pada item yang tidak didiskon (asumsi 13).
-	didiskon := map[int]bool{}
+	// Diskon terbesar didahulukan, sehingga jika satu menu kena beberapa diskon yang dipakai adalah yang terbesar.
+	diskon := make([]PromoAktif, 0, len(in.PromoProduk))
 	for _, p := range in.PromoProduk {
 		if p.Jenis == JenisDiskon {
-			if v := DiskonPersen(in.Items, p, didiskon); v > 0 {
-				h.RincianPromo = append(h.RincianPromo, Potongan{p.ID, p.Nama, v})
-			}
+			diskon = append(diskon, p)
+		}
+	}
+	sort.SliceStable(diskon, func(i, j int) bool { return diskon[i].Persen > diskon[j].Persen })
+	didiskon := map[int]bool{}
+	for _, p := range diskon {
+		if v := DiskonPersen(in.Items, p, didiskon); v > 0 {
+			h.RincianPromo = append(h.RincianPromo, Potongan{p.ID, p.Nama, v})
 		}
 	}
 	for _, p := range in.PromoProduk {

@@ -3,7 +3,7 @@
 Dipakai untuk pengujian manual dan unit test (`internal/service/hitung_test.go`).
 Semua angka dihitung manual mengikuti alur 1.8 laporan dan asumsi 1–15.
 
-## Data acuan (sama dengan `002_seed.sql`)
+## Data acuan (sama dengan `db/seed.sql`)
 | ID | Produk | Kategori | Harga |
 |---|---|---|---|
 | 1 | Americano | Kopi | 18.000 |
@@ -81,3 +81,17 @@ Saldo aktif = **45 poin** (L0 tidak dihitung) = Rp45.000.
 | G03 | Pembatalan tetapi masih memenuhi | Batalkan transaksi G01 | Total 1.480.000 + 40.000 = 1.520.000 → tetap GOLD |
 | G04 | Turun karena jendela 3 bulan | Belanja lama keluar dari jendela 3 bulan sehingga total < 1.500.000 | Job harian mengubah ke SILVER, riwayat dicatat |
 | G05 | Tepat di batas | Total tepat 1.500.000 | GOLD (syarat "minimal") |
+
+## E. Laporan pemilik (M4)
+
+Data: 5 transaksi tanggal 27 Okt 2026 (2 di Sekaran, 2 di Banaran, 1 di Tembalang), 1 transaksi Banaran dibatalkan.
+
+| ID | Skenario | Langkah | Hasil yang diharapkan |
+|---|---|---|---|
+| L01 | Biaya promo semua cabang (F-28) | Laporan biaya promo 1–27 Okt, semua cabang | Total potongan Rp65.000: Beli 2 gratis 1 Rp40.000 (2×), Diskon 20% Rp15.000 (2×), Voucher Rp10.000 (1×) |
+| L02 | Transaksi dibatalkan tidak dihitung (F-24) | Bandingkan sebelum & sesudah pembatalan | Transaksi batal hanya muncul di kolom "Batal"; omzet & potongan tidak berubah karena batal |
+| L03 | Filter cabang | Pilih Seduh Banaran | Hanya potongan transaksi Banaran (Rp22.000) |
+| L04 | Rentang terbalik | Dari 27 Okt, sampai 1 Okt | Ditolak: "Tanggal 'sampai' tidak boleh sebelum 'dari'" |
+| L05 | Poin aktif (F-29) | Buka laporan poin aktif | Total poin AKTIF yang belum kedaluwarsa, nilai = poin × Rp1.000 |
+| L06 | Poin akan kedaluwarsa | Satu lot kedaluwarsa 12 hari lagi | Muncul di "Akan kedaluwarsa dalam 30 hari" beserta nama member & tanggalnya |
+| L07 | Perkembangan member (F-30) | Member daftar Agustus, naik Gold September, turun Silver Oktober | Agustus baru 1; September naik +1, Gold 1; Oktober turun −1 (diuji otomatis di `laporan_test.go`) |

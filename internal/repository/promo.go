@@ -18,14 +18,14 @@ type PromoRepo struct {
 }
 
 const kolomPromo = `p.id, p.nama, p.jenis, p.nilai_persen, p.nilai_nominal, p.min_belanja, p.kode_voucher,
-	p.kuota, p.kuota_terpakai, p.tgl_mulai, p.tgl_selesai, p.jam_mulai, p.jam_selesai, p.aktif,
+	p.kuota, p.kuota_terpakai, p.tgl_mulai, p.tgl_selesai, p.jam_mulai, p.jam_selesai, COALESCE(p.catatan, ''), p.aktif,
 	COALESCE((SELECT GROUP_CONCAT(c.nama ORDER BY c.id SEPARATOR ', ') FROM promo_cabang pc JOIN cabang c ON c.id = pc.cabang_id WHERE pc.promo_id = p.id), ''),
 	COALESCE((SELECT GROUP_CONCAT(x.nama ORDER BY x.nama SEPARATOR ', ') FROM promo_produk pp JOIN produk x ON x.id = pp.produk_id WHERE pp.promo_id = p.id),
 	         (SELECT GROUP_CONCAT(k.nama ORDER BY k.nama SEPARATOR ', ') FROM promo_kategori pk JOIN kategori k ON k.id = pk.kategori_id WHERE pk.promo_id = p.id), '')`
 
 func scanPromo(s interface{ Scan(...any) error }, p *model.Promo) error {
 	return s.Scan(&p.ID, &p.Nama, &p.Jenis, &p.NilaiPersen, &p.NilaiNominal, &p.MinBelanja, &p.KodeVoucher,
-		&p.Kuota, &p.KuotaTerpakai, &p.TglMulai, &p.TglSelesai, &p.JamMulai, &p.JamSelesai, &p.Aktif,
+		&p.Kuota, &p.KuotaTerpakai, &p.TglMulai, &p.TglSelesai, &p.JamMulai, &p.JamSelesai, &p.Catatan, &p.Aktif,
 		&p.CabangNama, &p.TargetNama)
 }
 
@@ -43,7 +43,16 @@ func (r *PromoRepo) Semua(ctx context.Context) ([]model.Promo, error) {
 		}
 		hasil = append(hasil, p)
 	}
-	return hasil, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	rows.Close()
+	for i := range hasil {
+		if err := r.isiRelasi(ctx, r.DB, &hasil[i]); err != nil {
+			return nil, err
+		}
+	}
+	return hasil, nil
 }
 
 func (r *PromoRepo) CariByID(ctx context.Context, id int) (model.Promo, error) {
@@ -98,11 +107,11 @@ func (r *PromoRepo) Simpan(ctx context.Context, p model.Promo) (int64, error) {
 	id := int64(p.ID)
 	err := WithTx(ctx, r.DB, func(tx *sql.Tx) error {
 		args := []any{p.Nama, p.Jenis, p.NilaiPersen, p.NilaiNominal, p.MinBelanja, p.KodeVoucher, p.Kuota,
-			p.TglMulai, p.TglSelesai, p.JamMulai, p.JamSelesai, p.Aktif}
+			p.TglMulai, p.TglSelesai, p.JamMulai, p.JamSelesai, nullStr(p.Catatan), p.Aktif}
 		if p.ID == 0 {
 			res, err := tx.ExecContext(ctx, `INSERT INTO promo (nama, jenis, nilai_persen, nilai_nominal, min_belanja,
-				kode_voucher, kuota, tgl_mulai, tgl_selesai, jam_mulai, jam_selesai, aktif)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args...)
+				kode_voucher, kuota, tgl_mulai, tgl_selesai, jam_mulai, jam_selesai, catatan, aktif)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args...)
 			if err != nil {
 				return fmt.Errorf("tambah promo: %w", err)
 			}
@@ -112,7 +121,7 @@ func (r *PromoRepo) Simpan(ctx context.Context, p model.Promo) (int64, error) {
 		} else {
 			res, err := tx.ExecContext(ctx, `UPDATE promo SET nama = ?, jenis = ?, nilai_persen = ?, nilai_nominal = ?,
 				min_belanja = ?, kode_voucher = ?, kuota = ?, tgl_mulai = ?, tgl_selesai = ?, jam_mulai = ?,
-				jam_selesai = ?, aktif = ?, updated_at = NOW() WHERE id = ? AND deleted_at IS NULL`, append(args, p.ID)...)
+				jam_selesai = ?, catatan = ?, aktif = ?, updated_at = NOW() WHERE id = ? AND deleted_at IS NULL`, append(args, p.ID)...)
 			if err != nil {
 				return fmt.Errorf("ubah promo %d: %w", p.ID, err)
 			}
@@ -213,4 +222,40 @@ func (r *PromoRepo) VoucherByKode(ctx context.Context, q Querier, kode string, k
 func (r *PromoRepo) TambahPemakaian(ctx context.Context, q Querier, id, delta int) error {
 	_, err := q.ExecContext(ctx, "UPDATE promo SET kuota_terpakai = GREATEST(kuota_terpakai + ?, 0) WHERE id = ?", delta, id)
 	return err
+}
+
+// Dipakai: jumlah transaksi SELESAI yang memakai promo ini (promo terpakai dikunci nilainya).
+func (r *PromoRepo) Dipakai(ctx context.Context, id int) (int, error) {
+	var n int
+	err := r.DB.QueryRowContext(ctx, `SELECT COUNT(*) FROM transaksi_promo tp JOIN transaksi t ON t.id = tp.transaksi_id
+		WHERE tp.promo_id = ?`, id).Scan(&n)
+	return n, err
+}
+
+// B2G1Bentrok: promo beli 2 gratis 1 lain yang aktif, periodenya beririsan, dan berbagi cabang & kategori.
+func (r *PromoRepo) B2G1Bentrok(ctx context.Context, p model.Promo) (string, error) {
+	if len(p.CabangIDs) == 0 || len(p.KategoriIDs) == 0 {
+		return "", nil
+	}
+	in := func(ids []int) (string, []any) {
+		a := make([]any, len(ids))
+		for i, v := range ids {
+			a[i] = v
+		}
+		return strings.TrimSuffix(strings.Repeat("?,", len(ids)), ","), a
+	}
+	phC, aC := in(p.CabangIDs)
+	phK, aK := in(p.KategoriIDs)
+	args := append([]any{p.ID, p.TglSelesai.Format("2006-01-02"), p.TglMulai.Format("2006-01-02")}, append(aC, aK...)...)
+	var nama string
+	err := r.DB.QueryRowContext(ctx, `SELECT p.nama FROM promo p
+		WHERE p.jenis = 'B2G1' AND p.aktif = TRUE AND p.deleted_at IS NULL AND p.id <> ?
+		  AND p.tgl_mulai <= ? AND p.tgl_selesai >= ?
+		  AND EXISTS (SELECT 1 FROM promo_cabang pc WHERE pc.promo_id = p.id AND pc.cabang_id IN (`+phC+`))
+		  AND EXISTS (SELECT 1 FROM promo_kategori pk WHERE pk.promo_id = p.id AND pk.kategori_id IN (`+phK+`))
+		LIMIT 1`, args...).Scan(&nama)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", nil
+	}
+	return nama, err
 }

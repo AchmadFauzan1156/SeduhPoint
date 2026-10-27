@@ -1,9 +1,52 @@
-{{define "konten"}}
-<div class="title-row"><div><h1>Ringkasan</h1><p class="sub">Selamat datang, {{.Sesi.Username}}.</p></div></div>
-<div class="grid" style="grid-template-columns:repeat(3,1fr)">
-  <a class="panel" href="/produk"><h2>Produk</h2><p class="sub">Kelola menu, harga, dan foto.</p></a>
-  <a class="panel" href="/promo"><h2>Promo &amp; voucher</h2><p class="sub">Atur diskon, minimal belanja, beli 2 gratis 1, dan voucher.</p></a>
-  <a class="panel" href="/member"><h2>Member</h2><p class="sub">Cari member, lihat poin dan tingkat.</p></a>
+{{define "konten"}}{{with .Data}}
+<div class="title-row"><div><h1>Ringkasan</h1>
+  <p class="sub">{{if eq .R.Hari 1}}Hari ini, {{tglPendek .R.Sampai}}{{else}}{{rentang .R.Dari .R.Sampai}}{{end}} · semua cabang · hanya transaksi selesai</p></div>
+  <nav class="seg" aria-label="Periode">
+    <a class="seg-btn{{if eq .R.Hari 1}} on{{end}}" href="/?hari=1"{{if eq .R.Hari 1}} aria-current="page"{{end}}>Hari ini</a>
+    <a class="seg-btn{{if eq .R.Hari 7}} on{{end}}" href="/?hari=7"{{if eq .R.Hari 7}} aria-current="page"{{end}}>7 hari</a>
+    <a class="seg-btn{{if eq .R.Hari 30}} on{{end}}" href="/?hari=30"{{if eq .R.Hari 30}} aria-current="page"{{end}}>30 hari</a>
+  </nav></div>
+
+<div class="kpis" style="grid-template-columns:1.3fr 1fr 1fr 1fr;margin-bottom:var(--gap)">
+  <div class="kpi"><div class="label">Omzet</div><div class="val lead">{{rupiah .R.Omzet}}</div></div>
+  <div class="kpi"><div class="label">Transaksi</div><div class="val">{{.R.Transaksi}}{{if .R.Batal}} <span class="unit">{{.R.Batal}} batal</span>{{end}}</div></div>
+  <div class="kpi"><div class="label">Biaya promo</div><div class="val">{{rupiah .R.BiayaPromo}}</div></div>
+  <div class="kpi"><div class="label">Member Gold</div><div class="val">{{.MemberGold}} <span class="unit">/ {{.MemberTotal}}</span></div></div>
 </div>
-<p class="wip" style="margin-top:24px">Angka omzet, transaksi, dan biaya promo hari ini tampil di sini setelah fitur transaksi (M3) dan laporan (M4) selesai.</p>
-{{end}}
+
+<div class="grid" style="grid-template-columns:1fr 1fr;margin-bottom:var(--gap)">
+  <div class="panel">
+    <div class="panel-head"><h2>Omzet per cabang</h2><span class="small">{{if eq .R.Hari 1}}hari ini{{else}}{{.R.Hari}} hari{{end}}</span></div>
+    {{range $i, $c := .R.Cabang}}
+    <div class="bar-row"><div class="top"><span>{{$c.Nama}}</span><span class="num">{{rupiah $c.Omzet}}</span></div>
+      <div class="bar{{if $i}} light{{end}}" style="width:{{$c.Persen}}%"></div></div>
+    {{end}}
+    {{if not .R.Omzet}}<p class="small" style="margin-top:8px">Belum ada transaksi selesai pada periode ini.</p>{{end}}
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h2>Promo paling banyak memotong</h2><a href="/laporan/promo">Lihat laporan</a></div>
+    {{if .R.PromoTeratas}}
+    <table class="table">
+      <tr><th>Promo</th><th class="num">Dipakai</th><th class="num">Potongan</th></tr>
+      {{range .R.PromoTeratas}}<tr><td class="id">{{.Nama}}<span class="two">{{.NamaJenis}}</span></td><td class="num">{{.JumlahPakai}}</td><td class="num">{{rupiah .TotalPotongan}}</td></tr>{{end}}
+    </table>
+    {{else}}<p class="empty">Belum ada promo terpakai pada periode ini.</p>{{end}}
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>Transaksi terakhir hari ini</h2><a href="/transaksi">Semua transaksi</a></div>
+  {{if .Terakhir}}
+  <table class="table">
+    <tr><th>Nomor</th><th class="num">Jam</th><th>Cabang</th><th>Member</th><th class="num">Total</th><th>Status</th></tr>
+    {{range .Terakhir}}
+    <tr><td class="id"><a class="row-link" href="/transaksi/{{.ID}}">{{.NoTransaksi}}</a></td>
+      <td class="num">{{.Waktu.Format "15.04"}}</td><td>{{.CabangNama}}</td>
+      <td>{{if .MemberNama}}{{.MemberNama}}{{else}}<span class="grey">–</span>{{end}}</td>
+      <td class="num">{{rupiah .TotalBayar}}</td>
+      <td>{{if eq .Status "SELESAI"}}<span class="pill ok">Selesai</span>{{else}}<span class="pill bad">Dibatalkan</span>{{end}}</td></tr>
+    {{end}}
+  </table>
+  {{else}}<p class="empty">Belum ada transaksi hari ini.</p>{{end}}
+</div>
+{{end}}{{end}}

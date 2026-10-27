@@ -41,6 +41,8 @@ type KasirPage struct {
 	Kode       string
 	Poin       int
 	Token      string
+	Detail     map[int]DetailProduk
+	PromoHari  []PromoInfo
 }
 
 // keranjang dibaca dari form kasir.
@@ -172,6 +174,9 @@ func (h *TransaksiHandler) tampilKasir(w http.ResponseWriter, r *http.Request, k
 			}
 		}
 	}
+	// Kartu detail produk & panel "Promo hari ini" (kode voucher tidak ditampilkan ke kasir).
+	pg.Detail = detailProduk(pg.Produk, pg.Pr.Promo, false, true)
+	pg.PromoHari = infoPromo(pg.Pr.Promo, false)
 	if k.CariMember != "" {
 		if pg.HasilCari, err = h.MemberSvc.Cari(ctx, k.CariMember); err != nil {
 			gagal(w, err)
