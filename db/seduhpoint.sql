@@ -1,6 +1,6 @@
 -- =====================================================================
 -- SeduhPoint — seluruh query database dalam satu file
---   Bagian 1: membuat database & 15 tabel (berdasarkan Tabel 1.10 laporan)
+--   Bagian 1: membuat database & 15 tabel
 --   Bagian 2: data contoh (3 cabang, akun admin/kasir, menu, member, 4 promo)
 --
 -- Jalankan dari folder SeduhPoint (MySQL Laragon sudah Start All):
@@ -9,8 +9,8 @@
 -- Perintah ini sama di PowerShell maupun CMD. Jika "mysql" tidak dikenali, pakai Terminal Laragon
 -- (Menu > Terminal) atau path lengkap, mis. E:\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe
 --
--- Uang = BIGINT rupiah (NF-04). Riwayat tidak dihapus (NF-05).
--- Data master memakai soft delete (deleted_at), sesuai materi #10.
+-- Uang = BIGINT rupiah tanpa desimal. Riwayat transaksi & mutasi poin tidak dihapus.
+-- Data master memakai soft delete (deleted_at).
 -- =====================================================================
 
 -- ---------- Bagian 1: database & tabel ----------
@@ -32,7 +32,7 @@ CREATE TABLE pengguna (
   username      VARCHAR(50) NOT NULL UNIQUE,
   password_hash VARCHAR(100) NOT NULL,
   peran         ENUM('ADMIN','KASIR') NOT NULL,
-  cabang_id     INT NULL,                       -- wajib untuk KASIR (F-05)
+  cabang_id     INT NULL,                       -- wajib untuk KASIR
   aktif         BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NULL,
@@ -54,7 +54,7 @@ CREATE TABLE produk (
   nama        VARCHAR(100) NOT NULL,
   harga       BIGINT NOT NULL CHECK (harga >= 0),
   gambar      VARCHAR(255) NULL,            -- path foto, mis. /static/img/menu/cappuccino.jpg
-  deskripsi   VARCHAR(300) NULL,            -- penjelasan untuk kasir/pelanggan (F-31)
+  deskripsi   VARCHAR(300) NULL,            -- penjelasan untuk kasir/pelanggan
   aktif       BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NULL,
@@ -95,9 +95,9 @@ CREATE TABLE promo (
   kuota_terpakai INT NOT NULL DEFAULT 0,
   tgl_mulai      DATE NOT NULL,
   tgl_selesai    DATE NOT NULL,
-  jam_mulai      TIME NULL,         -- opsional (F-07)
+  jam_mulai      TIME NULL,         -- opsional
   jam_selesai    TIME NULL,
-  catatan        VARCHAR(200) NULL,  -- kalimat tambahan dari admin; ketentuan utama dibuat otomatis (F-32)
+  catatan        VARCHAR(200) NULL,  -- kalimat tambahan dari admin; ketentuan utama dibuat otomatis
   aktif          BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NULL,
@@ -180,11 +180,11 @@ CREATE TABLE poin_lot (
   poin_awal       INT NOT NULL,
   poin_sisa       INT NOT NULL,
   tgl_perolehan   DATETIME NOT NULL,
-  tgl_kedaluwarsa DATETIME NOT NULL,   -- tgl_perolehan + 6 bulan (AB02)
+  tgl_kedaluwarsa DATETIME NOT NULL,   -- tgl_perolehan + 6 bulan
   status          ENUM('AKTIF','HABIS','KEDALUWARSA','DITARIK') NOT NULL DEFAULT 'AKTIF',
   FOREIGN KEY (member_id) REFERENCES member(id),
   FOREIGN KEY (transaksi_id) REFERENCES transaksi(id),
-  INDEX idx_lot_fifo (member_id, status, tgl_kedaluwarsa)  -- FIFO (AB04)
+  INDEX idx_lot_fifo (member_id, status, tgl_kedaluwarsa)  -- FIFO
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE poin_mutasi (
@@ -236,7 +236,7 @@ UPDATE produk SET deskripsi = CASE nama
   WHEN 'Croissant' THEN 'Croissant mentega berlapis, renyah di luar dan lembut di dalam. Dipanggang setiap pagi.'
   WHEN 'Roti Bakar' THEN 'Roti tebal dipanggang dengan mentega dan selai blueberry.' END;
 
--- Contoh promo 4 jenis (M2.5) (P1–P4)
+-- Contoh promo, satu dari tiap jenis
 INSERT INTO promo (id, nama, jenis, nilai_persen, nilai_nominal, min_belanja, kode_voucher, kuota, tgl_mulai, tgl_selesai, jam_mulai, jam_selesai, aktif) VALUES
  (1, 'Diskon 20% cappuccino', 'DISKON_PERSEN', 20,   NULL,  NULL,   NULL,      NULL, '2026-10-01', '2026-12-31', NULL,       NULL,       TRUE),
  (2, 'Hemat sore',            'MIN_BELANJA',   NULL, 15000, 100000, NULL,      NULL, '2026-10-01', '2026-12-31', '14:00:00', '17:00:00', TRUE),

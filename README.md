@@ -1,86 +1,135 @@
-# SeduhPoint — Sistem Poin Member & Promo Kedai Kopi Seduh
+# SeduhPoint
 
-Project Akhir Pemrograman Web · Kelompok 5 · Topik 5
-Stack: **Go 1.22+ (`net/http`, `html/template`) + MySQL 8**, CSS & JS sendiri tanpa framework.
-Struktur mengikuti materi #10 *Struktur Aplikasi & Kickoff Project*.
+Aplikasi web untuk mengelola **program member dan promo kedai kopi dengan banyak cabang**. Kasir mencatat
+transaksi, sistem menghitung promo dan poin member secara otomatis, dan pemilik memantau biaya promo,
+poin yang beredar, serta perkembangan member lewat laporan.
 
-## Cara menjalankan (Windows + Laragon, lewat terminal)
-Semua perintah dijalankan dari folder `SeduhPoint`.
-
-1. Nyalakan Laragon → **Start All**.
-2. Buat database (pertama kali, atau untuk mengulang dari awal):
-   ```
-   mysql -u root -e "DROP DATABASE IF EXISTS seduhpoint"
-   mysql -u root --default-character-set=utf8mb4 -e "source db/seduhpoint.sql"
-   ```
-   Jika `mysql` tidak dikenali, pakai Terminal Laragon (Menu → Terminal) atau path lengkapnya,
-   mis. `E:\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe`.
-3. Salin konfigurasi: `copy .env.example .env` (isi `DB_DSN` jika password MySQL tidak kosong).
-4. Jalankan aplikasi:
-   ```
-   go run ./cmd/web
-   ```
-   atau dengan auto reload (materi #6): `wgo run -file .html -file .css ./cmd/web`
-   (pasang dulu: `go install github.com/bokwoon95/wgo@latest`).
-5. Buka http://localhost:8080 — login `admin` / `kasir1` / `kasir2` / `kasir3`, password `password`.
-
-Tes aturan bisnis: `go test ./...`
-
-## Struktur
-```
-cmd/web/main.go          hanya menyambung: config → db → repository → service → handler → route
-internal/
-  config/                baca .env (ADDR, DB_DSN), zona waktu WIB
-  model/                 struct data + ErrNotFound (tanpa business logic)
-  repository/            satu-satunya tempat SQL; satu struct per entitas (CabangRepo, ProdukRepo, ...)
-  service/               aturan bisnis + validasi (ValidasiError); hitung.go = mesin promo & poin + test
-  handler/               urusan HTTP; render.go (Renderer.Tampil), helper.go (gagal, idDariPath)
-  middleware/            logging, login & peran
-db/seduhpoint.sql        seluruh query database: membuat database + 15 tabel + data contoh
-templates/               layout, header, sidebar, footer + satu folder per modul
-static/                  css, js, logo, foto menu
-```
-Alur request: **Handler → Service → Repository → MySQL**.
+Dibangun dengan **Go** (`net/http`, `html/template`) dan **MySQL/MariaDB**, dirender di server tanpa framework
+front-end.
 
 ## Fitur
-- **Login & peran:** admin (pemilik) dan kasir per cabang.
-- **Data master:** cabang, kategori, produk (foto & deskripsi), member (cari, detail poin & lot, menuju Gold).
-- **Promo & voucher 4 jenis:** diskon persen, potongan minimal belanja, beli 2 gratis 1, voucher berkode
-  (periode, cabang, jam, kuota). Diskon 1–90%, jam promo tidak boleh lewat tengah malam, beli 2 gratis 1 tidak boleh
-  tumpang tindih, promo yang sudah dipakai terkunci jenis/nilai/kode/targetnya.
-- **Kasir:** menu bergambar, kartu detail menu, ketentuan promo berlaku, promo dihitung otomatis; minimal belanja
-  dan voucher tidak digabung, sistem memakai potongan yang lebih besar; tukar poin FIFO (maks 50%).
-- **Checkout** dalam satu DB transaction (anti bayar ganda), struk, riwayat, pembatalan (poin ditarik/dikembalikan,
-  kuota voucher kembali), job harian kedaluwarsa poin & evaluasi Silver/Gold.
-- **Ringkasan admin** (hari ini / 7 / 30 hari, grafik omzet, omzet per cabang) dan **laporan pemilik**:
-  biaya promo (F-28), poin aktif (F-29), perkembangan member (F-30). Hanya transaksi selesai yang dihitung.
 
-## Pola route (sama untuk tiap modul)
-| Method | Path | Fungsi |
-|---|---|---|
-| GET | `/cabang` | Daftar |
-| GET | `/cabang/form` | Form tambah |
-| POST | `/cabang` | Simpan |
-| GET | `/cabang/{id}/edit` | Form ubah (pre-fill) |
-| POST | `/cabang/{id}/edit` | Update |
-| POST | `/cabang/{id}/hapus` | Hapus (soft delete) |
+**Kasir**
+- Menu bergambar per kategori, pencarian menu, dan kartu detail menu (deskripsi, harga, promo yang berlaku).
+- Promo dihitung otomatis; daftar promo yang sedang berlaku beserta ketentuannya bisa dilihat kapan saja.
+- Pilih member, pakai kode voucher, dan tukar poin sebagai potongan pembayaran.
+- Pembayaran disimpan dalam satu transaksi database (aman dari klik ganda), lalu struk ditampilkan.
+- Riwayat transaksi dan pembatalan transaksi beserta alasannya.
 
-## Usulan pembagian modul (silakan diubah)
-| Modul | File utama | Milestone |
-|---|---|---|
-| A. Login + Cabang + Kategori/Produk | `handler|service|repository/{auth,cabang,produk}.go` | M1–M2 |
-| B. Member + saldo poin | `*/member.go`, `templates/member/` | M2 |
-| C. Promo & voucher | `*/promo.go`, `templates/promo/` | M2 |
-| D. Mesin hitung + test | `service/hitung.go`, `hitung_test.go` | M3 |
-| E. Kasir, checkout, pembatalan | `service/transaksi.go`, `handler/transaksi.go` | M3 |
-| F. Poin kedaluwarsa, tingkat, laporan | `service/poin.go`, `*/laporan.go` | M3–M4 |
+**Member & poin**
+- Member mendapat 1 poin untuk setiap Rp10.000 belanja setelah promo; 1 poin bernilai Rp1.000.
+- Poin berlaku 6 bulan. Saat ditukar, poin yang paling dekat kedaluwarsa dipakai lebih dulu (maks. 50% total belanja).
+- Dua tingkat member: **Silver** dan **Gold**. Member dengan belanja minimal Rp1.500.000 dalam 3 bulan terakhir
+  menjadi Gold dan mendapat poin 1,5 kali lipat. Tingkat dievaluasi otomatis setiap hari.
+- Pembatalan transaksi menarik poin yang didapat dan mengembalikan poin yang ditukar.
 
-## Aturan main kode
-- Handler tidak berisi SQL; service tidak tahu `http.Request`; SQL hanya di repository.
-- Query selalu `...Context(ctx, ...)` dengan placeholder `?`.
-- Uang selalu `int64` rupiah (NF-04). Gold 1,5× → `poin*3/2`.
-- Perubahan poin/transaksi/kuota **wajib** dalam `repository.WithTx` + `SELECT ... FOR UPDATE`.
-- `poin_mutasi` hanya INSERT (NF-05). Transaksi batal tidak dihapus, status `DIBATALKAN` (F-20).
-- Data master dihapus dengan soft delete (`deleted_at`).
-- Setelah POST berhasil → `http.Redirect(..., 303)`.
+**Promo & voucher**
+- Empat jenis promo: diskon persen untuk produk tertentu, potongan untuk minimal belanja, beli 2 gratis 1 untuk
+  kategori tertentu, dan voucher berkode dengan kuota pemakaian.
+- Setiap promo punya masa berlaku dan bisa dibatasi per cabang dan per jam.
+- Promo produk bisa digabung dengan promo lain. Potongan minimal belanja tidak digabung dengan voucher; jika
+  keduanya memenuhi syarat, sistem memakai potongan yang lebih besar.
+- Kode voucher tidak ditampilkan di layar kasir.
 
+**Admin / pemilik**
+- Kelola cabang, kategori, produk (dengan foto), member, promo, dan voucher.
+- Ringkasan: omzet, jumlah transaksi, biaya promo, member Gold, grafik omzet harian, dan omzet per cabang
+  (hari ini, 7 hari, atau 30 hari) dibanding periode sebelumnya.
+- Laporan biaya promo (filter tanggal & cabang), laporan poin aktif dan poin yang akan kedaluwarsa,
+  serta laporan perkembangan member per bulan.
+
+## Kebutuhan
+
+- [Go](https://go.dev/dl/) 1.22 atau lebih baru
+- MySQL 8 atau MariaDB 10.6+ — pilih salah satu:
+  - **Laragon** (Windows): klik *Start All*
+  - **XAMPP** (Windows/Linux/macOS): nyalakan *MySQL* di XAMPP Control Panel
+  - MySQL/MariaDB yang dipasang sendiri, atau lewat Docker:
+    `docker run -d --name seduhpoint-db -p 3306:3306 -e MYSQL_ALLOW_EMPTY_PASSWORD=yes mysql:8`
+
+## Menjalankan
+
+Semua perintah dijalankan dari folder proyek.
+
+**1. Buat database** (sekali di awal; ulangi untuk mengembalikan ke data contoh)
+```bash
+mysql -u root -e "DROP DATABASE IF EXISTS seduhpoint"
+mysql -u root --default-character-set=utf8mb4 -e "source db/seduhpoint.sql"
+```
+Tambahkan `-p` jika user MySQL memakai password. Jika perintah `mysql` tidak dikenali, pakai path lengkapnya:
+
+| Server | Lokasi `mysql` |
+|---|---|
+| Laragon | `C:\laragon\bin\mysql\mysql-<versi>\bin\mysql.exe` (atau buka *Menu → Terminal* di Laragon) |
+| XAMPP Windows | `C:\xampp\mysql\bin\mysql.exe` |
+| XAMPP Linux / macOS | `/opt/lampp/bin/mysql` · `/Applications/XAMPP/xamppfiles/bin/mysql` |
+
+Bisa juga lewat phpMyAdmin/HeidiSQL: buka tab SQL atau *Import*, lalu jalankan isi `db/seduhpoint.sql`.
+
+**2. Atur koneksi**
+```bash
+cp .env.example .env        # Windows CMD: copy .env.example .env
+```
+Ubah `DB_DSN` di `.env` jika user, password, atau port MySQL berbeda.
+
+**3. Jalankan**
+```bash
+go run ./cmd/web
+```
+Buka http://localhost:8080.
+
+Untuk muat ulang otomatis saat kode berubah, pakai [wgo](https://github.com/bokwoon95/wgo):
+```bash
+go install github.com/bokwoon95/wgo@latest
+wgo run -file .html -file .css ./cmd/web
+```
+
+**Akun contoh** (password semua: `password`)
+
+| Username | Peran |
+|---|---|
+| `admin` | Admin / pemilik — semua cabang |
+| `kasir1`, `kasir2`, `kasir3` | Kasir cabang Sekaran, Banaran, Tembalang |
+
+Data contoh juga berisi 7 menu, 2 member, dan 4 promo (satu dari tiap jenis; kode voucher `SEDUH10`) yang berlaku
+1 Okt – 31 Des 2026; ubah tanggalnya di menu *Promo & voucher* bila perlu.
+Ganti password akun sebelum dipakai sungguhan.
+
+## Pengujian
+
+```bash
+go test ./...
+```
+Menguji perhitungan promo, poin, tingkat member, validasi promo, dan data laporan.
+
+## Struktur proyek
+
+```
+cmd/web/main.go     titik masuk: menyambung konfigurasi, database, repository, service, handler, dan route
+internal/
+  config/           membaca .env (ADDR, DB_DSN) dan zona waktu WIB
+  model/            struct data
+  repository/       semua query SQL, satu file per entitas
+  service/          aturan bisnis dan validasi; hitung.go = perhitungan promo & poin
+  handler/          urusan HTTP: membaca form, memanggil service, merender template
+  middleware/       logging, login, dan pembatasan peran
+db/seduhpoint.sql   membuat database, seluruh tabel, dan data contoh
+templates/          template HTML per halaman
+static/             CSS, JavaScript, logo, dan foto menu
+```
+Alur request: **Handler → Service → Repository → database**. SQL hanya ada di repository, aturan bisnis hanya
+di service, dan setiap perubahan saldo poin, transaksi, atau kuota voucher berjalan di dalam satu transaksi
+database dengan penguncian baris (`SELECT ... FOR UPDATE`).
+
+## Catatan teknis
+
+- Nilai uang disimpan sebagai bilangan bulat rupiah (`BIGINT`), tanpa angka desimal.
+- Data master dihapus secara *soft delete* (`deleted_at`); transaksi yang dibatalkan tetap tersimpan dengan status
+  `DIBATALKAN`, dan riwayat mutasi poin tidak pernah diubah.
+- Jam promo dan tanggal mengikuti WIB (Asia/Jakarta).
+- Sesi login disimpan di memori server, jadi pengguna perlu login ulang setelah server dimulai ulang.
+
+## Kredit
+
+Foto menu dari [Unsplash](https://unsplash.com/license); font Inter, Plus Jakarta Sans, Lexend, dan Montserrat
+berlisensi SIL Open Font License. Rincian ada di `static/img/KREDIT.md`.
