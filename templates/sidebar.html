@@ -20,6 +20,8 @@
     <a class="nav-item{{if eq .Aktif "transaksi"}} on{{end}}" href="/transaksi"{{if eq .Aktif "transaksi"}} aria-current="page"{{end}}>{{template "ikon" "transaksi"}}Riwayat transaksi</a>
     <a class="nav-item{{if eq .Aktif "member"}} on{{end}}" href="/member"{{if eq .Aktif "member"}} aria-current="page"{{end}}>{{template "ikon" "member"}}Member</a>
   {{end}}
+    <div class="nav-group">Akun</div>
+    <a class="nav-item{{if eq .Aktif "password"}} on{{end}}" href="/password"{{if eq .Aktif "password"}} aria-current="page"{{end}}>{{template "ikon" "kunci"}}Ganti password</a>
   </nav>
   <a class="btn ghost menu-btn" href="#nav">Menu</a>
   <div class="side-foot">
@@ -27,7 +29,7 @@
     <div class="me">
       <span class="avatar" aria-hidden="true">{{slice .Sesi.Username 0 1 | upper}}</span>
       <div class="me-nama"><b>{{.Sesi.Username}}</b><span>{{if eq .Sesi.Peran "ADMIN"}}Admin · pemilik{{else}}Kasir{{end}}</span></div>
-      <form method="post" action="/logout" class="inline-form"><button class="icon-btn" aria-label="Keluar" title="Keluar">{{template "ikon" "keluar"}}</button></form>
+      <form method="post" action="/logout" class="inline-form"><input type="hidden" name="csrf" value="{{$.Sesi.CSRF}}"><button class="icon-btn" aria-label="Keluar" title="Keluar">{{template "ikon" "keluar"}}</button></form>
     </div>
   </div>
 </aside>

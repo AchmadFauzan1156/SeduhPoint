@@ -38,3 +38,19 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	middleware.HapusSesi(w, r)
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
+
+func (h *AuthHandler) FormPassword(w http.ResponseWriter, r *http.Request) {
+	h.View.Tampil(w, "password.html", halaman(r, "Ganti password", "password", nil))
+}
+
+func (h *AuthHandler) GantiPassword(w http.ResponseWriter, r *http.Request) {
+	s, _ := middleware.Ambil(r)
+	err := h.Svc.GantiPassword(r.Context(), s.PenggunaID,
+		r.PostFormValue("lama"), r.PostFormValue("baru"), r.PostFormValue("ulang"))
+	if err != nil {
+		formGagal(w, h.View, "password.html", halaman(r, "Ganti password", "password", nil), err)
+		return
+	}
+	middleware.HapusSesiLain(r, s.PenggunaID)
+	redirect(w, r, "/password", "Password berhasil diganti")
+}
