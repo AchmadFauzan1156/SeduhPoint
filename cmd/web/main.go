@@ -70,7 +70,9 @@ func main() {
 
 	mux.HandleFunc("GET /login", auth.FormLogin)
 	mux.HandleFunc("POST /login", auth.Login)
-	mux.HandleFunc("POST /logout", auth.Logout)
+	mux.HandleFunc("POST /logout", mw.Login(auth.Logout))
+	mux.HandleFunc("GET /password", mw.Login(auth.FormPassword))
+	mux.HandleFunc("POST /password", mw.Login(auth.GantiPassword))
 	mux.HandleFunc("GET /{$}", mw.Login(halaman.Dashboard))
 
 	// Data master

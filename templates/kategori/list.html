@@ -12,7 +12,7 @@
     </table>
     {{else}}<p class="empty">Belum ada kategori.</p>{{end}}
   </div>
-  <form class="panel" method="post" action="{{.Data.Action}}">
+  <form class="panel" method="post" action="{{.Data.Action}}"><input type="hidden" name="csrf" value="{{$.Sesi.CSRF}}">
     <h2 style="margin-bottom:16px">{{if .Data.Form.ID}}Ubah kategori{{else}}Tambah kategori{{end}}</h2>
     <div class="field"><label for="nama">Nama</label>
       <input id="nama" name="nama" class="input{{if index .Errors "nama"}} invalid{{end}}" value="{{.Data.Form.Nama}}" maxlength="100" required>
@@ -22,7 +22,7 @@
   </form>
 </div>
 {{if .Data.Form.ID}}
-<form method="post" action="/kategori/{{.Data.Form.ID}}/hapus" data-confirm="Hapus kategori {{.Data.Form.Nama}}?" style="margin-top:16px">
+<form method="post" action="/kategori/{{.Data.Form.ID}}/hapus" data-confirm="Hapus kategori {{.Data.Form.Nama}}?" style="margin-top:16px"><input type="hidden" name="csrf" value="{{$.Sesi.CSRF}}">
   <button class="link-btn bad">Hapus kategori ini</button>{{if .Data.Form.JumlahProduk}} <span class="small">(berisi {{.Data.Form.JumlahProduk}} produk, tidak bisa dihapus)</span>{{end}}</form>
 {{end}}
 {{end}}

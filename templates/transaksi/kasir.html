@@ -2,7 +2,7 @@
   <input id="q" name="q" form="kasir" placeholder="Cari menu, lalu tekan Enter" value="{{.Data.Q}}"></label>
   <span class="scope">{{template "ikon" "lokasi"}}{{.Data.Cabang}}</span>{{end}}
 {{define "konten"}}{{with .Data}}
-<form method="post" action="/kasir/hitung" id="kasir" class="pos">
+<form method="post" action="/kasir/hitung" id="kasir" class="pos"><input type="hidden" name="csrf" value="{{$.Sesi.CSRF}}">
   <!-- tombol bawaan saat Enter ditekan di kolom teks -->
   <button type="submit" name="aksi" value="hitung" class="sr-only" tabindex="-1" aria-hidden="true">Hitung</button>
   <input type="hidden" name="token" value="{{.Token}}">

@@ -14,7 +14,7 @@
           <span class="two">{{.CabangNama}}</span></td>
         <td class="nowrap">{{rentang .TglMulai .TglSelesai}}</td>
         <td class="num">{{if .Kuota.Valid}}{{.KuotaTerpakai}} / {{.Kuota.Int64}}{{else}}<span class="grey">–</span>{{end}}</td>
-        <td><form method="post" action="/promo/{{.ID}}/toggle" class="inline-form">
+        <td><form method="post" action="/promo/{{.ID}}/toggle" class="inline-form"><input type="hidden" name="csrf" value="{{$.Sesi.CSRF}}">
           <input type="hidden" name="aktif" value="{{if .Aktif}}0{{else}}1{{end}}">
           <button class="link-btn pill-btn" title="{{if .Aktif}}Nonaktifkan{{else}}Aktifkan{{end}}">{{if .Aktif}}<span class="pill ok">Aktif</span>{{else}}<span class="pill off">Nonaktif</span>{{end}}</button></form></td>
       </tr>
@@ -24,7 +24,7 @@
   </div>
 
   {{with .Data}}
-  <form class="panel" method="post" action="{{.Action}}" novalidate>
+  <form class="panel" method="post" action="{{.Action}}" novalidate><input type="hidden" name="csrf" value="{{$.Sesi.CSRF}}">
     <h2 style="margin-bottom:16px">{{if .Form.ID}}Ubah {{.Form.Nama}}{{else}}Tambah promo{{end}}</h2>
     {{$kunci := gt .Dipakai 0}}
     {{if $kunci}}<p class="note" style="margin-bottom:16px">Promo ini sudah dipakai di {{.Dipakai}} transaksi, jadi jenis, nilai, kode dan target tidak bisa diubah. Nama, periode, jam, cabang, kuota, catatan dan status tetap bisa diubah.</p>{{end}}

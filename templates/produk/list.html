@@ -19,7 +19,7 @@
     {{else}}<p class="empty">Belum ada produk.</p>{{end}}
   </div>
   {{with .Data}}
-  <form class="panel" method="post" action="{{.Action}}" enctype="multipart/form-data">
+  <form class="panel" method="post" action="{{.Action}}" enctype="multipart/form-data"><input type="hidden" name="csrf" value="{{$.Sesi.CSRF}}">
     <h2 style="margin-bottom:16px">{{if .Form.ID}}Ubah {{.Form.Nama}}{{else}}Tambah produk{{end}}</h2>
     <div id="preview" class="preview" {{if .Form.Gambar}}style="background-image:url({{.Form.Gambar}})"{{end}}></div>
     <div class="field"><label for="gambar">Foto <span class="small">JPG/PNG/WebP, maks 2 MB</span></label>
@@ -50,7 +50,7 @@
   {{end}}
 </div>
 {{if .Data.Form.ID}}
-<form method="post" action="/produk/{{.Data.Form.ID}}/hapus" data-confirm="Hapus {{.Data.Form.Nama}} dari menu? Riwayat transaksinya tetap tersimpan." style="margin-top:16px">
+<form method="post" action="/produk/{{.Data.Form.ID}}/hapus" data-confirm="Hapus {{.Data.Form.Nama}} dari menu? Riwayat transaksinya tetap tersimpan." style="margin-top:16px"><input type="hidden" name="csrf" value="{{$.Sesi.CSRF}}">
   <button class="link-btn bad">Hapus produk ini</button></form>
 {{end}}
 {{end}}

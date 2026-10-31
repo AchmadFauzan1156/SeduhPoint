@@ -17,7 +17,7 @@
     {{else}}<p class="empty">Belum ada cabang.</p>{{end}}
   </div>
   {{with .Data.Form}}
-  <form class="panel" method="post" action="{{.Action}}">
+  <form class="panel" method="post" action="{{.Action}}"><input type="hidden" name="csrf" value="{{$.Sesi.CSRF}}">
     <h2 style="margin-bottom:16px">{{if .Cabang.ID}}Ubah {{.Cabang.Nama}}{{else}}Tambah cabang{{end}}</h2>
     <div class="field"><label for="nama">Nama</label>
       <input id="nama" name="nama" class="input{{if index $.Errors "nama"}} invalid{{end}}" value="{{.Cabang.Nama}}" maxlength="100" required>
@@ -33,7 +33,7 @@
   {{end}}
 </div>
 {{with .Data.Form}}{{if .Cabang.ID}}
-<form method="post" action="/cabang/{{.Cabang.ID}}/hapus" data-confirm="Hapus cabang {{.Cabang.Nama}}? Riwayat transaksinya tetap tersimpan." style="margin-top:16px">
+<form method="post" action="/cabang/{{.Cabang.ID}}/hapus" data-confirm="Hapus cabang {{.Cabang.Nama}}? Riwayat transaksinya tetap tersimpan." style="margin-top:16px"><input type="hidden" name="csrf" value="{{$.Sesi.CSRF}}">
   <button class="link-btn bad">Hapus cabang ini</button></form>
 {{end}}{{end}}
 {{end}}

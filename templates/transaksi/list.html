@@ -24,7 +24,7 @@
     {{else}}<p class="empty">Belum ada transaksi pada tanggal ini.</p>{{end}}
   </div>
   {{with .Batal}}{{$t := .Transaksi}}
-  <form class="panel" method="post" action="/transaksi/{{$t.ID}}/batal">
+  <form class="panel" method="post" action="/transaksi/{{$t.ID}}/batal"><input type="hidden" name="csrf" value="{{$.Sesi.CSRF}}">
     <h2>Batalkan {{$t.NoTransaksi}}</h2>
     <p class="sub" style="margin-bottom:14px">Total {{rupiah $t.TotalBayar}}{{if $t.MemberNama}} · {{$t.MemberNama}}{{end}}</p>
     {{if eq $t.Status "SELESAI"}}

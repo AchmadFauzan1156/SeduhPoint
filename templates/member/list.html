@@ -41,7 +41,7 @@
     <div class="actions"><a class="btn ghost" href="/member/{{.Member.ID}}/edit">Ubah data</a></div>
   </div>
   {{end}}{{else if eq .Data.Mode "form"}}{{with .Data}}
-  <form class="panel" method="post" action="{{.Action}}">
+  <form class="panel" method="post" action="{{.Action}}"><input type="hidden" name="csrf" value="{{$.Sesi.CSRF}}">
     <h2 style="margin-bottom:16px">{{if .Form.ID}}Ubah data member{{else}}Daftar member baru{{end}}</h2>
     <div class="field"><label for="nama">Nama</label>
       <input id="nama" name="nama" class="input{{if index $.Errors "nama"}} invalid{{end}}" value="{{.Form.Nama}}" maxlength="100" required autocomplete="off">
