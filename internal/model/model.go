@@ -24,6 +24,7 @@ type Pengguna struct {
 	PasswordHash string
 	Peran        string // ADMIN | KASIR
 	CabangID     sql.NullInt64
+	CabangNama   string // hanya diisi di daftar akun
 }
 
 type Kategori struct {

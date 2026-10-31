@@ -81,6 +81,17 @@ func HapusSesiLain(r *http.Request, penggunaID int) {
 	}
 }
 
+// HapusSesiPengguna: keluarkan pengguna dari semua perangkat (dipakai setelah admin me-reset password kasir).
+func HapusSesiPengguna(penggunaID int) {
+	mu.Lock()
+	defer mu.Unlock()
+	for id, s := range sesi {
+		if s.PenggunaID == penggunaID {
+			delete(sesi, id)
+		}
+	}
+}
+
 // Ambil mengembalikan sesi pengguna yang sedang login.
 func Ambil(r *http.Request) (Sesi, bool) {
 	s, ok := r.Context().Value(ctxKey{}).(Sesi)

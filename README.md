@@ -112,7 +112,7 @@ pemilik memantau biaya promo, poin beredar, dan perkembangan member dari satu te
 |---|---|
 | Backend | Go standard library: `net/http` (routing Go 1.22), `html/template`, `database/sql` |
 | Database | MySQL 8 atau MariaDB 10.6+ lewat `go-sql-driver/mysql` |
-| Keamanan | Password `bcrypt`, ganti password, sesi berakhir setelah 8 jam, token CSRF di setiap form, pembatasan peran, query berparameter, transaksi database dengan `SELECT ... FOR UPDATE` |
+| Keamanan | Password `bcrypt` yang dikelola admin (termasuk reset password kasir), sesi berakhir setelah 8 jam, token CSRF di setiap form, pembatasan peran, query berparameter, transaksi database dengan `SELECT ... FOR UPDATE` |
 | Tampilan | HTML yang dirender di server, CSS dan JavaScript sendiri tanpa framework |
 | Konfigurasi | File `.env` lewat `joho/godotenv` |
 
@@ -196,7 +196,7 @@ wgo run -file .html -file .css ./cmd/web
 
 Data contoh berisi 3 cabang, 7 menu, 2 member, dan 4 promo (satu dari tiap jenis, kode voucher `SEDUH10`) yang
 berlaku 1 Okt sampai 31 Des 2026. Ubah tanggal promo di menu **Promo & voucher** bila perlu, dan ganti password
-akun lewat menu **Ganti password** sebelum dipakai sungguhan.
+akun lewat menu **Kelola password** (admin) sebelum dipakai sungguhan.
 
 ## Pengujian
 

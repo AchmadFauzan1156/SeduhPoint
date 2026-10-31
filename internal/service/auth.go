@@ -1,6 +1,7 @@
 package service
 
-// Login: cek username & password (bcrypt). GantiPassword untuk pengguna yang sedang login.
+// Login: cek username & password (bcrypt). Password dikelola admin:
+// GantiPassword untuk akun admin sendiri, ResetPasswordKasir untuk akun kasir.
 
 import (
 	"context"
@@ -70,4 +71,31 @@ func (s *AuthService) GantiPassword(ctx context.Context, penggunaID int, lama, b
 		return err
 	}
 	return s.Repo.UbahPassword(ctx, penggunaID, string(hash))
+}
+
+func (s *AuthService) DaftarKasir(ctx context.Context) ([]model.Pengguna, error) {
+	return s.Repo.DaftarKasir(ctx)
+}
+
+func (s *AuthService) Kasir(ctx context.Context, id int) (model.Pengguna, error) {
+	p, err := s.Repo.CariByID(ctx, id)
+	if err == nil && p.Peran != "KASIR" {
+		return p, model.ErrNotFound
+	}
+	return p, err
+}
+
+// ResetPasswordKasir: admin mengatur password baru kasir tanpa perlu password lamanya.
+func (s *AuthService) ResetPasswordKasir(ctx context.Context, kasirID int, baru, ulang string) error {
+	if _, err := s.Kasir(ctx, kasirID); err != nil {
+		return err
+	}
+	if err := ValidasiPasswordBaru("", baru, ulang); err != nil {
+		return err
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(baru), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	return s.Repo.UbahPassword(ctx, kasirID, string(hash))
 }

@@ -49,3 +49,23 @@ func (r *PenggunaRepo) UbahPassword(ctx context.Context, id int, hash string) er
 	}
 	return nil
 }
+
+// DaftarKasir: akun kasir beserta nama cabangnya (halaman kelola password admin).
+func (r *PenggunaRepo) DaftarKasir(ctx context.Context) ([]model.Pengguna, error) {
+	rows, err := r.DB.QueryContext(ctx, `SELECT p.id, p.username, p.peran, p.cabang_id, COALESCE(c.nama, '')
+		FROM pengguna p LEFT JOIN cabang c ON c.id = p.cabang_id
+		WHERE p.peran = 'KASIR' AND p.aktif = TRUE AND p.deleted_at IS NULL ORDER BY c.nama, p.username`)
+	if err != nil {
+		return nil, fmt.Errorf("daftar kasir: %w", err)
+	}
+	defer rows.Close()
+	var hasil []model.Pengguna
+	for rows.Next() {
+		var p model.Pengguna
+		if err := rows.Scan(&p.ID, &p.Username, &p.Peran, &p.CabangID, &p.CabangNama); err != nil {
+			return nil, fmt.Errorf("scan kasir: %w", err)
+		}
+		hasil = append(hasil, p)
+	}
+	return hasil, rows.Err()
+}

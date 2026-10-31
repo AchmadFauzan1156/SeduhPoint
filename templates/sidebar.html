@@ -15,13 +15,13 @@
     <a class="nav-item{{if eq .Aktif "lap-promo"}} on{{end}}" href="/laporan/promo"{{if eq .Aktif "lap-promo"}} aria-current="page"{{end}}>{{template "ikon" "lap-promo"}}Biaya promo</a>
     <a class="nav-item{{if eq .Aktif "lap-poin"}} on{{end}}" href="/laporan/poin"{{if eq .Aktif "lap-poin"}} aria-current="page"{{end}}>{{template "ikon" "lap-poin"}}Poin aktif</a>
     <a class="nav-item{{if eq .Aktif "lap-member"}} on{{end}}" href="/laporan/member"{{if eq .Aktif "lap-member"}} aria-current="page"{{end}}>{{template "ikon" "lap-member"}}Perkembangan member</a>
+    <div class="nav-group">Akun</div>
+    <a class="nav-item{{if eq .Aktif "password"}} on{{end}}" href="/password"{{if eq .Aktif "password"}} aria-current="page"{{end}}>{{template "ikon" "kunci"}}Kelola password</a>
   {{else}}
     <a class="nav-item{{if eq .Aktif "kasir"}} on{{end}}" href="/kasir"{{if eq .Aktif "kasir"}} aria-current="page"{{end}}>{{template "ikon" "kasir"}}Transaksi baru</a>
     <a class="nav-item{{if eq .Aktif "transaksi"}} on{{end}}" href="/transaksi"{{if eq .Aktif "transaksi"}} aria-current="page"{{end}}>{{template "ikon" "transaksi"}}Riwayat transaksi</a>
     <a class="nav-item{{if eq .Aktif "member"}} on{{end}}" href="/member"{{if eq .Aktif "member"}} aria-current="page"{{end}}>{{template "ikon" "member"}}Member</a>
   {{end}}
-    <div class="nav-group">Akun</div>
-    <a class="nav-item{{if eq .Aktif "password"}} on{{end}}" href="/password"{{if eq .Aktif "password"}} aria-current="page"{{end}}>{{template "ikon" "kunci"}}Ganti password</a>
   </nav>
   <a class="btn ghost menu-btn" href="#nav">Menu</a>
   <div class="side-foot">

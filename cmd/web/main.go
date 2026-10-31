@@ -71,8 +71,12 @@ func main() {
 	mux.HandleFunc("GET /login", auth.FormLogin)
 	mux.HandleFunc("POST /login", auth.Login)
 	mux.HandleFunc("POST /logout", mw.Login(auth.Logout))
-	mux.HandleFunc("GET /password", mw.Login(auth.FormPassword))
-	mux.HandleFunc("POST /password", mw.Login(auth.GantiPassword))
+
+	// Password dikelola admin (akun sendiri + reset password kasir)
+	mux.HandleFunc("GET /password", mw.Admin(auth.FormPassword))
+	mux.HandleFunc("POST /password", mw.Admin(auth.GantiPassword))
+	mux.HandleFunc("GET /password/{id}", mw.Admin(auth.FormResetKasir))
+	mux.HandleFunc("POST /password/{id}", mw.Admin(auth.ResetKasir))
 	mux.HandleFunc("GET /{$}", mw.Login(halaman.Dashboard))
 
 	// Data master
