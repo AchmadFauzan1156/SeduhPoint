@@ -225,6 +225,18 @@ func bolehAkses(r *http.Request, t model.Transaksi) bool {
 	return s.Peran == "ADMIN" || s.CabangID == t.CabangID
 }
 
+// bolehBatal: kasir hanya boleh membatalkan transaksi hari ini; transaksi lama lewat admin.
+func bolehBatal(r *http.Request, t model.Transaksi) bool {
+	s, _ := middleware.Ambil(r)
+	return service.BolehBatal(s.Peran, t.Waktu, time.Now().In(config.WIB))
+}
+
+// StrukPage: data struk + apakah tombol Batalkan ditampilkan.
+type StrukPage struct {
+	service.Struk
+	BisaBatal bool
+}
+
 func (h *TransaksiHandler) Struk(w http.ResponseWriter, r *http.Request) {
 	id, ok := idDariPath(w, r)
 	if !ok {
@@ -239,7 +251,8 @@ func (h *TransaksiHandler) Struk(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Akses ditolak", http.StatusForbidden)
 		return
 	}
-	h.View.Tampil(w, "transaksi/struk.html", halaman(r, st.Transaksi.NoTransaksi, "transaksi", st))
+	pg := StrukPage{Struk: st, BisaBatal: st.Transaksi.Status == "SELESAI" && bolehBatal(r, st.Transaksi)}
+	h.View.Tampil(w, "transaksi/struk.html", halaman(r, st.Transaksi.NoTransaksi, "transaksi", pg))
 }
 
 type RiwayatPage struct {
@@ -300,6 +313,10 @@ func (h *TransaksiHandler) panelBatal(w http.ResponseWriter, r *http.Request) (*
 	}
 	if !bolehAkses(r, t) {
 		http.Error(w, "Akses ditolak", http.StatusForbidden)
+		return nil, false
+	}
+	if !bolehBatal(r, t) {
+		http.Error(w, "Transaksi hari sebelumnya hanya bisa dibatalkan admin", http.StatusForbidden)
 		return nil, false
 	}
 	d, err := h.Svc.DampakBatal(r.Context(), id)

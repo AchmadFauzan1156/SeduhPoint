@@ -357,8 +357,10 @@ func (s *TransaksiService) DampakBatal(ctx context.Context, id int) (Dampak, err
 			if l, err := s.PoinRepo.LotForUpdate(ctx, s.DB, m.LotID); err == nil {
 				d.PoinDitarik += l.PoinSisa
 			}
-		} else {
-			d.PoinDikembalikan += -m.Jumlah
+		} else if l, err := s.PoinRepo.LotForUpdate(ctx, s.DB, m.LotID); err == nil {
+			if _, kembali := StatusLotKembali(l, s.sekarang()); kembali {
+				d.PoinDikembalikan += -m.Jumlah
+			}
 		}
 	}
 	promo, err := s.Repo.Promo(ctx, s.DB, id)
@@ -371,6 +373,24 @@ func (s *TransaksiService) DampakBatal(ctx context.Context, id int) (Dampak, err
 		}
 	}
 	return d, nil
+}
+
+// StatusLotKembali: status lot setelah poin tukar dikembalikan karena pembatalan.
+// Lot DITARIK (transaksi asal poin sudah dibatalkan) tidak menerima poin kembali,
+// supaya poin dari transaksi batal tidak hidup lagi.
+func StatusLotKembali(l model.PoinLot, now time.Time) (status string, kembali bool) {
+	switch {
+	case l.Status == "DITARIK":
+		return "", false
+	case l.Status == "KEDALUWARSA" || !l.TglKedaluwarsa.After(now):
+		return "KEDALUWARSA", true
+	}
+	return "AKTIF", true
+}
+
+// BolehBatal: kasir hanya boleh membatalkan transaksi hari ini (WIB); transaksi lama hanya oleh admin.
+func BolehBatal(peran string, waktu, now time.Time) bool {
+	return peran == "ADMIN" || waktu.In(config.WIB).Format("2006-01-02") == now.In(config.WIB).Format("2006-01-02")
 }
 
 // Batalkan: transaksi tidak dihapus, hanya berstatus DIBATALKAN.
@@ -415,9 +435,9 @@ func (s *TransaksiService) Batalkan(ctx context.Context, id int, alasan string) 
 					return err
 				}
 			case "TUKAR": // kembalikan ke lot asal; lot yang sudah lewat masa berlaku tetap kedaluwarsa
-				status := "AKTIF"
-				if !l.TglKedaluwarsa.After(now) || l.Status == "KEDALUWARSA" {
-					status = "KEDALUWARSA"
+				status, kembali := StatusLotKembali(l, now)
+				if !kembali {
+					continue
 				}
 				if err := s.PoinRepo.UbahSisaLot(ctx, tx, l.ID, l.PoinSisa-m.Jumlah, status); err != nil {
 					return err
