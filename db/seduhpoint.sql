@@ -214,16 +214,17 @@ CREATE TABLE poin_mutasi (
 
 
 -- ---------- Bagian 2: data contoh ----------
--- Data contoh. Password semua akun: "password" (hash bcrypt, ganti setelah login pertama)
+-- Data contoh. Password (hash bcrypt): admin = "admin123"; kasir = nama cabang + "#2026", mis. kasir_sekaran = "Sekaran#2026".
+-- Ganti lewat menu Pengguna sebelum dipakai sungguhan. Daftar lengkap ada di docs/akun-uji.md.
 INSERT INTO cabang (nama, alamat) VALUES
  ('Seduh Sekaran','Jl. Raya Sekaran, Gunungpati'),
  ('Seduh Banaran','Jl. Banaran Raya'),
  ('Seduh Tembalang','Jl. Tembalang Baru');
 INSERT INTO pengguna (username, password_hash, peran, cabang_id) VALUES
- ('admin',  '$2a$10$afezlsmSerOEjXWG7g0W4uNcIYlFfMZ4FB4D2oTfwKfiEqBcSAUf.', 'ADMIN', NULL),
- ('kasir1', '$2a$10$afezlsmSerOEjXWG7g0W4uNcIYlFfMZ4FB4D2oTfwKfiEqBcSAUf.', 'KASIR', 1),
- ('kasir2', '$2a$10$afezlsmSerOEjXWG7g0W4uNcIYlFfMZ4FB4D2oTfwKfiEqBcSAUf.', 'KASIR', 2),
- ('kasir3', '$2a$10$afezlsmSerOEjXWG7g0W4uNcIYlFfMZ4FB4D2oTfwKfiEqBcSAUf.', 'KASIR', 3);
+ ('admin',           '$2a$10$UndeRvQLt5KkwEuN1t3/BO9ceBRjZw.tIEVYlGswDRmKKWT6twOxW', 'ADMIN', NULL),
+ ('kasir_sekaran',   '$2a$10$UqvnSgZ.KAgBXyy3dSdZWOnX3qlQwFBI7qnxXd5xelr3yyIS/z5SG', 'KASIR', 1),
+ ('kasir_banaran',   '$2a$10$kz8jCQp4Er9d143D3AJfuO6gf1tFTdqKAh4ZH3brbpnYdjv.ZhiUu', 'KASIR', 2),
+ ('kasir_tembalang', '$2a$10$.EOzmLe797pPPNIHAwx5z.g6GK29p47S3ASB/gZdYnuaiNSRAD.wm', 'KASIR', 3);
 INSERT INTO kategori (nama) VALUES ('Kopi'),('Non-Kopi'),('Makanan');
 INSERT INTO produk (kategori_id, nama, harga) VALUES
  (1,'Americano',18000),(1,'Kopi Susu Seduh',22000),(1,'Cappuccino',25000),

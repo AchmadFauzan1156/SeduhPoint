@@ -206,10 +206,10 @@ wgo run -file .html -file .css ./cmd/web
 
 | Username | Password | Peran |
 |---|---|---|
-| `admin` | `password` | Admin / pemilik, semua cabang |
-| `kasir1` | `password` | Kasir Seduh Sekaran |
-| `kasir2` | `password` | Kasir Seduh Banaran |
-| `kasir3` | `password` | Kasir Seduh Tembalang |
+| `admin` | `admin123` | Admin / pemilik, semua cabang |
+| `kasir_sekaran` | `Sekaran#2026` | Kasir Seduh Sekaran |
+| `kasir_banaran` | `Banaran#2026` | Kasir Seduh Banaran |
+| `kasir_tembalang` | `Tembalang#2026` | Kasir Seduh Tembalang |
 
 Data contoh berisi 3 cabang, 7 menu, 2 member, dan 4 promo (satu dari tiap jenis, kode voucher `SEDUH10`) yang
 berlaku 1 Okt sampai 31 Des 2026. Ubah tanggal promo di menu **Promo & voucher** bila perlu, dan ganti password
