@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"seduhpoint/internal/middleware"
 	"seduhpoint/internal/model"
 	"seduhpoint/internal/service"
 )
@@ -43,12 +44,21 @@ func gagal(w http.ResponseWriter, err error) {
 	switch {
 	case errors.As(err, &ve):
 		http.Error(w, ve.Pesan, http.StatusBadRequest)
+	case errors.Is(err, model.ErrForbidden):
+		http.Error(w, "Akses ditolak", http.StatusForbidden)
 	case errors.Is(err, model.ErrNotFound):
 		http.Error(w, "Data tidak ditemukan", http.StatusNotFound)
 	default:
 		log.Printf("error: %v", err)
 		http.Error(w, "Terjadi kesalahan pada server", http.StatusInternalServerError)
 	}
+}
+
+// catatAksi mencatat aksi penting ke log: siapa dan apa yang dilakukan (waktunya ditambahkan oleh log).
+// Materi #12: catat aksi penting seperti hapus dan ubah hak akses.
+func catatAksi(r *http.Request, format string, args ...any) {
+	u, _ := middleware.PenggunaDari(r.Context())
+	log.Printf("aksi: %s (%s) "+format, append([]any{u.Username, u.Peran}, args...)...)
 }
 
 // formGagal: salah input -> tampilkan ulang halaman form beserta pesan di dekat field (422);
@@ -96,6 +106,8 @@ var pesanFlash = map[string]string{
 	"promo-nonaktif":       "Promo dinonaktifkan",
 	"transaksi-dibuat":     "Transaksi berhasil disimpan",
 	"transaksi-dibatalkan": "Transaksi berhasil dibatalkan",
+	"password-diubah":      "Password berhasil diganti",
+	"password-direset":     "Password kasir berhasil di-reset",
 }
 
 // redirect dengan kode pesan sukses (pola Post/Redirect/Get, materi #4).

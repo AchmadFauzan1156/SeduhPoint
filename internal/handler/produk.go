@@ -94,6 +94,7 @@ func (h *ProdukHandler) HapusKategori(w http.ResponseWriter, r *http.Request) {
 		h.tampilKategori(w, r, "/kategori", model.Kategori{}, err)
 		return
 	}
+	catatAksi(r, "menghapus kategori %d", id)
 	redirect(w, r, "/kategori", "kategori-dihapus")
 }
 
@@ -226,6 +227,7 @@ func (h *ProdukHandler) Hapus(w http.ResponseWriter, r *http.Request) {
 		gagal(w, err)
 		return
 	}
+	catatAksi(r, "menghapus produk %d", id)
 	redirect(w, r, "/produk", "produk-dihapus")
 }
 

@@ -61,6 +61,7 @@ func main() {
 	member := &handler.MemberHandler{Svc: memberSvc, View: view}
 	promo := &handler.PromoHandler{Svc: promoSvc, CabangSvc: cabangSvc, ProdukSvc: produkSvc, View: view}
 	transaksi := &handler.TransaksiHandler{Svc: transaksiSvc, ProdukSvc: produkSvc, MemberSvc: memberSvc, CabangSvc: cabangSvc, View: view}
+	pengguna := &handler.PenggunaHandler{Svc: authSvc, View: view}
 	laporan := &handler.LaporanHandler{Svc: laporanSvc, CabangSvc: cabangSvc, View: view}
 
 	// Job harian: kedaluwarsa poin & evaluasi tingkat
@@ -129,6 +130,12 @@ func main() {
 	privat.Handle("GET /laporan/poin", admin(laporan.Poin))
 	privat.Handle("GET /laporan/member", admin(laporan.Member))
 
+	// Pengguna & password (admin)
+	privat.Handle("GET /pengguna", admin(pengguna.Daftar))
+	privat.Handle("POST /pengguna/password", admin(pengguna.GantiPassword))
+	privat.Handle("GET /pengguna/{id}/password", admin(pengguna.FormReset))
+	privat.Handle("POST /pengguna/{id}/password", admin(pengguna.Reset))
+
 	// publik: boleh diakses tanpa login
 	mux := http.NewServeMux()
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
@@ -136,9 +143,14 @@ func main() {
 	mux.HandleFunc("POST /login", auth.Login)
 	mux.Handle("/", authMw.RequireLogin(privat)) // sisanya lewat RequireLogin
 
+	// Tolak POST yang dikirim dari situs lain atas nama pengguna yang sedang login (CSRF, materi #12).
+	csrf := http.NewCrossOriginProtection()
+
+	// Alur: csrf -> Logging -> BatasiBody -> mux -> /login, /static (publik)
+	//                                            -> RequireLogin -> privat -> RequireRole (admin/kasir)
 	srv := &http.Server{
 		Addr:              cfg.Addr,
-		Handler:           mw.Logging(mw.BatasiBody(mux)),
+		Handler:           csrf.Handler(mw.Logging(mw.BatasiBody(mux))),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      30 * time.Second,

@@ -15,6 +15,8 @@
     <a class="nav-item{{if eq .Aktif "lap-promo"}} on{{end}}" href="/laporan/promo"{{if eq .Aktif "lap-promo"}} aria-current="page"{{end}}>{{template "ikon" "lap-promo"}}Biaya promo</a>
     <a class="nav-item{{if eq .Aktif "lap-poin"}} on{{end}}" href="/laporan/poin"{{if eq .Aktif "lap-poin"}} aria-current="page"{{end}}>{{template "ikon" "lap-poin"}}Poin aktif</a>
     <a class="nav-item{{if eq .Aktif "lap-member"}} on{{end}}" href="/laporan/member"{{if eq .Aktif "lap-member"}} aria-current="page"{{end}}>{{template "ikon" "lap-member"}}Perkembangan member</a>
+    <div class="nav-group">Akun</div>
+    <a class="nav-item{{if eq .Aktif "pengguna"}} on{{end}}" href="/pengguna"{{if eq .Aktif "pengguna"}} aria-current="page"{{end}}>{{template "ikon" "kunci"}}Pengguna</a>
   {{else}}
     <a class="nav-item{{if eq .Aktif "kasir"}} on{{end}}" href="/kasir"{{if eq .Aktif "kasir"}} aria-current="page"{{end}}>{{template "ikon" "kasir"}}Transaksi baru</a>
     <a class="nav-item{{if eq .Aktif "transaksi"}} on{{end}}" href="/transaksi"{{if eq .Aktif "transaksi"}} aria-current="page"{{end}}>{{template "ikon" "transaksi"}}Riwayat transaksi</a>

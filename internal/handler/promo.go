@@ -131,6 +131,7 @@ func (h *PromoHandler) Toggle(w http.ResponseWriter, r *http.Request) {
 		gagal(w, err)
 		return
 	}
+	catatAksi(r, "mengubah status promo %d menjadi aktif=%v", id, aktif)
 	kode := "promo-nonaktif"
 	if aktif {
 		kode = "promo-aktif"

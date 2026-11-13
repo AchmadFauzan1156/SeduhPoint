@@ -222,10 +222,11 @@ func (h *TransaksiHandler) Bayar(w http.ResponseWriter, r *http.Request) {
 	redirect(w, r, fmt.Sprintf("/transaksi/%d", id), "transaksi-dibuat")
 }
 
-// bolehAkses: kasir hanya boleh melihat/membatalkan transaksi cabangnya sendiri.
-func bolehAkses(r *http.Request, t model.Transaksi) bool {
-	u, _ := middleware.PenggunaDari(r.Context())
-	return u.IsAdmin() || u.CabangID == t.CabangID
+// StrukPage: data struk + apakah tombol Batalkan ditampilkan.
+// Aturannya sama dengan service (model.Pengguna.BolehBatal), di sini hanya untuk tampilan.
+type StrukPage struct {
+	service.Struk
+	BisaBatal bool
 }
 
 func (h *TransaksiHandler) Struk(w http.ResponseWriter, r *http.Request) {
@@ -233,16 +234,14 @@ func (h *TransaksiHandler) Struk(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	st, err := h.Svc.Struk(r.Context(), id)
+	u, _ := middleware.PenggunaDari(r.Context())
+	st, err := h.Svc.Struk(r.Context(), u, id)
 	if err != nil {
 		gagal(w, err)
 		return
 	}
-	if !bolehAkses(r, st.Transaksi) {
-		http.Error(w, "Akses ditolak", http.StatusForbidden)
-		return
-	}
-	h.View.Tampil(w, r, "transaksi/struk.html", halaman(r, st.Transaksi.NoTransaksi, "transaksi", st))
+	pg := StrukPage{Struk: st, BisaBatal: u.BolehBatal(st.Transaksi, time.Now())}
+	h.View.Tampil(w, r, "transaksi/struk.html", halaman(r, st.Transaksi.NoTransaksi, "transaksi", pg))
 }
 
 type RiwayatPage struct {
@@ -296,13 +295,10 @@ func (h *TransaksiHandler) panelBatal(w http.ResponseWriter, r *http.Request) (*
 	if !ok {
 		return nil, false
 	}
-	t, err := h.Svc.Detail(r.Context(), id)
+	u, _ := middleware.PenggunaDari(r.Context())
+	t, err := h.Svc.UntukDibatalkan(r.Context(), u, id)
 	if err != nil {
 		gagal(w, err)
-		return nil, false
-	}
-	if !bolehAkses(r, t) {
-		http.Error(w, "Akses ditolak", http.StatusForbidden)
 		return nil, false
 	}
 	d, err := h.Svc.DampakBatal(r.Context(), id)
@@ -324,10 +320,12 @@ func (h *TransaksiHandler) Batal(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	u, _ := middleware.PenggunaDari(r.Context())
 	alasan := r.PostFormValue("alasan")
-	if err := h.Svc.Batalkan(r.Context(), p.Transaksi.ID, alasan); err != nil {
+	if err := h.Svc.Batalkan(r.Context(), u, p.Transaksi.ID, alasan); err != nil {
 		h.riwayat(w, r, p, alasan, err)
 		return
 	}
+	catatAksi(r, "membatalkan transaksi %s (alasan: %s)", p.Transaksi.NoTransaksi, alasan)
 	redirect(w, r, fmt.Sprintf("/transaksi/%d", p.Transaksi.ID), "transaksi-dibatalkan")
 }

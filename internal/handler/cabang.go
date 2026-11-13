@@ -91,6 +91,7 @@ func (h *CabangHandler) Hapus(w http.ResponseWriter, r *http.Request) {
 		gagal(w, err)
 		return
 	}
+	catatAksi(r, "menghapus cabang %d", id)
 	redirect(w, r, "/cabang", "cabang-dihapus")
 }
 

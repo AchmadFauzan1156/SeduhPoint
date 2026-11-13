@@ -1,0 +1,39 @@
+{{define "content"}}{{with .Data}}
+<div class="title-row"><div><h1>Pengguna</h1>
+  <p class="sub">{{len .Daftar}} akun · akun dibuat dan dikelola admin; setelah password diganti, akun tersebut keluar dari perangkat lain.</p></div></div>
+<div class="grid" style="grid-template-columns:1fr 360px">
+  <div class="panel">
+    <table class="table">
+      <tr><th>Username</th><th>Peran</th><th>Cabang</th><th class="num"><span class="sr-only">Aksi</span></th></tr>
+      {{range .Daftar}}
+      <tr class="{{if eq .ID $.Data.Target.ID}}sel{{end}}">
+        <td class="id">{{.Username}}</td>
+        <td>{{if .IsAdmin}}<span class="pill ok">Admin</span>{{else}}<span class="pill off">Kasir</span>{{end}}</td>
+        <td>{{if .CabangNama}}{{.CabangNama}}{{else}}<span class="grey">Semua cabang</span>{{end}}</td>
+        <td class="num">{{if .IsKasir}}<a href="/pengguna/{{.ID}}/password">Reset password</a>{{end}}</td>
+      </tr>
+      {{end}}
+    </table>
+  </div>
+  <form class="panel" method="post" action="{{.Action}}">
+    {{if .Target.ID}}
+    <h2>Reset password {{.Target.Username}}</h2>
+    <p class="sub" style="margin-bottom:14px">Kasir {{.Target.CabangNama}} · password lama tidak diperlukan.</p>
+    {{else}}
+    <h2>Password saya</h2>
+    <p class="sub" style="margin-bottom:14px">Akun {{user.Username}}</p>
+    <div class="field"><label for="lama">Password lama</label>
+      <input id="lama" name="lama" type="password" class="input{{if index $.Errors "lama"}} invalid{{end}}" autocomplete="current-password" required>
+      {{with index $.Errors "lama"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
+    {{end}}
+    <div class="field"><label for="baru">Password baru</label>
+      <input id="baru" name="baru" type="password" class="input{{if index $.Errors "baru"}} invalid{{end}}" autocomplete="new-password" minlength="8" maxlength="72" required>
+      {{with index $.Errors "baru"}}<p class="field-error" role="alert">{{.}}</p>{{else}}<p class="sub">8 sampai 72 karakter.</p>{{end}}</div>
+    <div class="field"><label for="ulang">Ulangi password baru</label>
+      <input id="ulang" name="ulang" type="password" class="input{{if index $.Errors "ulang"}} invalid{{end}}" autocomplete="new-password" required>
+      {{with index $.Errors "ulang"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
+    <div class="actions"><button class="btn">Simpan password</button>
+      {{if .Target.ID}}<a class="btn ghost" href="/pengguna">Batal</a>{{end}}</div>
+  </form>
+</div>
+{{end}}{{end}}

@@ -311,11 +311,16 @@ type Struk struct {
 	SaldoPoin int
 }
 
-func (s *TransaksiService) Struk(ctx context.Context, id int) (Struk, error) {
+// Struk: transaksi cabang lain dijawab "tidak ditemukan" (404), bukan 403,
+// supaya kasir tidak bisa menebak transaksi mana saja yang ada (materi #12).
+func (s *TransaksiService) Struk(ctx context.Context, u model.Pengguna, id int) (Struk, error) {
 	var st Struk
 	var err error
 	if st.Transaksi, err = s.Repo.CariByID(ctx, id); err != nil {
 		return st, err
+	}
+	if !u.BolehLihat(st.Transaksi) {
+		return st, model.ErrNotFound
 	}
 	if st.Item, err = s.Repo.Item(ctx, id); err != nil {
 		return st, err
@@ -336,8 +341,26 @@ func (s *TransaksiService) Daftar(ctx context.Context, cabangID int, tgl time.Ti
 	return s.Repo.Semua(ctx, cabangID, tgl)
 }
 
-func (s *TransaksiService) Detail(ctx context.Context, id int) (model.Transaksi, error) {
-	return s.Repo.CariByID(ctx, id)
+// UntukDibatalkan mengambil transaksi sekaligus memastikan u boleh membatalkannya.
+// Dipakai saat form pembatalan dibuka (GET), bukan hanya saat submit (POST).
+func (s *TransaksiService) UntukDibatalkan(ctx context.Context, u model.Pengguna, id int) (model.Transaksi, error) {
+	t, err := s.Repo.CariByID(ctx, id)
+	if err != nil {
+		return t, err
+	}
+	return t, cekBolehBatal(u, t, s.sekarang())
+}
+
+// cekBolehBatal: transaksi cabang lain -> 404; transaksi yang tidak boleh dibatalkan u -> 403.
+// Transaksi yang sudah dibatalkan tetap boleh dibuka (panel menampilkan keterangannya).
+func cekBolehBatal(u model.Pengguna, t model.Transaksi, sekarang time.Time) error {
+	switch {
+	case !u.BolehLihat(t):
+		return model.ErrNotFound
+	case t.Status == "SELESAI" && !u.BolehBatal(t, sekarang):
+		return model.ErrForbidden
+	}
+	return nil
 }
 
 // Dampak: ringkasan yang ditampilkan sebelum kasir mengonfirmasi pembatalan.
@@ -375,7 +398,7 @@ func (s *TransaksiService) DampakBatal(ctx context.Context, id int) (Dampak, err
 }
 
 // Batalkan: transaksi tidak dihapus, hanya berstatus DIBATALKAN.
-func (s *TransaksiService) Batalkan(ctx context.Context, id int, alasan string) error {
+func (s *TransaksiService) Batalkan(ctx context.Context, u model.Pengguna, id int, alasan string) error {
 	alasan = strings.TrimSpace(alasan)
 	if alasan == "" {
 		return salah("alasan", "Alasan pembatalan wajib diisi")
@@ -386,6 +409,10 @@ func (s *TransaksiService) Batalkan(ctx context.Context, id int, alasan string) 
 	return repository.WithTx(ctx, s.DB, func(tx *sql.Tx) error {
 		t, err := s.Repo.CariForUpdate(ctx, tx, id)
 		if err != nil {
+			return err
+		}
+		// Dicek lagi saat submit: request POST bisa dikirim tanpa membuka form (materi #12).
+		if err := cekBolehBatal(u, t, s.sekarang()); err != nil {
 			return err
 		}
 		if t.Status != "SELESAI" {

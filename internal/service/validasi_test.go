@@ -5,7 +5,9 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
+	"seduhpoint/internal/config"
 	"seduhpoint/internal/model"
 )
 
@@ -41,5 +43,26 @@ func TestValidasiCabangLolos(t *testing.T) {
 	}
 	if c.Nama != "Seduh Sekaran" {
 		t.Errorf("nama harus dirapikan (TrimSpace), dapat %q", c.Nama)
+	}
+}
+
+// cekBolehBatal: transaksi cabang lain -> 404 (tidak membocorkan keberadaan data), hari sebelumnya -> 403.
+func TestCekBolehBatal(t *testing.T) {
+	sekarang := time.Date(2026, 11, 10, 9, 0, 0, 0, config.WIB)
+	kasir := model.Pengguna{ID: 2, Peran: model.PeranKasir, CabangID: 1}
+	cases := []struct {
+		nama string
+		t    model.Transaksi
+		want error
+	}{
+		{"hari ini", model.Transaksi{CabangID: 1, Status: "SELESAI", Waktu: sekarang}, nil},
+		{"kemarin", model.Transaksi{CabangID: 1, Status: "SELESAI", Waktu: sekarang.AddDate(0, 0, -1)}, model.ErrForbidden},
+		{"cabang lain", model.Transaksi{CabangID: 2, Status: "SELESAI", Waktu: sekarang}, model.ErrNotFound},
+		{"sudah dibatalkan (panel tetap bisa dibuka)", model.Transaksi{CabangID: 1, Status: "DIBATALKAN", Waktu: sekarang.AddDate(0, 0, -1)}, nil},
+	}
+	for _, c := range cases {
+		if err := cekBolehBatal(kasir, c.t, sekarang); !errors.Is(err, c.want) {
+			t.Errorf("%s: dapat %v, harusnya %v", c.nama, err, c.want)
+		}
 	}
 }
