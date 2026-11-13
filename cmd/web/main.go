@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 
 	"seduhpoint/internal/config"
 	"seduhpoint/internal/handler"
@@ -43,7 +43,7 @@ func main() {
 
 	// Service
 	authSvc := &service.AuthService{Pengguna: penggunaRepo, Sessions: &repository.SessionRepo{DB: db}}
-	cabangSvc := &service.CabangService{Repo: cabangRepo}
+	cabangSvc := &service.CabangService{DB: db, Repo: cabangRepo, PenggunaRepo: penggunaRepo}
 	produkSvc := &service.ProdukService{Repo: produkRepo, KategoriRepo: kategoriRepo}
 	memberSvc := &service.MemberService{DB: db, Repo: memberRepo, PoinRepo: poinRepo}
 	promoSvc := &service.PromoService{Repo: promoRepo}
@@ -107,6 +107,7 @@ func main() {
 	privat.HandleFunc("GET /member/{id}", member.Detail)
 	privat.HandleFunc("GET /member/{id}/edit", member.FormEdit)
 	privat.HandleFunc("POST /member/{id}/edit", member.Update)
+	privat.Handle("POST /member/{id}/hapus", admin(member.Hapus))
 
 	// Promo & voucher (admin)
 	privat.Handle("GET /promo", admin(promo.Daftar))
@@ -161,7 +162,14 @@ func main() {
 }
 
 func bukaDB(dsn string) (*sql.DB, error) {
-	db, err := sql.Open("mysql", dsn)
+	// ClientFoundRows: RowsAffected menghitung baris yang cocok dengan WHERE, bukan hanya yang berubah.
+	// Tanpa ini, menyimpan form tanpa perubahan apa pun dianggap "data tidak ditemukan" oleh pastikanAdaBaris.
+	c, err := mysql.ParseDSN(dsn)
+	if err != nil {
+		return nil, err
+	}
+	c.ClientFoundRows = true
+	db, err := sql.Open("mysql", c.FormatDSN())
 	if err != nil {
 		return nil, err
 	}
