@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Format, vet, dan test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Cek format (gofmt)
+        run: |
+          berkas=$(gofmt -l .)
+          if [ -n "$berkas" ]; then
+            echo "Berkas berikut belum diformat, jalankan 'gofmt -w .':"
+            echo "$berkas"
+            exit 1
+          fi
+
+      - name: Go vet
+        run: go vet ./...
+
+      - name: Build
+        run: go build ./...
+
+      # Test tidak butuh database: perhitungan, validasi, hak akses, middleware, dan template diuji tanpa MySQL.
+      - name: Test
+        run: go test -race ./...

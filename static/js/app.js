@@ -18,6 +18,8 @@ if (foto) foto.addEventListener("change", () => {
   const f = foto.files[0], pv = document.getElementById("preview");
   if (f && pv) pv.style.backgroundImage = `url(${URL.createObjectURL(f)})`;
 });
+// Tombol cetak struk (tanpa onclick inline, karena Content-Security-Policy hanya mengizinkan script dari file ini)
+document.querySelectorAll("[data-cetak]").forEach(b => b.addEventListener("click", () => window.print()));
 // Konfirmasi sebelum menghapus
 document.querySelectorAll("form[data-confirm]").forEach(f =>
   f.addEventListener("submit", e => { if (!confirm(f.dataset.confirm)) e.preventDefault(); }));

@@ -146,11 +146,11 @@ func main() {
 	// Tolak POST yang dikirim dari situs lain atas nama pengguna yang sedang login (CSRF, materi #12).
 	csrf := http.NewCrossOriginProtection()
 
-	// Alur: csrf -> Logging -> BatasiBody -> mux -> /login, /static (publik)
+	// Alur: header keamanan -> csrf -> Logging -> BatasiBody -> mux -> /login, /static (publik)
 	//                                            -> RequireLogin -> privat -> RequireRole (admin/kasir)
 	srv := &http.Server{
 		Addr:              cfg.Addr,
-		Handler:           csrf.Handler(mw.Logging(mw.BatasiBody(mux))),
+		Handler:           mw.SecureHeaders(csrf.Handler(mw.Logging(mw.BatasiBody(mux)))),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      30 * time.Second,

@@ -50,3 +50,14 @@ func TestRequireLoginTanpaCookie(t *testing.T) {
 		t.Errorf("harusnya 303 ke /login, dapat %d %q", w.Code, w.Header().Get("Location"))
 	}
 }
+
+func TestSecureHeaders(t *testing.T) {
+	h := SecureHeaders(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, httptest.NewRequest("GET", "/login", nil))
+	for _, nama := range []string{"Content-Security-Policy", "X-Content-Type-Options", "X-Frame-Options", "Referrer-Policy"} {
+		if w.Header().Get(nama) == "" {
+			t.Errorf("header %s tidak ada", nama)
+		}
+	}
+}

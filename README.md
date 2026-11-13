@@ -11,6 +11,7 @@ Kasir mencatat transaksi, sistem menghitung promo dan poin secara otomatis,<br>
 pemilik memantau biaya promo, poin beredar, dan perkembangan member dari satu tempat.
 
 <p>
+  <a href="https://github.com/AchmadFauzan1156/SeduhPoint/actions/workflows/ci.yml"><img src="https://github.com/AchmadFauzan1156/SeduhPoint/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/Go-1.25+-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go 1.25+">
   <img src="https://img.shields.io/badge/MySQL-8-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL 8">
   <img src="https://img.shields.io/badge/MariaDB-10.6+-003545?style=for-the-badge&logo=mariadb&logoColor=white" alt="MariaDB 10.6+">
@@ -113,7 +114,7 @@ pemilik memantau biaya promo, poin beredar, dan perkembangan member dari satu te
 |---|---|
 | Backend | Go standard library: `net/http` (routing Go 1.22+), `html/template`, `database/sql` |
 | Database | MySQL 8 atau MariaDB 10.6+ lewat `go-sql-driver/mysql` |
-| Keamanan | Password `bcrypt`, session di database, pembatasan peran (RBAC), proteksi CSRF `http.NewCrossOriginProtection`, query berparameter, transaksi database dengan `SELECT ... FOR UPDATE` |
+| Keamanan | Password `bcrypt`, session di database, pembatasan peran (RBAC), proteksi CSRF `http.NewCrossOriginProtection`, header keamanan (CSP, X-Frame-Options, nosniff), query berparameter, transaksi database dengan `SELECT ... FOR UPDATE` |
 | Tampilan | HTML yang dirender di server, CSS dan JavaScript sendiri tanpa framework |
 | Konfigurasi | File `.env` lewat `joho/godotenv` |
 
@@ -237,6 +238,9 @@ pengguna yang belum login diarahkan ke `/login`.
 go test ./...
 ```
 
+Setiap push ke `main` dan setiap pull request dicek otomatis oleh GitHub Actions (`.github/workflows/ci.yml`):
+format `gofmt`, `go vet`, build, dan `go test -race`.
+
 Test mencakup perhitungan promo bertumpuk, batas tukar poin, poin Silver dan Gold, validasi yang mengumpulkan
 semua error sekaligus, ketentuan promo, data grafik dan laporan, pengembalian poin saat pembatalan, serta
 kasus negatif hak akses (kasir ditolak di halaman admin, tidak bisa melihat cabang lain, tidak bisa membatalkan
@@ -290,22 +294,6 @@ SeduhPoint/
   server dimulai ulang. Setelah password diganti, session akun itu di perangkat lain dihapus.
 - Aksi penting (pembatalan transaksi, hapus data master, ubah status promo, ganti/reset password) dicatat
   ke log server beserta username pelakunya.
-
-## Penerapan materi kuliah
-
-| Materi | Penerapan di SeduhPoint |
-|---|---|
-| #1 Pengantar web dengan Go | Satu binary Go sebagai web server, `go run ./cmd/web` |
-| #2 Dasar Go untuk web | Struct di `internal/model`, error sebagai nilai (`if err != nil`), `errors.Is` / `errors.As` |
-| #3 HTTP di Go | `http.ServeMux` dengan pola `GET /produk/{id}` dan `{$}`, `r.PathValue`, `http.Server` dengan timeout |
-| #4 Menangani input | `PostFormValue`, validasi di server dengan `utf8.RuneCountInString`, semua error dikumpulkan per field, `http.MaxBytesReader`, Post/Redirect/Get |
-| #5 Output HTML | `html/template` dengan layout, `header`, `sidebar`, `footer`, blok `content`, `FuncMap` (mis. `rupiah`), file statis dengan `index.html` kosong |
-| #6 Koneksi database | `database/sql` + driver MySQL, DSN dari `.env`, `PingContext` saat start, batas pool koneksi |
-| #7 CRUD: create & read | Query berparameter `?`, `LastInsertId`, `sql.ErrNoRows` diubah jadi `model.ErrNotFound`, `r.Context()` ke semua query |
-| #9 CRUD: update & delete | Satu form untuk tambah dan ubah, `RowsAffected` lewat `pastikanAdaBaris`, hapus lewat POST dengan konfirmasi, soft delete, pesan flash berupa kode |
-| #10 Struktur aplikasi | Lapisan model, repository, service, handler; dependency lewat struct; `ValidasiError`; middleware; config dari env |
-| #11 Session & authentication | Tabel `sessions`, token `rand.Text()`, bcrypt, cookie `HttpOnly` + `SameSite=Lax` + `Secure` dari config, `RequireLogin` |
-| #12 Authorization & RBAC | `RequireRole`, konstanta peran, aturan akses di model dan service (`BolehLihat`, `BolehBatal`), `ErrForbidden`, CSRF, halaman Pengguna, log aksi, test kasus negatif |
 
 ## Kredit
 
