@@ -102,58 +102,73 @@ func (r *PromoRepo) KodeDipakai(ctx context.Context, kode string, kecualiID int)
 	return n > 0, err
 }
 
-// Simpan: tambah (p.ID == 0) atau ubah, termasuk tabel relasi, dalam satu transaction.
-func (r *PromoRepo) Simpan(ctx context.Context, p model.Promo) (int64, error) {
-	id := int64(p.ID)
+// Tambah: promo baru beserta tabel relasinya (cabang, produk, kategori) dalam satu transaction.
+func (r *PromoRepo) Tambah(ctx context.Context, p model.Promo) (int64, error) {
+	var id int64
 	err := WithTx(ctx, r.DB, func(tx *sql.Tx) error {
-		args := []any{p.Nama, p.Jenis, p.NilaiPersen, p.NilaiNominal, p.MinBelanja, p.KodeVoucher, p.Kuota,
-			p.TglMulai, p.TglSelesai, p.JamMulai, p.JamSelesai, nullStr(p.Catatan), p.Aktif}
-		if p.ID == 0 {
-			res, err := tx.ExecContext(ctx, `INSERT INTO promo (nama, jenis, nilai_persen, nilai_nominal, min_belanja,
-				kode_voucher, kuota, tgl_mulai, tgl_selesai, jam_mulai, jam_selesai, catatan, aktif)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args...)
-			if err != nil {
-				return fmt.Errorf("tambah promo: %w", err)
-			}
-			if id, err = res.LastInsertId(); err != nil {
-				return err
-			}
-		} else {
-			res, err := tx.ExecContext(ctx, `UPDATE promo SET nama = ?, jenis = ?, nilai_persen = ?, nilai_nominal = ?,
-				min_belanja = ?, kode_voucher = ?, kuota = ?, tgl_mulai = ?, tgl_selesai = ?, jam_mulai = ?,
-				jam_selesai = ?, catatan = ?, aktif = ?, updated_at = NOW() WHERE id = ? AND deleted_at IS NULL`, append(args, p.ID)...)
-			if err != nil {
-				return fmt.Errorf("ubah promo %d: %w", p.ID, err)
-			}
-			if err := pastikanAdaBaris(res); err != nil {
-				return err
-			}
+		res, err := tx.ExecContext(ctx, `INSERT INTO promo (nama, jenis, nilai_persen, nilai_nominal, min_belanja,
+			kode_voucher, kuota, tgl_mulai, tgl_selesai, jam_mulai, jam_selesai, catatan, aktif)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, kolomSimpanPromo(p)...)
+		if err != nil {
+			return fmt.Errorf("tambah promo: %w", err)
 		}
-		for _, rel := range []struct {
-			tabel, kolom string
-			ids          []int
-		}{{"promo_cabang", "cabang_id", p.CabangIDs}, {"promo_produk", "produk_id", p.ProdukIDs}, {"promo_kategori", "kategori_id", p.KategoriIDs}} {
-			if _, err := tx.ExecContext(ctx, "DELETE FROM "+rel.tabel+" WHERE promo_id = ?", id); err != nil {
-				return err
-			}
-			if len(rel.ids) == 0 {
-				continue
-			}
-			nilai := strings.TrimSuffix(strings.Repeat("(?, ?),", len(rel.ids)), ",")
-			var a []any
-			for _, x := range rel.ids {
-				a = append(a, id, x)
-			}
-			if _, err := tx.ExecContext(ctx, "INSERT INTO "+rel.tabel+" (promo_id, "+rel.kolom+") VALUES "+nilai, a...); err != nil {
-				return fmt.Errorf("simpan %s: %w", rel.tabel, err)
-			}
+		if id, err = res.LastInsertId(); err != nil {
+			return err
 		}
-		return nil
+		return simpanRelasiPromo(ctx, tx, id, p)
 	})
 	return id, err
 }
 
-func (r *PromoRepo) SetAktif(ctx context.Context, id int, aktif bool) error {
+// Ubah: data promo dan tabel relasinya diganti dalam satu transaction.
+func (r *PromoRepo) Ubah(ctx context.Context, p model.Promo) error {
+	return WithTx(ctx, r.DB, func(tx *sql.Tx) error {
+		res, err := tx.ExecContext(ctx, `UPDATE promo SET nama = ?, jenis = ?, nilai_persen = ?, nilai_nominal = ?,
+			min_belanja = ?, kode_voucher = ?, kuota = ?, tgl_mulai = ?, tgl_selesai = ?, jam_mulai = ?,
+			jam_selesai = ?, catatan = ?, aktif = ?, updated_at = NOW() WHERE id = ? AND deleted_at IS NULL`,
+			append(kolomSimpanPromo(p), p.ID)...)
+		if err != nil {
+			return fmt.Errorf("ubah promo %d: %w", p.ID, err)
+		}
+		if err := pastikanAdaBaris(res); err != nil {
+			return err
+		}
+		return simpanRelasiPromo(ctx, tx, int64(p.ID), p)
+	})
+}
+
+// kolomSimpanPromo: nilai kolom promo dengan urutan yang sama untuk INSERT dan UPDATE.
+func kolomSimpanPromo(p model.Promo) []any {
+	return []any{p.Nama, p.Jenis, p.NilaiPersen, p.NilaiNominal, p.MinBelanja, p.KodeVoucher, p.Kuota,
+		p.TglMulai, p.TglSelesai, p.JamMulai, p.JamSelesai, nullStr(p.Catatan), p.Aktif}
+}
+
+// simpanRelasiPromo menulis ulang cabang, produk, dan kategori target sebuah promo.
+func simpanRelasiPromo(ctx context.Context, tx *sql.Tx, id int64, p model.Promo) error {
+	for _, rel := range []struct {
+		tabel, kolom string
+		ids          []int
+	}{{"promo_cabang", "cabang_id", p.CabangIDs}, {"promo_produk", "produk_id", p.ProdukIDs}, {"promo_kategori", "kategori_id", p.KategoriIDs}} {
+		if _, err := tx.ExecContext(ctx, "DELETE FROM "+rel.tabel+" WHERE promo_id = ?", id); err != nil {
+			return err
+		}
+		if len(rel.ids) == 0 {
+			continue
+		}
+		nilai := strings.TrimSuffix(strings.Repeat("(?, ?),", len(rel.ids)), ",")
+		var a []any
+		for _, x := range rel.ids {
+			a = append(a, id, x)
+		}
+		if _, err := tx.ExecContext(ctx, "INSERT INTO "+rel.tabel+" (promo_id, "+rel.kolom+") VALUES "+nilai, a...); err != nil {
+			return fmt.Errorf("simpan %s: %w", rel.tabel, err)
+		}
+	}
+	return nil
+}
+
+// UbahAktif menyalakan/mematikan promo tanpa mengubah data lainnya.
+func (r *PromoRepo) UbahAktif(ctx context.Context, id int, aktif bool) error {
 	res, err := r.DB.ExecContext(ctx, "UPDATE promo SET aktif = ?, updated_at = NOW() WHERE id = ? AND deleted_at IS NULL", aktif, id)
 	if err != nil {
 		return fmt.Errorf("aktif promo %d: %w", id, err)

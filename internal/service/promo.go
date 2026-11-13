@@ -67,12 +67,15 @@ func (s *PromoService) simpan(ctx context.Context, p model.Promo) (int64, error)
 	if err := s.Validasi(ctx, &p); err != nil {
 		return 0, err
 	}
-	return s.Repo.Simpan(ctx, p)
+	if p.ID == 0 {
+		return s.Repo.Tambah(ctx, p)
+	}
+	return int64(p.ID), s.Repo.Ubah(ctx, p)
 }
 
-// SetAktif menyalakan/mematikan promo. Saat dinyalakan, promo beli 2 gratis 1 dicek lagi bentroknya,
+// UbahAktif menyalakan/mematikan promo. Saat dinyalakan, promo beli 2 gratis 1 dicek lagi bentroknya,
 // karena promo yang disimpan dalam keadaan nonaktif belum pernah dicek (validasi hanya untuk promo aktif).
-func (s *PromoService) SetAktif(ctx context.Context, id int, aktif bool) error {
+func (s *PromoService) UbahAktif(ctx context.Context, id int, aktif bool) error {
 	if aktif {
 		p, err := s.Repo.CariByID(ctx, id)
 		if err != nil {
@@ -82,7 +85,7 @@ func (s *PromoService) SetAktif(ctx context.Context, id int, aktif bool) error {
 			return err
 		}
 	}
-	return s.Repo.SetAktif(ctx, id, aktif)
+	return s.Repo.UbahAktif(ctx, id, aktif)
 }
 
 // cekBentrokB2G1: dua promo beli 2 gratis 1 untuk kategori & cabang yang sama di periode yang beririsan

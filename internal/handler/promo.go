@@ -128,7 +128,7 @@ func (h *PromoHandler) Toggle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	aktif := r.PostFormValue("aktif") == "1"
-	if err := h.Svc.SetAktif(r.Context(), id, aktif); err != nil {
+	if err := h.Svc.UbahAktif(r.Context(), id, aktif); err != nil {
 		var ve *service.ValidasiError
 		if errors.As(err, &ve) { // mis. bentrok beli 2 gratis 1: tampilkan sebagai pesan di atas halaman
 			h.tampil(w, r, "Promo & voucher", "/promo", promoBaru(), &service.ValidasiError{Pesan: "Promo tidak bisa diaktifkan: " + ve.Pesan})
