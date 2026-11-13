@@ -106,11 +106,18 @@ func (h *PromoHandler) simpan(w http.ResponseWriter, r *http.Request, id int) {
 			p.KuotaTerpakai = lama.KuotaTerpakai
 		}
 	}
-	if _, err := h.Svc.Simpan(r.Context(), p); err != nil {
+	var err error
+	kode := "promo-dibuat"
+	if id == 0 {
+		_, err = h.Svc.Buat(r.Context(), p)
+	} else {
+		err, kode = h.Svc.Ubah(r.Context(), p), "promo-diubah"
+	}
+	if err != nil {
 		h.tampil(w, r, "Promo & voucher", action, p, err)
 		return
 	}
-	redirect(w, r, "/promo", "Promo "+p.Nama+" disimpan")
+	redirect(w, r, "/promo", kode)
 }
 
 // Toggle mengaktifkan/menonaktifkan promo tanpa menghapus riwayatnya.
@@ -124,11 +131,11 @@ func (h *PromoHandler) Toggle(w http.ResponseWriter, r *http.Request) {
 		gagal(w, err)
 		return
 	}
-	pesan := "Promo dinonaktifkan"
+	kode := "promo-nonaktif"
 	if aktif {
-		pesan = "Promo diaktifkan"
+		kode = "promo-aktif"
 	}
-	redirect(w, r, "/promo", pesan)
+	redirect(w, r, "/promo", kode)
 }
 
 func nullAngka(s string) sql.NullInt64 {

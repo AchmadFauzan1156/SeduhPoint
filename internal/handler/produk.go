@@ -52,11 +52,11 @@ func (h *ProdukHandler) DaftarKategori(w http.ResponseWriter, r *http.Request) {
 
 func (h *ProdukHandler) SimpanKategori(w http.ResponseWriter, r *http.Request) {
 	k := model.Kategori{Nama: r.PostFormValue("nama")}
-	if err := h.Svc.SimpanKategori(r.Context(), k); err != nil {
+	if err := h.Svc.BuatKategori(r.Context(), k); err != nil {
 		h.tampilKategori(w, r, "/kategori", k, err)
 		return
 	}
-	redirect(w, r, "/kategori", "Kategori ditambahkan")
+	redirect(w, r, "/kategori", "kategori-dibuat")
 }
 
 func (h *ProdukHandler) FormEditKategori(w http.ResponseWriter, r *http.Request) {
@@ -78,11 +78,11 @@ func (h *ProdukHandler) UpdateKategori(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	k := model.Kategori{ID: id, Nama: r.PostFormValue("nama")}
-	if err := h.Svc.SimpanKategori(r.Context(), k); err != nil {
+	if err := h.Svc.UbahKategori(r.Context(), k); err != nil {
 		h.tampilKategori(w, r, fmt.Sprintf("/kategori/%d/edit", id), k, err)
 		return
 	}
-	redirect(w, r, "/kategori", "Kategori disimpan")
+	redirect(w, r, "/kategori", "kategori-diubah")
 }
 
 func (h *ProdukHandler) HapusKategori(w http.ResponseWriter, r *http.Request) {
@@ -94,7 +94,7 @@ func (h *ProdukHandler) HapusKategori(w http.ResponseWriter, r *http.Request) {
 		h.tampilKategori(w, r, "/kategori", model.Kategori{}, err)
 		return
 	}
-	redirect(w, r, "/kategori", "Kategori dihapus")
+	redirect(w, r, "/kategori", "kategori-dihapus")
 }
 
 // ---------- Produk ----------
@@ -173,14 +173,17 @@ func (h *ProdukHandler) simpan(w http.ResponseWriter, r *http.Request, id int) {
 		h.tampil(w, r, "Produk", action, model.Produk{ID: id}, service.SalahInput("gambar", "Foto terlalu besar (maks 2 MB)"))
 		return
 	}
-	p := model.Produk{
-		ID:         id,
-		Nama:       r.PostFormValue("nama"),
-		KategoriID: atoi(r.PostFormValue("kategori_id")),
-		Harga:      angka(r.PostFormValue("harga")),
-		Gambar:     r.PostFormValue("gambar_lama"),
-		Deskripsi:  r.PostFormValue("deskripsi"),
-		Aktif:      r.PostFormValue("aktif") == "on",
+	p := produkDariForm(r)
+	p.ID = id
+	// Foto lama diambil dari database, bukan dari hidden input, supaya path gambar
+	// tidak bisa diubah lewat form (mass assignment, materi #12).
+	if id > 0 {
+		lama, err := h.Svc.Detail(r.Context(), id)
+		if err != nil {
+			gagal(w, err)
+			return
+		}
+		p.Gambar = lama.Gambar
 	}
 	path, err := simpanFoto(r, "gambar")
 	if err != nil {
@@ -190,11 +193,28 @@ func (h *ProdukHandler) simpan(w http.ResponseWriter, r *http.Request, id int) {
 	if path != "" {
 		p.Gambar = path
 	}
-	if _, err := h.Svc.Simpan(r.Context(), p); err != nil {
+	kode := "produk-dibuat"
+	if id == 0 {
+		_, err = h.Svc.Buat(r.Context(), p)
+	} else {
+		err, kode = h.Svc.Ubah(r.Context(), p), "produk-diubah"
+	}
+	if err != nil {
 		h.tampil(w, r, "Produk", action, p, err)
 		return
 	}
-	redirect(w, r, "/produk", p.Nama+" disimpan")
+	redirect(w, r, "/produk", kode)
+}
+
+// produkDariForm hanya membaca field yang memang boleh diisi dari form (materi #10 & #12).
+func produkDariForm(r *http.Request) model.Produk {
+	return model.Produk{
+		Nama:       r.PostFormValue("nama"),
+		KategoriID: atoi(r.PostFormValue("kategori_id")),
+		Harga:      angka(r.PostFormValue("harga")),
+		Deskripsi:  r.PostFormValue("deskripsi"),
+		Aktif:      r.PostFormValue("aktif") == "on",
+	}
 }
 
 func (h *ProdukHandler) Hapus(w http.ResponseWriter, r *http.Request) {
@@ -206,7 +226,7 @@ func (h *ProdukHandler) Hapus(w http.ResponseWriter, r *http.Request) {
 		gagal(w, err)
 		return
 	}
-	redirect(w, r, "/produk", "Produk dihapus")
+	redirect(w, r, "/produk", "produk-dihapus")
 }
 
 const maksFoto = 2 << 20 // 2 MB

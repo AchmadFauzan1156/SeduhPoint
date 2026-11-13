@@ -24,7 +24,6 @@
     <div id="preview" class="preview" {{if .Form.Gambar}}style="background-image:url({{.Form.Gambar}})"{{end}}></div>
     <div class="field"><label for="gambar">Foto <span class="small">JPG/PNG/WebP, maks 2 MB</span></label>
       <input id="gambar" name="gambar" type="file" accept="image/jpeg,image/png,image/webp" class="input" style="padding-top:6px">
-      <input type="hidden" name="gambar_lama" value="{{.Form.Gambar}}">
       {{with index $.Errors "gambar"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
     <div class="field"><label for="nama">Nama</label>
       <input id="nama" name="nama" class="input{{if index $.Errors "nama"}} invalid{{end}}" value="{{.Form.Nama}}" maxlength="100" required>

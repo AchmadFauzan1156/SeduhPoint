@@ -84,8 +84,8 @@ func (s *MemberService) validasi(ctx context.Context, m *model.Member) error {
 	return hasilValidasi(errs)
 }
 
-// Daftar: member baru otomatis SILVER.
-func (s *MemberService) Daftar(ctx context.Context, m model.Member) (int64, error) {
+// Buat: mendaftarkan member baru, otomatis SILVER.
+func (s *MemberService) Buat(ctx context.Context, m model.Member) (int64, error) {
 	if err := s.validasi(ctx, &m); err != nil {
 		return 0, err
 	}

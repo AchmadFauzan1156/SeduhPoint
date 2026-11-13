@@ -52,7 +52,7 @@ func (h *CabangHandler) Simpan(w http.ResponseWriter, r *http.Request) {
 		h.tampil(w, r, "Cabang", CabangForm{Action: "/cabang", Cabang: c}, err)
 		return
 	}
-	redirect(w, r, "/cabang", "Cabang "+c.Nama+" ditambahkan")
+	redirect(w, r, "/cabang", "cabang-dibuat")
 }
 
 func (h *CabangHandler) FormEdit(w http.ResponseWriter, r *http.Request) {
@@ -79,7 +79,7 @@ func (h *CabangHandler) Update(w http.ResponseWriter, r *http.Request) {
 		h.tampil(w, r, "Ubah cabang", CabangForm{Action: fmt.Sprintf("/cabang/%d/edit", id), Cabang: c}, err)
 		return
 	}
-	redirect(w, r, "/cabang", "Cabang "+c.Nama+" disimpan")
+	redirect(w, r, "/cabang", "cabang-diubah")
 }
 
 func (h *CabangHandler) Hapus(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +91,7 @@ func (h *CabangHandler) Hapus(w http.ResponseWriter, r *http.Request) {
 		gagal(w, err)
 		return
 	}
-	redirect(w, r, "/cabang", "Cabang dihapus")
+	redirect(w, r, "/cabang", "cabang-dihapus")
 }
 
 func cabangDariForm(r *http.Request) model.Cabang {

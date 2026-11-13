@@ -54,13 +54,13 @@ func (h *MemberHandler) FormTambah(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MemberHandler) Simpan(w http.ResponseWriter, r *http.Request) {
-	m := model.Member{Nama: r.PostFormValue("nama"), NoHP: r.PostFormValue("no_hp")}
-	id, err := h.Svc.Daftar(r.Context(), m)
+	m := memberDariForm(r)
+	id, err := h.Svc.Buat(r.Context(), m)
 	if err != nil {
 		h.tampil(w, r, "Daftar member", MemberPage{Mode: "form", Action: "/member", Form: m}, err)
 		return
 	}
-	redirect(w, r, fmt.Sprintf("/member/%d", id), m.Nama+" terdaftar sebagai member Silver")
+	redirect(w, r, fmt.Sprintf("/member/%d", id), "member-dibuat")
 }
 
 func (h *MemberHandler) Detail(w http.ResponseWriter, r *http.Request) {
@@ -94,10 +94,16 @@ func (h *MemberHandler) Update(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	m := model.Member{ID: id, Nama: r.PostFormValue("nama"), NoHP: r.PostFormValue("no_hp")}
+	m := memberDariForm(r)
+	m.ID = id
 	if err := h.Svc.Ubah(r.Context(), m); err != nil {
 		h.tampil(w, r, "Ubah member", MemberPage{Mode: "form", Action: fmt.Sprintf("/member/%d/edit", id), Form: m}, err)
 		return
 	}
-	redirect(w, r, fmt.Sprintf("/member/%d", id), "Data member disimpan")
+	redirect(w, r, fmt.Sprintf("/member/%d", id), "member-diubah")
+}
+
+// memberDariForm hanya membaca field yang boleh diisi dari form (materi #10).
+func memberDariForm(r *http.Request) model.Member {
+	return model.Member{Nama: r.PostFormValue("nama"), NoHP: r.PostFormValue("no_hp")}
 }

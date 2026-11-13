@@ -27,7 +27,17 @@ func (s *ProdukService) DetailKategori(ctx context.Context, id int) (model.Kateg
 	return s.KategoriRepo.CariByID(ctx, id)
 }
 
-func (s *ProdukService) SimpanKategori(ctx context.Context, k model.Kategori) error {
+func (s *ProdukService) BuatKategori(ctx context.Context, k model.Kategori) error {
+	k.ID = 0
+	return s.simpanKategori(ctx, k)
+}
+
+func (s *ProdukService) UbahKategori(ctx context.Context, k model.Kategori) error {
+	return s.simpanKategori(ctx, k)
+}
+
+// simpanKategori: satu fungsi validasi untuk tambah dan ubah (materi #9).
+func (s *ProdukService) simpanKategori(ctx context.Context, k model.Kategori) error {
 	k.Nama = strings.TrimSpace(k.Nama)
 	if k.Nama == "" {
 		return salah("nama", "Nama kategori wajib diisi")
@@ -73,14 +83,18 @@ func (s *ProdukService) Detail(ctx context.Context, id int) (model.Produk, error
 	return s.Repo.CariByID(ctx, id)
 }
 
-func (s *ProdukService) Simpan(ctx context.Context, p model.Produk) (int64, error) {
+func (s *ProdukService) Buat(ctx context.Context, p model.Produk) (int64, error) {
 	if err := s.validasi(ctx, &p); err != nil {
 		return 0, err
 	}
-	if p.ID == 0 {
-		return s.Repo.Tambah(ctx, p)
+	return s.Repo.Tambah(ctx, p)
+}
+
+func (s *ProdukService) Ubah(ctx context.Context, p model.Produk) error {
+	if err := s.validasi(ctx, &p); err != nil {
+		return err
 	}
-	return int64(p.ID), s.Repo.Ubah(ctx, p)
+	return s.Repo.Ubah(ctx, p)
 }
 
 func (s *ProdukService) Hapus(ctx context.Context, id int) error { return s.Repo.Hapus(ctx, id) }

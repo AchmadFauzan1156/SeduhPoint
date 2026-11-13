@@ -28,7 +28,7 @@ type Halaman struct {
 func halaman(r *http.Request, judul, aktif string, data any) Halaman {
 	s, _ := middleware.Ambil(r)
 	return Halaman{Judul: judul, Aktif: aktif, Sesi: s, Data: data,
-		Flash: r.URL.Query().Get("pesan"), Errors: map[string]string{}}
+		Flash: pesanFlash[r.URL.Query().Get("pesan")], Errors: map[string]string{}}
 }
 
 func idDariPath(w http.ResponseWriter, r *http.Request) (int, bool) {
@@ -79,13 +79,35 @@ func catatError(hal *Halaman, ve *service.ValidasiError) {
 	}
 }
 
-// redirect dengan pesan sukses.
-func redirect(w http.ResponseWriter, r *http.Request, url, pesan string) {
+// pesanFlash: pesan sukses setelah redirect (materi #9). URL hanya membawa kode, teksnya diambil dari map ini,
+// sehingga orang lain tidak bisa membuat link yang menampilkan pesan karangan di halaman kita.
+var pesanFlash = map[string]string{
+	"cabang-dibuat":        "Cabang berhasil ditambahkan",
+	"cabang-diubah":        "Cabang berhasil disimpan",
+	"cabang-dihapus":       "Cabang berhasil dihapus",
+	"kategori-dibuat":      "Kategori berhasil ditambahkan",
+	"kategori-diubah":      "Kategori berhasil disimpan",
+	"kategori-dihapus":     "Kategori berhasil dihapus",
+	"produk-dibuat":        "Produk berhasil ditambahkan",
+	"produk-diubah":        "Produk berhasil disimpan",
+	"produk-dihapus":       "Produk berhasil dihapus",
+	"member-dibuat":        "Member terdaftar dengan tingkat Silver",
+	"member-diubah":        "Data member berhasil disimpan",
+	"promo-dibuat":         "Promo berhasil ditambahkan",
+	"promo-diubah":         "Promo berhasil disimpan",
+	"promo-aktif":          "Promo diaktifkan",
+	"promo-nonaktif":       "Promo dinonaktifkan",
+	"transaksi-dibuat":     "Transaksi berhasil disimpan",
+	"transaksi-dibatalkan": "Transaksi berhasil dibatalkan",
+}
+
+// redirect dengan kode pesan sukses (pola Post/Redirect/Get, materi #4).
+func redirect(w http.ResponseWriter, r *http.Request, url, kode string) {
 	sep := "?"
 	if strings.Contains(url, "?") {
 		sep = "&"
 	}
-	http.Redirect(w, r, url+sep+"pesan="+neturl.QueryEscape(pesan), http.StatusSeeOther)
+	http.Redirect(w, r, url+sep+"pesan="+neturl.QueryEscape(kode), http.StatusSeeOther)
 }
 
 func angka(s string) int64 {

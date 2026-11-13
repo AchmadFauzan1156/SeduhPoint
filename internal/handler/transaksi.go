@@ -219,7 +219,7 @@ func (h *TransaksiHandler) Bayar(w http.ResponseWriter, r *http.Request) {
 		h.tampilKasir(w, r, k, err)
 		return
 	}
-	redirect(w, r, fmt.Sprintf("/transaksi/%d", id), "Transaksi berhasil disimpan")
+	redirect(w, r, fmt.Sprintf("/transaksi/%d", id), "transaksi-dibuat")
 }
 
 // bolehAkses: kasir hanya boleh melihat/membatalkan transaksi cabangnya sendiri.
@@ -329,5 +329,5 @@ func (h *TransaksiHandler) Batal(w http.ResponseWriter, r *http.Request) {
 		h.riwayat(w, r, p, alasan, err)
 		return
 	}
-	redirect(w, r, fmt.Sprintf("/transaksi/%d", p.Transaksi.ID), "Transaksi "+p.Transaksi.NoTransaksi+" dibatalkan")
+	redirect(w, r, fmt.Sprintf("/transaksi/%d", p.Transaksi.ID), "transaksi-dibatalkan")
 }

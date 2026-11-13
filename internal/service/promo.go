@@ -39,7 +39,17 @@ func (s *PromoService) Dipakai(ctx context.Context, id int) (int, error) {
 	return s.Repo.Dipakai(ctx, id)
 }
 
-func (s *PromoService) Simpan(ctx context.Context, p model.Promo) (int64, error) {
+func (s *PromoService) Buat(ctx context.Context, p model.Promo) (int64, error) {
+	p.ID = 0
+	return s.simpan(ctx, p)
+}
+
+func (s *PromoService) Ubah(ctx context.Context, p model.Promo) error {
+	_, err := s.simpan(ctx, p)
+	return err
+}
+
+func (s *PromoService) simpan(ctx context.Context, p model.Promo) (int64, error) {
 	// Promo yang sudah dipakai transaksi dikunci jenis, nilai, kode, dan targetnya agar laporan tetap jelas;
 	// yang boleh diubah: nama, catatan, tanggal, jam, cabang, kuota, status aktif.
 	if p.ID > 0 {
