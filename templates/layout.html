@@ -20,11 +20,11 @@
       </header>
       {{if .Flash}}<div class="alert ok" role="status">{{.Flash}}</div>{{end}}
       {{if .Error}}<div class="alert bad" role="alert">{{.Error}}</div>{{end}}
-      {{template "konten" .}}
+      {{template "content" .}}
     </main>
   </div>
 {{else}}
-  {{template "konten" .}}
+  {{template "content" .}}
 {{end}}
   {{template "footer" .}}
 </body>

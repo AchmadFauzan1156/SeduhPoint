@@ -1,4 +1,4 @@
-{{define "konten"}}{{with .Data}}
+{{define "content"}}{{with .Data}}
 <div class="title-row"><div><h1>Selamat datang, {{$.Sesi.Username}}</h1>
   <p class="sub">{{if eq .R.Hari 1}}Ringkasan hari ini, {{tglPendek .R.Sampai}}{{else}}Ringkasan {{rentang .R.Dari .R.Sampai}}{{end}} · semua cabang · hanya transaksi selesai</p></div>
   <nav class="seg" aria-label="Periode">

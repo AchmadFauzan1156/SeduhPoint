@@ -1,4 +1,4 @@
-{{define "konten"}}{{with .Data}}{{$t := .Transaksi}}
+{{define "content"}}{{with .Data}}{{$t := .Transaksi}}
 <div class="title-row"><div><h1>{{$t.NoTransaksi}}</h1>
   <p class="sub">{{if eq $t.Status "SELESAI"}}Selesai{{else}}<span class="pill bad">Dibatalkan</span>{{end}} · {{tgl $t.Waktu}} WIB</p></div>
   <div style="display:flex;gap:8px">

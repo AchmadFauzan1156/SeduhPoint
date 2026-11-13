@@ -1,4 +1,4 @@
-{{define "konten"}}{{with .Data}}
+{{define "content"}}{{with .Data}}
 <div class="title-row"><div><h1>{{if eq $.Sesi.Peran "KASIR"}}Riwayat transaksi{{else}}Transaksi{{end}}</h1>
   <p class="sub">{{tglPendek .Tgl}} · {{len .Daftar}} transaksi</p></div>
   <form method="get" action="/transaksi" style="display:flex;gap:8px">

@@ -1,7 +1,7 @@
 {{define "topbar"}}<label class="cari-top" for="q">{{template "ikon" "cari"}}<span class="sr-only">Cari menu</span>
   <input id="q" name="q" form="kasir" placeholder="Cari menu, lalu tekan Enter" value="{{.Data.Q}}"></label>
   <span class="scope">{{template "ikon" "lokasi"}}{{.Data.Cabang}}</span>{{end}}
-{{define "konten"}}{{with .Data}}
+{{define "content"}}{{with .Data}}
 <form method="post" action="/kasir/hitung" id="kasir" class="pos">
   <!-- tombol bawaan saat Enter ditekan di kolom teks -->
   <button type="submit" name="aksi" value="hitung" class="sr-only" tabindex="-1" aria-hidden="true">Hitung</button>
