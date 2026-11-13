@@ -2,10 +2,6 @@
 *.exe
 tmp/
 
-# Skill/konfigurasi Claude Code lokal (tidak di-commit)
-.claude/
-CLAUDE.local.md
-
 # Foto unggahan admin (hanya di laptop/server masing-masing)
 static/img/upload/*
 !static/img/upload/.gitkeep

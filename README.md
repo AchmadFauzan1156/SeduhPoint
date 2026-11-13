@@ -242,6 +242,9 @@ semua error sekaligus, ketentuan promo, data grafik dan laporan, pengembalian po
 kasus negatif hak akses (kasir ditolak di halaman admin, tidak bisa melihat cabang lain, tidak bisa membatalkan
 transaksi kemarin, dan tidak bisa me-reset password).
 
+Aturan bisnis lengkap ada di [docs/aturan-bisnis.md](docs/aturan-bisnis.md), dan hasil simulasi pengujian
+seluruh fitur dengan peran admin dan kasir ada di [docs/hasil-simulasi.md](docs/hasil-simulasi.md).
+
 ## Arsitektur
 
 ```mermaid
@@ -275,6 +278,7 @@ SeduhPoint/
 │   ├── handler/           handler HTTP dan helper template
 │   └── middleware/        logging, batas ukuran body, RequireLogin, RequireRole
 ├── db/seduhpoint.sql      database, tabel, dan data contoh
+├── docs/                  aturan bisnis dan hasil simulasi pengujian
 ├── templates/             template HTML per halaman
 └── static/                CSS, JavaScript, logo, foto menu
 ```
