@@ -70,8 +70,35 @@ func (s *PromoService) simpan(ctx context.Context, p model.Promo) (int64, error)
 	return s.Repo.Simpan(ctx, p)
 }
 
+// SetAktif menyalakan/mematikan promo. Saat dinyalakan, promo beli 2 gratis 1 dicek lagi bentroknya,
+// karena promo yang disimpan dalam keadaan nonaktif belum pernah dicek (validasi hanya untuk promo aktif).
 func (s *PromoService) SetAktif(ctx context.Context, id int, aktif bool) error {
+	if aktif {
+		p, err := s.Repo.CariByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if err := s.cekBentrokB2G1(ctx, p); err != nil {
+			return err
+		}
+	}
 	return s.Repo.SetAktif(ctx, id, aktif)
+}
+
+// cekBentrokB2G1: dua promo beli 2 gratis 1 untuk kategori & cabang yang sama di periode yang beririsan
+// akan memberi gratis dobel, jadi hanya satu yang boleh aktif.
+func (s *PromoService) cekBentrokB2G1(ctx context.Context, p model.Promo) error {
+	if p.Jenis != JenisB2G1 || s.Repo == nil {
+		return nil
+	}
+	nama, err := s.Repo.B2G1Bentrok(ctx, p)
+	if err != nil {
+		return err
+	}
+	if nama != "" {
+		return salah("kategori", "Bentrok dengan promo \""+nama+"\" (beli 2 gratis 1 untuk kategori dan cabang yang sama di periode yang beririsan)")
+	}
+	return nil
 }
 
 var reKode = regexp.MustCompile(`^[A-Z0-9]{4,20}$`)
@@ -176,14 +203,9 @@ func (s *PromoService) Validasi(ctx context.Context, p *model.Promo) error {
 	if len(errs) > 0 {
 		return hasilValidasi(errs)
 	}
-	// Dua promo beli 2 gratis 1 untuk kategori & cabang yang sama di periode yang beririsan akan memberi gratis dobel.
 	// Dicek terakhir karena butuh isian lain yang sudah valid.
-	if p.Jenis == JenisB2G1 && p.Aktif && s.Repo != nil {
-		if nama, err := s.Repo.B2G1Bentrok(ctx, *p); err != nil {
-			return err
-		} else if nama != "" {
-			return salah("kategori", "Bentrok dengan promo \""+nama+"\" (beli 2 gratis 1 untuk kategori dan cabang yang sama di periode yang beririsan)")
-		}
+	if p.Aktif {
+		return s.cekBentrokB2G1(ctx, *p)
 	}
 	return nil
 }

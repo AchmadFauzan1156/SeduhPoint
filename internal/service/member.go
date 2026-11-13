@@ -55,12 +55,22 @@ func (s *MemberService) DetailLengkap(ctx context.Context, id int) (DetailMember
 	return d, nil
 }
 
-var reHP = regexp.MustCompile(`^(08|628)[0-9]{8,12}$`)
+var reHP = regexp.MustCompile(`^08[0-9]{8,12}$`)
 
-// NormalisasiHP: buang spasi/tanda hubung, "+62" -> "62".
+// NormalisasiHP: buang spasi/tanda hubung/titik, lalu ubah awalan "+62"/"62" menjadi "0",
+// sehingga 6281234567890 dan 081234567890 dianggap nomor yang sama (satu orang tidak bisa terdaftar dua kali).
 func NormalisasiHP(s string) string {
 	s = strings.NewReplacer(" ", "", "-", "", ".", "").Replace(strings.TrimSpace(s))
-	return strings.TrimPrefix(s, "+")
+	s = strings.TrimPrefix(s, "+")
+	if strings.HasPrefix(s, "62") {
+		s = "0" + strings.TrimPrefix(s, "62")
+	}
+	return s
+}
+
+// bentukLamaHP: nomor yang tersimpan sebelum normalisasi di atas bisa masih berawalan 62.
+func bentukLamaHP(noHP string) string {
+	return "62" + strings.TrimPrefix(noHP, "0")
 }
 
 func (s *MemberService) validasi(ctx context.Context, m *model.Member) error {
@@ -76,7 +86,7 @@ func (s *MemberService) validasi(ctx context.Context, m *model.Member) error {
 		errs["no_hp"] = "Nomor HP wajib diisi"
 	} else if !reHP.MatchString(m.NoHP) {
 		errs["no_hp"] = "Nomor HP tidak valid (contoh: 081234567890)"
-	} else if dipakai, err := s.Repo.NoHPDipakai(ctx, m.NoHP, m.ID); err != nil {
+	} else if dipakai, err := s.Repo.NoHPDipakai(ctx, []string{m.NoHP, bentukLamaHP(m.NoHP)}, m.ID); err != nil {
 		return err
 	} else if dipakai {
 		errs["no_hp"] = "Nomor HP sudah terdaftar sebagai member"

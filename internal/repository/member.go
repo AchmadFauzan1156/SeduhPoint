@@ -64,9 +64,11 @@ func (r *MemberRepo) Hitung(ctx context.Context) (total, gold int, err error) {
 	return
 }
 
-func (r *MemberRepo) NoHPDipakai(ctx context.Context, noHP string, kecualiID int) (bool, error) {
+// NoHPDipakai: apakah salah satu bentuk nomor (mis. 08... dan 628...) sudah dipakai member lain.
+func (r *MemberRepo) NoHPDipakai(ctx context.Context, bentuk []string, kecualiID int) (bool, error) {
 	var n int
-	err := r.DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM member WHERE no_hp = ? AND id <> ?", noHP, kecualiID).Scan(&n)
+	err := r.DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM member WHERE no_hp IN (?, ?) AND id <> ?",
+		bentuk[0], bentuk[1], kecualiID).Scan(&n)
 	return n > 0, err
 }
 

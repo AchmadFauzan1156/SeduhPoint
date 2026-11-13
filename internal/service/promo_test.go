@@ -70,7 +70,8 @@ func TestDiskonMengosongkanFieldLain(t *testing.T) {
 }
 
 func TestNormalisasiHP(t *testing.T) {
-	for in, want := range map[string]string{"0812-3456 7890": "081234567890", "+6281234567890": "6281234567890"} {
+	for in, want := range map[string]string{"0812-3456 7890": "081234567890", "+6281234567890": "081234567890",
+		"6281234567890": "081234567890", "62 812.3456.7890": "081234567890"} {
 		if got := NormalisasiHP(in); got != want {
 			t.Errorf("%q -> %q, harap %q", in, got, want)
 		}
