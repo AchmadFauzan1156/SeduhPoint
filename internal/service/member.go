@@ -27,9 +27,18 @@ type DetailMember struct {
 	PersenGold int   // 0–100, untuk bar progres
 }
 
+// Cari berdasarkan nama atau nomor HP. Jika yang diketik berupa nomor HP (mis. "0812-3456", "+62 812..."),
+// nomornya dinormalkan dulu, lalu dicari tanpa angka 0 di depan agar cocok dengan nomor yang tersimpan
+// sebagai 08... maupun data lama yang masih 628...
 func (s *MemberService) Cari(ctx context.Context, q string) ([]model.Member, error) {
-	return s.Repo.Cari(ctx, strings.TrimSpace(q))
+	q = strings.TrimSpace(q)
+	if hp := NormalisasiHP(q); reAngka.MatchString(hp) {
+		q = strings.TrimPrefix(hp, "0")
+	}
+	return s.Repo.Cari(ctx, q)
 }
+
+var reAngka = regexp.MustCompile(`^[0-9]{4,}$`)
 
 func (s *MemberService) Hitung(ctx context.Context) (total, gold int, err error) {
 	return s.Repo.Hitung(ctx)
