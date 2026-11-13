@@ -139,6 +139,12 @@ func bukaDB(dsn string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Batasi ukuran pool (materi #6): default MaxOpenConns tanpa batas bisa menghabiskan
+	// jatah koneksi MySQL, dan ConnMaxLifetime mencegah koneksi basi yang sudah diputus MySQL.
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(25)
+	db.SetConnMaxLifetime(5 * time.Minute)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := db.PingContext(ctx); err != nil {
