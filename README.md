@@ -11,7 +11,7 @@ Kasir mencatat transaksi, sistem menghitung promo dan poin secara otomatis,<br>
 pemilik memantau biaya promo, poin beredar, dan perkembangan member dari satu tempat.
 
 <p>
-  <img src="https://img.shields.io/badge/Go-1.22+-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go 1.22+">
+  <img src="https://img.shields.io/badge/Go-1.25+-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go 1.25+">
   <img src="https://img.shields.io/badge/MySQL-8-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL 8">
   <img src="https://img.shields.io/badge/MariaDB-10.6+-003545?style=for-the-badge&logo=mariadb&logoColor=white" alt="MariaDB 10.6+">
   <img src="https://img.shields.io/badge/HTML_Template-SSR-E34F26?style=for-the-badge&logo=html5&logoColor=white" alt="Server-side rendering">
@@ -71,6 +71,7 @@ pemilik memantau biaya promo, poin beredar, dan perkembangan member dari satu te
 
 ### Admin & laporan
 - Kelola cabang, kategori, produk (dengan foto), member, promo
+- Kelola pengguna: ganti password admin dan reset password kasir
 - Ringkasan omzet, transaksi, biaya promo, member Gold
 - Grafik omzet harian dan omzet per cabang, dibanding periode sebelumnya
 - Laporan biaya promo (filter tanggal & cabang)
@@ -110,9 +111,9 @@ pemilik memantau biaya promo, poin beredar, dan perkembangan member dari satu te
 
 | Lapisan | Teknologi |
 |---|---|
-| Backend | Go standard library: `net/http` (routing Go 1.22), `html/template`, `database/sql` |
+| Backend | Go standard library: `net/http` (routing Go 1.22+), `html/template`, `database/sql` |
 | Database | MySQL 8 atau MariaDB 10.6+ lewat `go-sql-driver/mysql` |
-| Keamanan | Password `bcrypt`, pembatasan peran, query berparameter, transaksi database dengan `SELECT ... FOR UPDATE` |
+| Keamanan | Password `bcrypt`, session di database, pembatasan peran (RBAC), proteksi CSRF `http.NewCrossOriginProtection`, query berparameter, transaksi database dengan `SELECT ... FOR UPDATE` |
 | Tampilan | HTML yang dirender di server, CSS dan JavaScript sendiri tanpa framework |
 | Konfigurasi | File `.env` lewat `joho/godotenv` |
 
@@ -120,7 +121,7 @@ pemilik memantau biaya promo, poin beredar, dan perkembangan member dari satu te
 
 ### Kebutuhan
 
-- [Go](https://go.dev/dl/) 1.22 atau lebih baru
+- [Go](https://go.dev/dl/) 1.25 atau lebih baru
 - MySQL 8 atau MariaDB 10.6+, pilih salah satu:
 
 | Pilihan | Cara menyalakan |
@@ -145,6 +146,18 @@ mysql -u root --default-character-set=utf8mb4 -e "source db/seduhpoint.sql"
 
 File `db/seduhpoint.sql` membuat database, seluruh tabel, dan data contoh. Untuk mengulang dari awal, jalankan
 `mysql -u root -e "DROP DATABASE IF EXISTS seduhpoint"` lebih dulu. Tambahkan `-p` jika user MySQL memakai password.
+
+Sudah punya database `seduhpoint` dari versi sebelumnya? Cukup tambahkan tabel `sessions` tanpa menghapus data:
+
+```sql
+CREATE TABLE IF NOT EXISTS sessions (
+  token       VARCHAR(64) PRIMARY KEY,
+  pengguna_id INT NOT NULL,
+  expires_at  DATETIME NOT NULL,
+  FOREIGN KEY (pengguna_id) REFERENCES pengguna(id) ON DELETE CASCADE,
+  INDEX idx_sessions_pengguna (pengguna_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
 
 <details>
 <summary>Perintah <code>mysql</code> tidak dikenali?</summary>
@@ -171,6 +184,7 @@ cp .env.example .env        # Windows CMD: copy .env.example .env
 |---|---|---|
 | `ADDR` | `127.0.0.1:8080` | Alamat server web |
 | `DB_DSN` | `root:@tcp(127.0.0.1:3306)/seduhpoint?parseTime=true&charset=utf8mb4&loc=Asia%2FJakarta` | Koneksi database: `user:password@tcp(host:port)/nama_database` |
+| `COOKIE_SECURE` | `false` | `true` hanya jika aplikasi dibuka lewat HTTPS. Di localhost harus `false`, kalau tidak login selalu kembali ke halaman login |
 
 ### 4. Jalankan
 
@@ -196,7 +210,26 @@ wgo run -file .html -file .css ./cmd/web
 
 Data contoh berisi 3 cabang, 7 menu, 2 member, dan 4 promo (satu dari tiap jenis, kode voucher `SEDUH10`) yang
 berlaku 1 Okt sampai 31 Des 2026. Ubah tanggal promo di menu **Promo & voucher** bila perlu, dan ganti password
-akun sebelum dipakai sungguhan.
+akun lewat menu **Pengguna** (khusus admin) sebelum dipakai sungguhan.
+
+### Hak akses
+
+Akun dibuat dan dikelola admin, jadi tidak ada halaman register. Semua route wajib login kecuali halaman login,
+dan setiap aturan dicek di server, bukan hanya dengan menyembunyikan tombol.
+
+| Aksi | Tamu | Kasir | Admin |
+|---|:---:|:---:|:---:|
+| Login | ✓ | ✓ | ✓ |
+| Halaman kasir: pilih menu, voucher, tukar poin, bayar | | ✓ | |
+| Lihat riwayat dan struk transaksi | | cabangnya sendiri | semua cabang |
+| Batalkan transaksi | | cabangnya sendiri, hari ini | semua |
+| Lihat, daftarkan, dan ubah member | | ✓ | ✓ |
+| Kelola cabang, kategori, produk, promo & voucher | | | ✓ |
+| Ringkasan dan laporan | | | ✓ |
+| Kelola pengguna, ganti/reset password | | | ✓ |
+
+Transaksi cabang lain dijawab **404** (keberadaannya tidak dibocorkan), aksi yang tidak diizinkan **403**, dan
+pengguna yang belum login diarahkan ke `/login`.
 
 ## Pengujian
 
@@ -204,14 +237,16 @@ akun sebelum dipakai sungguhan.
 go test ./...
 ```
 
-Test mencakup perhitungan promo bertumpuk, batas tukar poin, poin Silver dan Gold, validasi promo,
-ketentuan promo, serta data grafik dan laporan.
+Test mencakup perhitungan promo bertumpuk, batas tukar poin, poin Silver dan Gold, validasi yang mengumpulkan
+semua error sekaligus, ketentuan promo, data grafik dan laporan, pengembalian poin saat pembatalan, serta
+kasus negatif hak akses (kasir ditolak di halaman admin, tidak bisa melihat cabang lain, tidak bisa membatalkan
+transaksi kemarin, dan tidak bisa me-reset password).
 
 ## Arsitektur
 
 ```mermaid
 flowchart LR
-    B[Browser] -->|HTTP| M[Middleware<br/>log, login, peran]
+    B[Browser] -->|HTTP| M[Middleware<br/>CSRF, log, login, peran]
     M --> H[Handler<br/>form & template]
     H --> S[Service<br/>aturan bisnis & validasi]
     S --> R[Repository<br/>query SQL]
@@ -238,7 +273,7 @@ SeduhPoint/
 │   ├── repository/        query SQL, satu file per entitas
 │   ├── service/           aturan bisnis, validasi, perhitungan promo & poin
 │   ├── handler/           handler HTTP dan helper template
-│   └── middleware/        logging, sesi login, pembatasan peran
+│   └── middleware/        logging, batas ukuran body, RequireLogin, RequireRole
 ├── db/seduhpoint.sql      database, tabel, dan data contoh
 ├── templates/             template HTML per halaman
 └── static/                CSS, JavaScript, logo, foto menu
@@ -247,7 +282,26 @@ SeduhPoint/
 ## Catatan
 
 - Jam promo dan tanggal mengikuti WIB (Asia/Jakarta).
-- Sesi login disimpan di memori server, jadi pengguna perlu login ulang setelah server dimulai ulang.
+- Session login disimpan di tabel `sessions` dan berlaku 8 jam (satu shift kerja), jadi tetap login walau
+  server dimulai ulang. Setelah password diganti, session akun itu di perangkat lain dihapus.
+- Aksi penting (pembatalan transaksi, hapus data master, ubah status promo, ganti/reset password) dicatat
+  ke log server beserta username pelakunya.
+
+## Penerapan materi kuliah
+
+| Materi | Penerapan di SeduhPoint |
+|---|---|
+| #1 Pengantar web dengan Go | Satu binary Go sebagai web server, `go run ./cmd/web` |
+| #2 Dasar Go untuk web | Struct di `internal/model`, error sebagai nilai (`if err != nil`), `errors.Is` / `errors.As` |
+| #3 HTTP di Go | `http.ServeMux` dengan pola `GET /produk/{id}` dan `{$}`, `r.PathValue`, `http.Server` dengan timeout |
+| #4 Menangani input | `PostFormValue`, validasi di server dengan `utf8.RuneCountInString`, semua error dikumpulkan per field, `http.MaxBytesReader`, Post/Redirect/Get |
+| #5 Output HTML | `html/template` dengan layout, `header`, `sidebar`, `footer`, blok `content`, `FuncMap` (mis. `rupiah`), file statis dengan `index.html` kosong |
+| #6 Koneksi database | `database/sql` + driver MySQL, DSN dari `.env`, `PingContext` saat start, batas pool koneksi |
+| #7 CRUD: create & read | Query berparameter `?`, `LastInsertId`, `sql.ErrNoRows` diubah jadi `model.ErrNotFound`, `r.Context()` ke semua query |
+| #9 CRUD: update & delete | Satu form untuk tambah dan ubah, `RowsAffected` lewat `pastikanAdaBaris`, hapus lewat POST dengan konfirmasi, soft delete, pesan flash berupa kode |
+| #10 Struktur aplikasi | Lapisan model, repository, service, handler; dependency lewat struct; `ValidasiError`; middleware; config dari env |
+| #11 Session & authentication | Tabel `sessions`, token `rand.Text()`, bcrypt, cookie `HttpOnly` + `SameSite=Lax` + `Secure` dari config, `RequireLogin` |
+| #12 Authorization & RBAC | `RequireRole`, konstanta peran, aturan akses di model dan service (`BolehLihat`, `BolehBatal`), `ErrForbidden`, CSRF, halaman Pengguna, log aksi, test kasus negatif |
 
 ## Kredit
 
