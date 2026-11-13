@@ -103,15 +103,15 @@ func bacaKeranjang(r *http.Request) keranjang {
 }
 
 func (h *TransaksiHandler) permintaan(r *http.Request, k keranjang) service.PermintaanCheckout {
-	s, _ := middleware.Ambil(r)
-	return service.PermintaanCheckout{CabangID: s.CabangID, PenggunaID: s.PenggunaID, MemberID: k.MemberID, Qty: k.Qty,
+	u, _ := middleware.PenggunaDari(r.Context())
+	return service.PermintaanCheckout{CabangID: u.CabangID, PenggunaID: u.ID, MemberID: k.MemberID, Qty: k.Qty,
 		KodeVoucher: k.Kode, PoinDiminta: k.Poin, Token: k.Token}
 }
 
 // tampilKasir menghitung pratinjau dan merender halaman kasir. errAwal = error dari checkout (jika ada).
 func (h *TransaksiHandler) tampilKasir(w http.ResponseWriter, r *http.Request, k keranjang, errAwal error) {
 	ctx := r.Context()
-	s, _ := middleware.Ambil(r)
+	u, _ := middleware.PenggunaDari(r.Context())
 	pg := KasirPage{Kat: k.Kat, Q: k.Q, MemberID: k.MemberID, CariMember: k.CariMember, Kode: k.Kode, Poin: k.Poin,
 		Token: k.Token, Label: map[int]string{}}
 	hal := halaman(r, "Transaksi baru", "kasir", nil)
@@ -127,7 +127,7 @@ func (h *TransaksiHandler) tampilKasir(w http.ResponseWriter, r *http.Request, k
 		gagal(w, errAwal)
 		return
 	}
-	if c, err := h.CabangSvc.Detail(ctx, s.CabangID); err == nil {
+	if c, err := h.CabangSvc.Detail(ctx, u.CabangID); err == nil {
 		pg.Cabang = c.Nama
 	}
 	semua, err := h.ProdukSvc.DaftarDijual(ctx)
@@ -192,7 +192,7 @@ func (h *TransaksiHandler) tampilKasir(w http.ResponseWriter, r *http.Request, k
 	if len(hal.Errors) > 0 || hal.Error != "" {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 	}
-	h.View.Tampil(w, "transaksi/kasir.html", hal)
+	h.View.Tampil(w, r, "transaksi/kasir.html", hal)
 }
 
 func (h *TransaksiHandler) Kasir(w http.ResponseWriter, r *http.Request) {
@@ -224,8 +224,8 @@ func (h *TransaksiHandler) Bayar(w http.ResponseWriter, r *http.Request) {
 
 // bolehAkses: kasir hanya boleh melihat/membatalkan transaksi cabangnya sendiri.
 func bolehAkses(r *http.Request, t model.Transaksi) bool {
-	s, _ := middleware.Ambil(r)
-	return s.Peran == "ADMIN" || s.CabangID == t.CabangID
+	u, _ := middleware.PenggunaDari(r.Context())
+	return u.IsAdmin() || u.CabangID == t.CabangID
 }
 
 func (h *TransaksiHandler) Struk(w http.ResponseWriter, r *http.Request) {
@@ -242,7 +242,7 @@ func (h *TransaksiHandler) Struk(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Akses ditolak", http.StatusForbidden)
 		return
 	}
-	h.View.Tampil(w, "transaksi/struk.html", halaman(r, st.Transaksi.NoTransaksi, "transaksi", st))
+	h.View.Tampil(w, r, "transaksi/struk.html", halaman(r, st.Transaksi.NoTransaksi, "transaksi", st))
 }
 
 type RiwayatPage struct {
@@ -258,7 +258,7 @@ type BatalPanel struct {
 }
 
 func (h *TransaksiHandler) riwayat(w http.ResponseWriter, r *http.Request, batal *BatalPanel, alasan string, err error) {
-	s, _ := middleware.Ambil(r)
+	u, _ := middleware.PenggunaDari(r.Context())
 	tgl, e := time.ParseInLocation("2006-01-02", r.URL.Query().Get("tgl"), config.WIB)
 	if e != nil {
 		tgl = time.Now().In(config.WIB)
@@ -267,8 +267,8 @@ func (h *TransaksiHandler) riwayat(w http.ResponseWriter, r *http.Request, batal
 		}
 	}
 	cabang := 0
-	if s.Peran == "KASIR" {
-		cabang = s.CabangID
+	if u.IsKasir() {
+		cabang = u.CabangID
 	}
 	daftar, e := h.Svc.Daftar(r.Context(), cabang, tgl)
 	if e != nil {
@@ -281,10 +281,10 @@ func (h *TransaksiHandler) riwayat(w http.ResponseWriter, r *http.Request, batal
 	}
 	hal := halaman(r, judul, "transaksi", RiwayatPage{Daftar: daftar, Tgl: tgl, Batal: batal, Alasan: alasan})
 	if err != nil {
-		formGagal(w, h.View, "transaksi/list.html", hal, err)
+		formGagal(w, r, h.View, "transaksi/list.html", hal, err)
 		return
 	}
-	h.View.Tampil(w, "transaksi/list.html", hal)
+	h.View.Tampil(w, r, "transaksi/list.html", hal)
 }
 
 func (h *TransaksiHandler) Daftar(w http.ResponseWriter, r *http.Request) {

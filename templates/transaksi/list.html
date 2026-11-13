@@ -1,5 +1,5 @@
 {{define "content"}}{{with .Data}}
-<div class="title-row"><div><h1>{{if eq $.Sesi.Peran "KASIR"}}Riwayat transaksi{{else}}Transaksi{{end}}</h1>
+<div class="title-row"><div><h1>{{if user.IsKasir}}Riwayat transaksi{{else}}Transaksi{{end}}</h1>
   <p class="sub">{{tglPendek .Tgl}} · {{len .Daftar}} transaksi</p></div>
   <form method="get" action="/transaksi" style="display:flex;gap:8px">
     <label class="sr-only" for="tgl">Tanggal</label>
@@ -9,12 +9,12 @@
   <div class="panel">
     {{if .Daftar}}
     <table class="table">
-      <tr><th>Nomor</th><th class="num">Jam</th>{{if eq $.Sesi.Peran "ADMIN"}}<th>Cabang</th>{{end}}<th>Member</th><th class="num">Total</th><th>Status</th></tr>
+      <tr><th>Nomor</th><th class="num">Jam</th>{{if user.IsAdmin}}<th>Cabang</th>{{end}}<th>Member</th><th class="num">Total</th><th>Status</th></tr>
       {{range .Daftar}}
       <tr class="{{if $.Data.Batal}}{{if eq .ID $.Data.Batal.Transaksi.ID}}sel{{end}}{{end}}">
         <td class="id"><a class="row-link" href="/transaksi/{{.ID}}">{{.NoTransaksi}}</a></td>
         <td class="num">{{.Waktu.Format "15.04"}}</td>
-        {{if eq $.Sesi.Peran "ADMIN"}}<td>{{.CabangNama}}</td>{{end}}
+        {{if user.IsAdmin}}<td>{{.CabangNama}}</td>{{end}}
         <td>{{if .MemberNama}}{{.MemberNama}}{{else}}<span class="grey">–</span>{{end}}</td>
         <td class="num">{{rupiah .TotalBayar}}</td>
         <td>{{if eq .Status "SELESAI"}}<span class="pill ok">Selesai</span>{{else}}<span class="pill bad">Dibatalkan</span>{{end}}</td>

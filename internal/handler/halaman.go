@@ -26,7 +26,7 @@ type DashboardPage struct {
 
 // Dashboard: kasir langsung ke halaman transaksi baru; admin ke ringkasan (hari ini / 7 / 30 hari).
 func (h *HalamanHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
-	if s, _ := middleware.Ambil(r); s.Peran == "KASIR" {
+	if p, _ := middleware.PenggunaDari(r.Context()); p.IsKasir() {
 		http.Redirect(w, r, "/kasir", http.StatusSeeOther)
 		return
 	}
@@ -53,5 +53,5 @@ func (h *HalamanHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	if len(pg.Terakhir) > 6 {
 		pg.Terakhir = pg.Terakhir[:6]
 	}
-	h.View.Tampil(w, "dashboard.html", halaman(r, "Ringkasan", "ringkasan", pg))
+	h.View.Tampil(w, r, "dashboard.html", halaman(r, "Ringkasan", "ringkasan", pg))
 }

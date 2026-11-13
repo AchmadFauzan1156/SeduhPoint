@@ -4,7 +4,7 @@
   <div style="display:flex;gap:8px">
     <button class="btn ghost" onclick="window.print()">Cetak</button>
     {{if eq $t.Status "SELESAI"}}<a class="btn ghost" style="color:var(--bad)" href="/transaksi/{{$t.ID}}/batal">Batalkan</a>{{end}}
-    {{if eq $.Sesi.Peran "KASIR"}}<a class="btn" href="/kasir">Transaksi baru</a>{{else}}<a class="btn" href="/transaksi">Riwayat</a>{{end}}
+    {{if user.IsKasir}}<a class="btn" href="/kasir">Transaksi baru</a>{{else}}<a class="btn" href="/transaksi">Riwayat</a>{{end}}
   </div></div>
 {{if ne $t.Status "SELESAI"}}<div class="alert bad">Dibatalkan {{if $t.WaktuBatal.Valid}}{{tgl $t.WaktuBatal.Time}}{{end}}: {{$t.AlasanBatal.String}}</div>{{end}}
 <div class="receipt">

@@ -39,10 +39,10 @@ func (h *MemberHandler) tampil(w http.ResponseWriter, r *http.Request, judul str
 	}
 	hal := halaman(r, judul, "member", pg)
 	if err != nil {
-		formGagal(w, h.View, "member/list.html", hal, err)
+		formGagal(w, r, h.View, "member/list.html", hal, err)
 		return
 	}
-	h.View.Tampil(w, "member/list.html", hal)
+	h.View.Tampil(w, r, "member/list.html", hal)
 }
 
 func (h *MemberHandler) Daftar(w http.ResponseWriter, r *http.Request) {

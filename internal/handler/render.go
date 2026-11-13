@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"path/filepath"
 	"seduhpoint/internal/config"
+	"seduhpoint/internal/middleware"
+	"seduhpoint/internal/model"
 	"strconv"
 	"strings"
 	"time"
@@ -129,7 +131,10 @@ func nilaiPoin(p int) int64 { return int64(p) * 1000 }
 // kali: harga × qty untuk subtotal baris
 func kali(h int64, q int) int64 { return h * int64(q) }
 
-var funcs = template.FuncMap{"rentang": rentang, "kali": kali, "rupiah": rupiah, "add_one": addOne, "tgl": tgl, "upper": strings.ToUpper,
+var funcs = template.FuncMap{
+	// "user" berisi pengguna yang sedang login; diganti per request di Tampil (materi #12).
+	"user":    func() model.Pengguna { return model.Pengguna{} },
+	"rentang": rentang, "kali": kali, "rupiah": rupiah, "add_one": addOne, "tgl": tgl, "upper": strings.ToUpper,
 	"has": has, "tglBulan": tglBulan, "add": add, "dict": dict, "int": toInt, "mod": mod, "sisa100": sisa100, "add25": add25, "bulanPendek": bulanPendek, "rupiahPendek": rupiahPendek, "hariIni": hariIni, "jamSekarang": jamSekarang, "desimal1": desimal1, "nilaiPoin": nilaiPoin, "jam": jam, "tglInput": tglInput, "tglPendek": tglPendek}
 
 type Renderer struct {
@@ -157,15 +162,21 @@ func NewRenderer() *Renderer {
 }
 
 // Tampil me-render ke buffer dulu supaya error template tidak menghasilkan halaman setengah jadi.
-func (rd *Renderer) Tampil(w http.ResponseWriter, file string, data any) {
+// Fungsi "user" di template berisi pengguna yang sedang login (kosong kalau belum login).
+func (rd *Renderer) Tampil(w http.ResponseWriter, r *http.Request, file string, data any) {
 	t, ok := rd.tpl[file]
 	if !ok {
 		log.Printf("template %s tidak ada", file)
 		http.Error(w, "Terjadi kesalahan pada server", http.StatusInternalServerError)
 		return
 	}
+	// Clone: tiap request punya salinan template sendiri, pengguna A tidak tertukar dengan pengguna B.
+	p, _ := middleware.PenggunaDari(r.Context())
+	tpl := template.Must(t.Clone())
+	tpl.Funcs(template.FuncMap{"user": func() model.Pengguna { return p }})
+
 	var buf bytes.Buffer
-	if err := t.ExecuteTemplate(&buf, "layout", data); err != nil {
+	if err := tpl.ExecuteTemplate(&buf, "layout", data); err != nil {
 		log.Printf("render %s: %v", file, err)
 		http.Error(w, "Terjadi kesalahan pada server", http.StatusInternalServerError)
 		return

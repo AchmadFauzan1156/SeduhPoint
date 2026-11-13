@@ -66,7 +66,7 @@ func (h *LaporanHandler) Promo(w http.ResponseWriter, r *http.Request) {
 	}
 	pg.Lap.CabangID = cabangID
 	hal.Data = pg
-	h.View.Tampil(w, "laporan/promo.html", hal)
+	h.View.Tampil(w, r, "laporan/promo.html", hal)
 }
 
 // Poin: GET /laporan/poin.
@@ -76,7 +76,7 @@ func (h *LaporanHandler) Poin(w http.ResponseWriter, r *http.Request) {
 		gagal(w, err)
 		return
 	}
-	h.View.Tampil(w, "laporan/poin.html", halaman(r, "Laporan poin aktif", "lap-poin", lap))
+	h.View.Tampil(w, r, "laporan/poin.html", halaman(r, "Laporan poin aktif", "lap-poin", lap))
 }
 
 type LaporanMemberPage struct {
@@ -100,5 +100,5 @@ func (h *LaporanHandler) Member(w http.ResponseWriter, r *http.Request) {
 	for t := now.Year(); t >= 2026; t-- {
 		pg.Tahun = append(pg.Tahun, t)
 	}
-	h.View.Tampil(w, "laporan/member.html", halaman(r, "Laporan perkembangan member", "lap-member", pg))
+	h.View.Tampil(w, r, "laporan/member.html", halaman(r, "Laporan perkembangan member", "lap-member", pg))
 }

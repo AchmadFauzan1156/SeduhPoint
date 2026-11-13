@@ -2,7 +2,7 @@
 <aside class="side" aria-label="Navigasi">
   <a class="logo" href="/" aria-label="SeduhPoint, ke beranda">{{template "logo"}}</a>
   <nav class="nav" id="nav">
-  {{if eq .Sesi.Peran "ADMIN"}}
+  {{if user.IsAdmin}}
     <a class="nav-item{{if eq .Aktif "ringkasan"}} on{{end}}" href="/"{{if eq .Aktif "ringkasan"}} aria-current="page"{{end}}>{{template "ikon" "ringkasan"}}Ringkasan</a>
     <a class="nav-item{{if eq .Aktif "transaksi"}} on{{end}}" href="/transaksi"{{if eq .Aktif "transaksi"}} aria-current="page"{{end}}>{{template "ikon" "transaksi"}}Transaksi</a>
     <a class="nav-item{{if eq .Aktif "member"}} on{{end}}" href="/member"{{if eq .Aktif "member"}} aria-current="page"{{end}}>{{template "ikon" "member"}}Member</a>
@@ -25,8 +25,8 @@
   <div class="side-foot">
     <div class="ornamen" aria-hidden="true">{{template "ranting"}}<span class="slogan">Seduh hangat,<br>poin mengalir</span></div>
     <div class="me">
-      <span class="avatar" aria-hidden="true">{{slice .Sesi.Username 0 1 | upper}}</span>
-      <div class="me-nama"><b>{{.Sesi.Username}}</b><span>{{if eq .Sesi.Peran "ADMIN"}}Admin · pemilik{{else}}Kasir{{end}}</span></div>
+      <span class="avatar" aria-hidden="true">{{slice user.Username 0 1 | upper}}</span>
+      <div class="me-nama"><b>{{user.Username}}</b><span>{{if user.IsAdmin}}Admin · pemilik{{else}}Kasir{{end}}</span></div>
       <form method="post" action="/logout" class="inline-form"><button class="icon-btn" aria-label="Keluar" title="Keluar">{{template "ikon" "keluar"}}</button></form>
     </div>
   </div>

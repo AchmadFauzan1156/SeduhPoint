@@ -14,6 +14,7 @@ import (
 	"seduhpoint/internal/config"
 	"seduhpoint/internal/handler"
 	mw "seduhpoint/internal/middleware"
+	"seduhpoint/internal/model"
 	"seduhpoint/internal/repository"
 	"seduhpoint/internal/service"
 )
@@ -41,7 +42,7 @@ func main() {
 	laporanRepo := &repository.LaporanRepo{DB: db}
 
 	// Service
-	authSvc := &service.AuthService{Repo: penggunaRepo}
+	authSvc := &service.AuthService{Pengguna: penggunaRepo, Sessions: &repository.SessionRepo{DB: db}}
 	cabangSvc := &service.CabangService{Repo: cabangRepo}
 	produkSvc := &service.ProdukService{Repo: produkRepo, KategoriRepo: kategoriRepo}
 	memberSvc := &service.MemberService{DB: db, Repo: memberRepo, PoinRepo: poinRepo}
@@ -54,7 +55,7 @@ func main() {
 	// Handler
 	view := handler.NewRenderer()
 	halaman := &handler.HalamanHandler{LaporanSvc: laporanSvc, MemberSvc: memberSvc, TransaksiSvc: transaksiSvc, View: view}
-	auth := &handler.AuthHandler{Svc: authSvc, View: view}
+	auth := &handler.AuthHandler{Svc: authSvc, View: view, CookieSecure: cfg.CookieSecure}
 	cabang := &handler.CabangHandler{Svc: cabangSvc, View: view}
 	produk := &handler.ProdukHandler{Svc: produkSvc, PromoSvc: promoSvc, View: view}
 	member := &handler.MemberHandler{Svc: memberSvc, View: view}
@@ -65,62 +66,75 @@ func main() {
 	// Job harian: kedaluwarsa poin & evaluasi tingkat
 	go poinSvc.JalankanJobHarian()
 
+	authMw := &mw.Auth{Svc: authSvc}
+	khususAdmin := mw.RequireRole(model.PeranAdmin)
+	khususKasir := mw.RequireRole(model.PeranKasir)
+	// admin(h) dan kasir(h) = khususAdmin(http.HandlerFunc(h)) seperti di materi, disingkat agar daftar route mudah dibaca.
+	admin := func(h http.HandlerFunc) http.Handler { return khususAdmin(h) }
+	kasir := func(h http.HandlerFunc) http.Handler { return khususKasir(h) }
+
+	// privat: semua route yang wajib login (deny by default, materi #12).
+	// Route baru otomatis wajib login; yang khusus peran tertentu dibungkus admin(...) / kasir(...).
+	privat := http.NewServeMux()
+	privat.HandleFunc("GET /{$}", halaman.Dashboard)
+	privat.HandleFunc("POST /logout", auth.Logout)
+
+	// Data master (admin)
+	privat.Handle("GET /cabang", admin(cabang.Daftar))
+	privat.Handle("GET /cabang/form", admin(cabang.FormTambah))
+	privat.Handle("POST /cabang", admin(cabang.Simpan))
+	privat.Handle("GET /cabang/{id}/edit", admin(cabang.FormEdit))
+	privat.Handle("POST /cabang/{id}/edit", admin(cabang.Update))
+	privat.Handle("POST /cabang/{id}/hapus", admin(cabang.Hapus))
+
+	privat.Handle("GET /kategori", admin(produk.DaftarKategori))
+	privat.Handle("POST /kategori", admin(produk.SimpanKategori))
+	privat.Handle("GET /kategori/{id}/edit", admin(produk.FormEditKategori))
+	privat.Handle("POST /kategori/{id}/edit", admin(produk.UpdateKategori))
+	privat.Handle("POST /kategori/{id}/hapus", admin(produk.HapusKategori))
+	privat.Handle("GET /produk", admin(produk.Daftar))
+	privat.Handle("GET /produk/form", admin(produk.FormTambah))
+	privat.Handle("POST /produk", admin(produk.Simpan))
+	privat.Handle("GET /produk/{id}/edit", admin(produk.FormEdit))
+	privat.Handle("POST /produk/{id}/edit", admin(produk.Update))
+	privat.Handle("POST /produk/{id}/hapus", admin(produk.Hapus))
+
+	// Member (admin & kasir)
+	privat.HandleFunc("GET /member", member.Daftar)
+	privat.HandleFunc("GET /member/form", member.FormTambah)
+	privat.HandleFunc("POST /member", member.Simpan)
+	privat.HandleFunc("GET /member/{id}", member.Detail)
+	privat.HandleFunc("GET /member/{id}/edit", member.FormEdit)
+	privat.HandleFunc("POST /member/{id}/edit", member.Update)
+
+	// Promo & voucher (admin)
+	privat.Handle("GET /promo", admin(promo.Daftar))
+	privat.Handle("GET /promo/form", admin(promo.FormTambah))
+	privat.Handle("POST /promo", admin(promo.Simpan))
+	privat.Handle("GET /promo/{id}/edit", admin(promo.FormEdit))
+	privat.Handle("POST /promo/{id}/edit", admin(promo.Update))
+	privat.Handle("POST /promo/{id}/toggle", admin(promo.Toggle))
+
+	// Transaksi (kasir) & riwayat/pembatalan (admin & kasir; hak per transaksi dicek di service)
+	privat.Handle("GET /kasir", kasir(transaksi.Kasir))
+	privat.Handle("POST /kasir/hitung", kasir(transaksi.Hitung))
+	privat.Handle("POST /kasir/bayar", kasir(transaksi.Bayar))
+	privat.HandleFunc("GET /transaksi", transaksi.Daftar)
+	privat.HandleFunc("GET /transaksi/{id}", transaksi.Struk)
+	privat.HandleFunc("GET /transaksi/{id}/batal", transaksi.FormBatal)
+	privat.HandleFunc("POST /transaksi/{id}/batal", transaksi.Batal)
+
+	// Laporan pemilik (admin)
+	privat.Handle("GET /laporan/promo", admin(laporan.Promo))
+	privat.Handle("GET /laporan/poin", admin(laporan.Poin))
+	privat.Handle("GET /laporan/member", admin(laporan.Member))
+
+	// publik: boleh diakses tanpa login
 	mux := http.NewServeMux()
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-
 	mux.HandleFunc("GET /login", auth.FormLogin)
 	mux.HandleFunc("POST /login", auth.Login)
-	mux.HandleFunc("POST /logout", auth.Logout)
-	mux.HandleFunc("GET /{$}", mw.Login(halaman.Dashboard))
-
-	// Data master
-	mux.HandleFunc("GET /cabang", mw.Admin(cabang.Daftar))
-	mux.HandleFunc("GET /cabang/form", mw.Admin(cabang.FormTambah))
-	mux.HandleFunc("POST /cabang", mw.Admin(cabang.Simpan))
-	mux.HandleFunc("GET /cabang/{id}/edit", mw.Admin(cabang.FormEdit))
-	mux.HandleFunc("POST /cabang/{id}/edit", mw.Admin(cabang.Update))
-	mux.HandleFunc("POST /cabang/{id}/hapus", mw.Admin(cabang.Hapus))
-
-	mux.HandleFunc("GET /kategori", mw.Admin(produk.DaftarKategori))
-	mux.HandleFunc("POST /kategori", mw.Admin(produk.SimpanKategori))
-	mux.HandleFunc("GET /kategori/{id}/edit", mw.Admin(produk.FormEditKategori))
-	mux.HandleFunc("POST /kategori/{id}/edit", mw.Admin(produk.UpdateKategori))
-	mux.HandleFunc("POST /kategori/{id}/hapus", mw.Admin(produk.HapusKategori))
-	mux.HandleFunc("GET /produk", mw.Admin(produk.Daftar))
-	mux.HandleFunc("GET /produk/form", mw.Admin(produk.FormTambah))
-	mux.HandleFunc("POST /produk", mw.Admin(produk.Simpan))
-	mux.HandleFunc("GET /produk/{id}/edit", mw.Admin(produk.FormEdit))
-	mux.HandleFunc("POST /produk/{id}/edit", mw.Admin(produk.Update))
-	mux.HandleFunc("POST /produk/{id}/hapus", mw.Admin(produk.Hapus))
-
-	mux.HandleFunc("GET /member", mw.Login(member.Daftar))
-	mux.HandleFunc("GET /member/form", mw.Login(member.FormTambah))
-	mux.HandleFunc("POST /member", mw.Login(member.Simpan))
-	mux.HandleFunc("GET /member/{id}", mw.Login(member.Detail))
-	mux.HandleFunc("GET /member/{id}/edit", mw.Login(member.FormEdit))
-	mux.HandleFunc("POST /member/{id}/edit", mw.Login(member.Update))
-
-	// Promo & voucher
-	mux.HandleFunc("GET /promo", mw.Admin(promo.Daftar))
-	mux.HandleFunc("GET /promo/form", mw.Admin(promo.FormTambah))
-	mux.HandleFunc("POST /promo", mw.Admin(promo.Simpan))
-	mux.HandleFunc("GET /promo/{id}/edit", mw.Admin(promo.FormEdit))
-	mux.HandleFunc("POST /promo/{id}/edit", mw.Admin(promo.Update))
-	mux.HandleFunc("POST /promo/{id}/toggle", mw.Admin(promo.Toggle))
-
-	// Transaksi & pembatalan
-	mux.HandleFunc("GET /kasir", mw.Kasir(transaksi.Kasir))
-	mux.HandleFunc("POST /kasir/hitung", mw.Kasir(transaksi.Hitung))
-	mux.HandleFunc("POST /kasir/bayar", mw.Kasir(transaksi.Bayar))
-	mux.HandleFunc("GET /transaksi", mw.Login(transaksi.Daftar))
-	mux.HandleFunc("GET /transaksi/{id}", mw.Login(transaksi.Struk))
-	mux.HandleFunc("GET /transaksi/{id}/batal", mw.Login(transaksi.FormBatal))
-	mux.HandleFunc("POST /transaksi/{id}/batal", mw.Login(transaksi.Batal))
-
-	// Laporan pemilik
-	mux.HandleFunc("GET /laporan/promo", mw.Admin(laporan.Promo))
-	mux.HandleFunc("GET /laporan/poin", mw.Admin(laporan.Poin))
-	mux.HandleFunc("GET /laporan/member", mw.Admin(laporan.Member))
+	mux.Handle("/", authMw.RequireLogin(privat)) // sisanya lewat RequireLogin
 
 	srv := &http.Server{
 		Addr:              cfg.Addr,

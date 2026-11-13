@@ -40,10 +40,10 @@ func (h *ProdukHandler) tampilKategori(w http.ResponseWriter, r *http.Request, a
 	}
 	hal := halaman(r, "Kategori", "kategori", KategoriPage{Daftar: daftar, Action: action, Form: k})
 	if err != nil {
-		formGagal(w, h.View, "kategori/list.html", hal, err)
+		formGagal(w, r, h.View, "kategori/list.html", hal, err)
 		return
 	}
-	h.View.Tampil(w, "kategori/list.html", hal)
+	h.View.Tampil(w, r, "kategori/list.html", hal)
 }
 
 func (h *ProdukHandler) DaftarKategori(w http.ResponseWriter, r *http.Request) {
@@ -131,10 +131,10 @@ func (h *ProdukHandler) tampil(w http.ResponseWriter, r *http.Request, judul, ac
 	hal := halaman(r, judul, "produk", ProdukPage{Daftar: daftar, Kategori: kat, Action: action, Form: p,
 		Detail: detailProduk(daftar, berjalan, true, false)})
 	if err != nil {
-		formGagal(w, h.View, "produk/list.html", hal, err)
+		formGagal(w, r, h.View, "produk/list.html", hal, err)
 		return
 	}
-	h.View.Tampil(w, "produk/list.html", hal)
+	h.View.Tampil(w, r, "produk/list.html", hal)
 }
 
 func (h *ProdukHandler) Daftar(w http.ResponseWriter, r *http.Request) {

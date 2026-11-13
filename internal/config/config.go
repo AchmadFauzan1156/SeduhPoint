@@ -15,16 +15,18 @@ import (
 var WIB, _ = time.LoadLocation("Asia/Jakarta")
 
 type Config struct {
-	Addr  string
-	DBDSN string
+	Addr         string
+	DBDSN        string
+	CookieSecure bool // true di production (HTTPS); localhost pakai http:// jadi false
 }
 
 func Load() (Config, error) {
 	keAkarProyek()
 	_ = godotenv.Load() // baca .env jika ada
 	cfg := Config{
-		Addr:  getEnv("ADDR", "127.0.0.1:8080"),
-		DBDSN: os.Getenv("DB_DSN"),
+		Addr:         getEnv("ADDR", "127.0.0.1:8080"),
+		DBDSN:        os.Getenv("DB_DSN"),
+		CookieSecure: os.Getenv("COOKIE_SECURE") == "true",
 	}
 	if cfg.DBDSN == "" {
 		wd, _ := os.Getwd()

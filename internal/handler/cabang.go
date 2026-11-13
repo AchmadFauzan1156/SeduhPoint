@@ -34,10 +34,10 @@ func (h *CabangHandler) tampil(w http.ResponseWriter, r *http.Request, judul str
 	}
 	hal := halaman(r, judul, "cabang", CabangPage{Daftar: daftar, Form: f})
 	if err != nil {
-		formGagal(w, h.View, "cabang/list.html", hal, err)
+		formGagal(w, r, h.View, "cabang/list.html", hal, err)
 		return
 	}
-	h.View.Tampil(w, "cabang/list.html", hal)
+	h.View.Tampil(w, r, "cabang/list.html", hal)
 }
 
 func (h *CabangHandler) Daftar(w http.ResponseWriter, r *http.Request) {

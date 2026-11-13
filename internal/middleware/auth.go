@@ -1,85 +1,71 @@
 package middleware
 
-// Session sederhana yang disimpan di memori server.
+// RequireLogin (materi #11) dan RequireRole (materi #12).
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
+	"errors"
+	"log"
 	"net/http"
-	"sync"
+
+	"seduhpoint/internal/model"
+	"seduhpoint/internal/service"
 )
 
-type Sesi struct {
-	PenggunaID int
-	Username   string
-	Peran      string // ADMIN | KASIR
-	CabangID   int
-}
-
-var (
-	mu   sync.Mutex // lindungi map dari data race
-	sesi = map[string]Sesi{}
-)
-
-const namaCookie = "seduh_sesi"
+// NamaCookie: nama cookie yang membawa token session.
+const NamaCookie = "session"
 
 type ctxKey struct{}
 
-func BuatSesi(w http.ResponseWriter, s Sesi) {
-	b := make([]byte, 32)
-	rand.Read(b)
-	id := hex.EncodeToString(b)
-	mu.Lock()
-	sesi[id] = s
-	mu.Unlock()
-	http.SetCookie(w, &http.Cookie{Name: namaCookie, Value: id, Path: "/", HttpOnly: true, SameSite: http.SameSiteLaxMode})
+type Auth struct {
+	Svc *service.AuthService
 }
 
-func HapusSesi(w http.ResponseWriter, r *http.Request) {
-	if c, err := r.Cookie(namaCookie); err == nil {
-		mu.Lock()
-		delete(sesi, c.Value)
-		mu.Unlock()
-	}
-	http.SetCookie(w, &http.Cookie{Name: namaCookie, Value: "", Path: "/", MaxAge: -1})
-}
-
-// Ambil mengembalikan sesi pengguna yang sedang login.
-func Ambil(r *http.Request) (Sesi, bool) {
-	s, ok := r.Context().Value(ctxKey{}).(Sesi)
-	return s, ok
-}
-
-// Login: hanya pengguna yang sudah login.
-func Login(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		c, err := r.Cookie(namaCookie)
+// RequireLogin: request tanpa session yang valid diarahkan ke /login.
+// Pengguna yang login dititipkan di context request.
+func (a *Auth) RequireLogin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		c, err := r.Cookie(NamaCookie)
 		if err != nil {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
-		mu.Lock()
-		s, ok := sesi[c.Value]
-		mu.Unlock()
-		if !ok {
+		p, err := a.Svc.PenggunaDariToken(r.Context(), c.Value)
+		if errors.Is(err, model.ErrNotFound) {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
-		next(w, r.WithContext(context.WithValue(r.Context(), ctxKey{}, s)))
-	}
-}
-
-// Peran: hanya peran tertentu (ADMIN / KASIR).
-func Peran(peran string, next http.HandlerFunc) http.HandlerFunc {
-	return Login(func(w http.ResponseWriter, r *http.Request) {
-		if s, _ := Ambil(r); s.Peran != peran {
-			http.Error(w, "Akses ditolak", http.StatusForbidden)
+		if err != nil {
+			log.Printf("cek session: %v", err)
+			http.Error(w, "Terjadi kesalahan pada server", http.StatusInternalServerError)
 			return
 		}
-		next(w, r)
+		ctx := context.WithValue(r.Context(), ctxKey{}, p)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func Admin(next http.HandlerFunc) http.HandlerFunc { return Peran("ADMIN", next) }
-func Kasir(next http.HandlerFunc) http.HandlerFunc { return Peran("KASIR", next) }
+// PenggunaDari mengembalikan pengguna yang sedang login.
+func PenggunaDari(ctx context.Context) (model.Pengguna, bool) {
+	p, ok := ctx.Value(ctxKey{}).(model.Pengguna)
+	return p, ok
+}
+
+// RequireRole dipasang setelah RequireLogin: pengguna di context sudah terisi.
+// Allow-list: hanya peran yang sama persis yang lolos.
+func RequireRole(peran string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			p, ok := PenggunaDari(r.Context())
+			if !ok {
+				http.Redirect(w, r, "/login", http.StatusSeeOther)
+				return
+			}
+			if p.Peran != peran {
+				http.Error(w, "Akses ditolak", http.StatusForbidden)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}

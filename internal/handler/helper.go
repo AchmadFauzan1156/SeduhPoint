@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"seduhpoint/internal/middleware"
 	"seduhpoint/internal/model"
 	"seduhpoint/internal/service"
 )
@@ -16,8 +15,7 @@ import (
 // Halaman adalah data standar yang dikirim ke setiap template.
 type Halaman struct {
 	Judul  string
-	Aktif  string // menu sidebar yang sedang aktif
-	Sesi   middleware.Sesi
+	Aktif  string            // menu sidebar yang sedang aktif
 	Flash  string            // pesan sukses (?pesan=...)
 	Error  string            // pesan ValidasiError umum
 	Errors map[string]string // pesan per field (ditampilkan di dekat input)
@@ -26,8 +24,7 @@ type Halaman struct {
 }
 
 func halaman(r *http.Request, judul, aktif string, data any) Halaman {
-	s, _ := middleware.Ambil(r)
-	return Halaman{Judul: judul, Aktif: aktif, Sesi: s, Data: data,
+	return Halaman{Judul: judul, Aktif: aktif, Data: data,
 		Flash: pesanFlash[r.URL.Query().Get("pesan")], Errors: map[string]string{}}
 }
 
@@ -56,7 +53,7 @@ func gagal(w http.ResponseWriter, err error) {
 
 // formGagal: salah input -> tampilkan ulang halaman form beserta pesan di dekat field (422);
 // error lain -> gagal().
-func formGagal(w http.ResponseWriter, view *Renderer, file string, hal Halaman, err error) {
+func formGagal(w http.ResponseWriter, r *http.Request, view *Renderer, file string, hal Halaman, err error) {
 	var ve *service.ValidasiError
 	if !errors.As(err, &ve) {
 		gagal(w, err)
@@ -64,7 +61,7 @@ func formGagal(w http.ResponseWriter, view *Renderer, file string, hal Halaman, 
 	}
 	catatError(&hal, ve)
 	w.WriteHeader(http.StatusUnprocessableEntity)
-	view.Tampil(w, file, hal)
+	view.Tampil(w, r, file, hal)
 }
 
 // catatError memasukkan pesan ValidasiError ke halaman: per field (ditampilkan di dekat input),

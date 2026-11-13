@@ -10,12 +10,12 @@
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-{{if .Sesi.Username}}
+{{if user.ID}}
   <div class="app">
     {{template "sidebar" .}}
     <main class="main">
       <header class="topbar">
-        <div class="topbar-kiri">{{block "topbar" .}}<span class="scope">{{template "ikon" "lokasi"}}{{if eq .Sesi.Peran "ADMIN"}}Semua cabang · Kedai Kopi Seduh{{else}}Kedai Kopi Seduh{{end}}</span>{{end}}</div>
+        <div class="topbar-kiri">{{block "topbar" .}}<span class="scope">{{template "ikon" "lokasi"}}{{if user.IsAdmin}}Semua cabang · Kedai Kopi Seduh{{else}}Kedai Kopi Seduh{{end}}</span>{{end}}</div>
         <div class="waktu" title="Waktu Indonesia Barat">{{template "ikon" "kalender"}}<span><span data-tanggal>{{hariIni}}</span><b data-jam>{{jamSekarang}}</b> WIB</span></div>
       </header>
       {{if .Flash}}<div class="alert ok" role="status">{{.Flash}}</div>{{end}}

@@ -40,6 +40,16 @@ CREATE TABLE pengguna (
   FOREIGN KEY (cabang_id) REFERENCES cabang(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Session login disimpan di database (materi #11): browser hanya membawa token acak lewat cookie.
+-- ON DELETE CASCADE: pengguna dihapus, session-nya ikut hilang.
+CREATE TABLE sessions (
+  token       VARCHAR(64) PRIMARY KEY,
+  pengguna_id INT NOT NULL,
+  expires_at  DATETIME NOT NULL,
+  FOREIGN KEY (pengguna_id) REFERENCES pengguna(id) ON DELETE CASCADE,
+  INDEX idx_sessions_pengguna (pengguna_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE kategori (
   id   INT AUTO_INCREMENT PRIMARY KEY,
   nama VARCHAR(100) NOT NULL UNIQUE,

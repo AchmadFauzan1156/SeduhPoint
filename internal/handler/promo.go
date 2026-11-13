@@ -52,10 +52,10 @@ func (h *PromoHandler) tampil(w http.ResponseWriter, r *http.Request, judul, act
 	}
 	hal := halaman(r, judul, "promo", pg)
 	if err != nil {
-		formGagal(w, h.View, "promo/list.html", hal, err)
+		formGagal(w, r, h.View, "promo/list.html", hal, err)
 		return
 	}
-	h.View.Tampil(w, "promo/list.html", hal)
+	h.View.Tampil(w, r, "promo/list.html", hal)
 }
 
 func promoBaru() model.Promo {

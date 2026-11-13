@@ -1,5 +1,5 @@
 {{define "content"}}{{with .Data}}
-<div class="title-row"><div><h1>Selamat datang, {{$.Sesi.Username}}</h1>
+<div class="title-row"><div><h1>Selamat datang, {{user.Username}}</h1>
   <p class="sub">{{if eq .R.Hari 1}}Ringkasan hari ini, {{tglPendek .R.Sampai}}{{else}}Ringkasan {{rentang .R.Dari .R.Sampai}}{{end}} · semua cabang · hanya transaksi selesai</p></div>
   <nav class="seg" aria-label="Periode">
     <a class="seg-btn{{if eq .R.Hari 1}} on{{end}}" href="/?hari=1"{{if eq .R.Hari 1}} aria-current="page"{{end}}>Hari ini</a>

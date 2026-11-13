@@ -8,8 +8,12 @@ import (
 	"time"
 )
 
-// ErrNotFound: repository mengubah sql.ErrNoRows menjadi error ini.
-var ErrNotFound = errors.New("data tidak ditemukan")
+var (
+	// ErrNotFound: repository mengubah sql.ErrNoRows menjadi error ini.
+	ErrNotFound = errors.New("data tidak ditemukan")
+	// ErrLoginGagal: username tidak ada atau password salah (pesannya sengaja sama, materi #11).
+	ErrLoginGagal = errors.New("username atau password salah")
+)
 
 type Cabang struct {
 	ID     int
@@ -18,12 +22,13 @@ type Cabang struct {
 	Aktif  bool
 }
 
+// Pengguna tidak memuat password hash, jadi aman dikirim ke handler dan template (materi #11).
 type Pengguna struct {
-	ID           int
-	Username     string
-	PasswordHash string
-	Peran        string // ADMIN | KASIR
-	CabangID     sql.NullInt64
+	ID         int
+	Username   string
+	Peran      string // PeranAdmin | PeranKasir
+	CabangID   int    // 0 untuk admin (semua cabang)
+	CabangNama string // diisi di daftar pengguna
 }
 
 type Kategori struct {
