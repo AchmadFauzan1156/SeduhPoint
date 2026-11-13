@@ -170,7 +170,7 @@ func (h *ProdukHandler) simpan(w http.ResponseWriter, r *http.Request, id int) {
 		action = fmt.Sprintf("/produk/%d/edit", id)
 	}
 	if err := r.ParseMultipartForm(maksFoto + 1<<20); err != nil && !errors.Is(err, http.ErrNotMultipart) {
-		h.tampil(w, r, "Produk", action, model.Produk{ID: id}, &service.ValidasiError{Field: "gambar", Pesan: "Foto terlalu besar (maks 2 MB)"})
+		h.tampil(w, r, "Produk", action, model.Produk{ID: id}, service.SalahInput("gambar", "Foto terlalu besar (maks 2 MB)"))
 		return
 	}
 	p := model.Produk{
@@ -225,13 +225,13 @@ func simpanFoto(r *http.Request, field string) (string, error) {
 	}
 	defer f.Close()
 	if hdr.Size > maksFoto {
-		return "", &service.ValidasiError{Field: field, Pesan: "Foto maksimal 2 MB"}
+		return "", service.SalahInput(field, "Foto maksimal 2 MB")
 	}
 	kepala := make([]byte, 512)
 	n, _ := io.ReadFull(f, kepala)
 	ext, ok := ekstensiFoto[http.DetectContentType(kepala[:n])]
 	if !ok {
-		return "", &service.ValidasiError{Field: field, Pesan: "Foto harus JPG, PNG, atau WebP"}
+		return "", service.SalahInput(field, "Foto harus JPG, PNG, atau WebP")
 	}
 	if _, err := f.Seek(0, io.SeekStart); err != nil {
 		return "", err

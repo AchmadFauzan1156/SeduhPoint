@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"regexp"
 	"strings"
+	"unicode/utf8"
 
 	"seduhpoint/internal/model"
 	"seduhpoint/internal/repository"
@@ -65,22 +66,22 @@ func NormalisasiHP(s string) string {
 func (s *MemberService) validasi(ctx context.Context, m *model.Member) error {
 	m.Nama = strings.TrimSpace(m.Nama)
 	m.NoHP = NormalisasiHP(m.NoHP)
-	switch {
-	case m.Nama == "":
-		return salah("nama", "Nama wajib diisi")
-	case len([]rune(m.Nama)) > 100:
-		return salah("nama", "Nama maksimal 100 karakter")
-	case m.NoHP == "":
-		return salah("no_hp", "Nomor HP wajib diisi")
-	case !reHP.MatchString(m.NoHP):
-		return salah("no_hp", "Nomor HP tidak valid (contoh: 081234567890)")
+	errs := map[string]string{}
+	if m.Nama == "" {
+		errs["nama"] = "Nama wajib diisi"
+	} else if utf8.RuneCountInString(m.Nama) > 100 {
+		errs["nama"] = "Nama maksimal 100 karakter"
 	}
-	if dipakai, err := s.Repo.NoHPDipakai(ctx, m.NoHP, m.ID); err != nil {
+	if m.NoHP == "" {
+		errs["no_hp"] = "Nomor HP wajib diisi"
+	} else if !reHP.MatchString(m.NoHP) {
+		errs["no_hp"] = "Nomor HP tidak valid (contoh: 081234567890)"
+	} else if dipakai, err := s.Repo.NoHPDipakai(ctx, m.NoHP, m.ID); err != nil {
 		return err
 	} else if dipakai {
-		return salah("no_hp", "Nomor HP sudah terdaftar sebagai member")
+		errs["no_hp"] = "Nomor HP sudah terdaftar sebagai member"
 	}
-	return nil
+	return hasilValidasi(errs)
 }
 
 // Daftar: member baru otomatis SILVER.

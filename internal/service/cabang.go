@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"strings"
+	"unicode/utf8"
 
 	"seduhpoint/internal/model"
 	"seduhpoint/internal/repository"
@@ -40,11 +41,14 @@ func (s *CabangService) Hapus(ctx context.Context, id int) error {
 
 func validasiCabang(c *model.Cabang) error {
 	c.Nama, c.Alamat = strings.TrimSpace(c.Nama), strings.TrimSpace(c.Alamat)
+	errs := map[string]string{}
 	if c.Nama == "" {
-		return salah("nama", "Nama cabang wajib diisi")
+		errs["nama"] = "Nama cabang wajib diisi"
+	} else if utf8.RuneCountInString(c.Nama) > 100 {
+		errs["nama"] = "Nama cabang maksimal 100 karakter"
 	}
-	if len([]rune(c.Nama)) > 100 {
-		return salah("nama", "Nama cabang maksimal 100 karakter")
+	if utf8.RuneCountInString(c.Alamat) > 255 {
+		errs["alamat"] = "Alamat maksimal 255 karakter"
 	}
-	return nil
+	return hasilValidasi(errs)
 }

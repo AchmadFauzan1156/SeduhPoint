@@ -95,7 +95,10 @@ func (h *PromoHandler) simpan(w http.ResponseWriter, r *http.Request, id int) {
 	if id > 0 {
 		action = fmt.Sprintf("/promo/%d/edit", id)
 	}
-	r.ParseForm()
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Form tidak valid", http.StatusBadRequest)
+		return
+	}
 	p := promoDariForm(r)
 	p.ID = id
 	if id > 0 { // kuota terpakai dibutuhkan validasi kuota

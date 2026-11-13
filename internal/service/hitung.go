@@ -64,7 +64,7 @@ type Hasil struct {
 }
 
 // ErrMinDanVoucher: potongan minimal belanja tidak bisa digabung dengan voucher.
-var ErrMinDanVoucher = &ValidasiError{Field: "kode_voucher", Pesan: "Potongan minimal belanja tidak dapat digabung dengan voucher"}
+var ErrMinDanVoucher = salah("kode_voucher", "Potongan minimal belanja tidak dapat digabung dengan voucher")
 
 // Hitung menjalankan langkah 1–7 perhitungan transaksi.
 func Hitung(in Input) (Hasil, error) {

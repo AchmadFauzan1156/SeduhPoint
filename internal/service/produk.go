@@ -4,7 +4,9 @@ package service
 
 import (
 	"context"
+	"errors"
 	"strings"
+	"unicode/utf8"
 
 	"seduhpoint/internal/model"
 	"seduhpoint/internal/repository"
@@ -30,7 +32,7 @@ func (s *ProdukService) SimpanKategori(ctx context.Context, k model.Kategori) er
 	if k.Nama == "" {
 		return salah("nama", "Nama kategori wajib diisi")
 	}
-	if len([]rune(k.Nama)) > 100 {
+	if utf8.RuneCountInString(k.Nama) > 100 {
 		return salah("nama", "Nama kategori maksimal 100 karakter")
 	}
 	if dipakai, err := s.KategoriRepo.NamaDipakai(ctx, k.Nama, k.ID); err != nil {
@@ -85,22 +87,27 @@ func (s *ProdukService) Hapus(ctx context.Context, id int) error { return s.Repo
 
 func (s *ProdukService) validasi(ctx context.Context, p *model.Produk) error {
 	p.Nama, p.Deskripsi = strings.TrimSpace(p.Nama), strings.TrimSpace(p.Deskripsi)
+	errs := map[string]string{}
+	if p.Nama == "" {
+		errs["nama"] = "Nama produk wajib diisi"
+	} else if utf8.RuneCountInString(p.Nama) > 100 {
+		errs["nama"] = "Nama produk maksimal 100 karakter"
+	}
 	switch {
-	case len([]rune(p.Deskripsi)) > 300:
-		return salah("deskripsi", "Deskripsi maksimal 300 karakter")
-	case p.Nama == "":
-		return salah("nama", "Nama produk wajib diisi")
-	case len([]rune(p.Nama)) > 100:
-		return salah("nama", "Nama produk maksimal 100 karakter")
 	case p.Harga <= 0:
-		return salah("harga", "Harga harus lebih dari Rp0")
+		errs["harga"] = "Harga harus lebih dari Rp0"
 	case p.Harga > 10_000_000:
-		return salah("harga", "Harga terlalu besar (maks Rp10.000.000)")
+		errs["harga"] = "Harga terlalu besar (maks Rp10.000.000)"
 	case p.Harga%100 != 0:
-		return salah("harga", "Harga harus kelipatan Rp100")
+		errs["harga"] = "Harga harus kelipatan Rp100"
 	}
-	if _, err := s.KategoriRepo.CariByID(ctx, p.KategoriID); err != nil {
-		return salah("kategori_id", "Pilih kategori")
+	if utf8.RuneCountInString(p.Deskripsi) > 300 {
+		errs["deskripsi"] = "Deskripsi maksimal 300 karakter"
 	}
-	return nil
+	if _, err := s.KategoriRepo.CariByID(ctx, p.KategoriID); errors.Is(err, model.ErrNotFound) {
+		errs["kategori_id"] = "Pilih kategori"
+	} else if err != nil {
+		return err
+	}
+	return hasilValidasi(errs)
 }

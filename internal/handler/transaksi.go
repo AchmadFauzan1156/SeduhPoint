@@ -62,10 +62,11 @@ func tokenBaru() string {
 	return hex.EncodeToString(b)
 }
 
+// bacaKeranjang hanya membaca body form (PostFormValue), bukan query string di URL (materi #4).
 func bacaKeranjang(r *http.Request) keranjang {
-	k := keranjang{Qty: map[int]int{}, MemberID: atoi(r.FormValue("member_id")), Kode: strings.TrimSpace(r.FormValue("kode_voucher")),
-		Q: strings.TrimSpace(r.FormValue("q")), CariMember: strings.TrimSpace(r.FormValue("cari_member")),
-		Poin: atoi(r.FormValue("poin")), Kat: atoi(r.FormValue("kat_aktif")), Token: r.FormValue("token")}
+	k := keranjang{Qty: map[int]int{}, MemberID: atoi(r.PostFormValue("member_id")), Kode: strings.TrimSpace(r.PostFormValue("kode_voucher")),
+		Q: strings.TrimSpace(r.PostFormValue("q")), CariMember: strings.TrimSpace(r.PostFormValue("cari_member")),
+		Poin: atoi(r.PostFormValue("poin")), Kat: atoi(r.PostFormValue("kat_aktif")), Token: r.PostFormValue("token")}
 	if v, ok := r.PostForm["kat"]; ok && len(v) > 0 { // tombol filter kategori ditekan
 		k.Kat = atoi(v[0])
 	}
@@ -76,18 +77,18 @@ func bacaKeranjang(r *http.Request) keranjang {
 			}
 		}
 	}
-	if id := atoi(r.FormValue("tambah")); id > 0 {
+	if id := atoi(r.PostFormValue("tambah")); id > 0 {
 		k.Qty[id] = min(k.Qty[id]+1, 99)
 	}
-	if id := atoi(r.FormValue("kurang")); id > 0 {
+	if id := atoi(r.PostFormValue("kurang")); id > 0 {
 		if k.Qty[id]--; k.Qty[id] <= 0 {
 			delete(k.Qty, id)
 		}
 	}
-	if id := atoi(r.FormValue("pilih_member")); id > 0 {
+	if id := atoi(r.PostFormValue("pilih_member")); id > 0 {
 		k.MemberID, k.CariMember = id, ""
 	}
-	switch r.FormValue("aksi") {
+	switch r.PostFormValue("aksi") {
 	case "kosong":
 		k = keranjang{Qty: map[int]int{}, Kat: k.Kat, Token: tokenBaru()}
 	case "lepas_member":
@@ -119,11 +120,7 @@ func (h *TransaksiHandler) tampilKasir(w http.ResponseWriter, r *http.Request, k
 		if !errors.As(err, &ve) {
 			return false
 		}
-		if ve.Field != "" {
-			hal.Errors[ve.Field] = ve.Pesan
-		} else {
-			hal.Error = ve.Pesan
-		}
+		catatError(&hal, ve)
 		return true
 	}
 	if errAwal != nil && !catat(errAwal) {
@@ -204,12 +201,18 @@ func (h *TransaksiHandler) Kasir(w http.ResponseWriter, r *http.Request) {
 
 // Hitung: semua tombol di halaman kasir (tambah, kurang, pilih member, voucher, poin) kembali ke sini.
 func (h *TransaksiHandler) Hitung(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Form tidak valid", http.StatusBadRequest)
+		return
+	}
 	h.tampilKasir(w, r, bacaKeranjang(r), nil)
 }
 
 func (h *TransaksiHandler) Bayar(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Form tidak valid", http.StatusBadRequest)
+		return
+	}
 	k := bacaKeranjang(r)
 	id, err := h.Svc.Checkout(r.Context(), h.permintaan(r, k))
 	if err != nil {

@@ -62,13 +62,21 @@ func formGagal(w http.ResponseWriter, view *Renderer, file string, hal Halaman, 
 		gagal(w, err)
 		return
 	}
-	if ve.Field != "" {
-		hal.Errors[ve.Field] = ve.Pesan
-	} else {
-		hal.Error = ve.Pesan
-	}
+	catatError(&hal, ve)
 	w.WriteHeader(http.StatusUnprocessableEntity)
 	view.Tampil(w, file, hal)
+}
+
+// catatError memasukkan pesan ValidasiError ke halaman: per field (ditampilkan di dekat input),
+// atau pesan umum di atas halaman jika kesalahannya tidak terkait satu field.
+func catatError(hal *Halaman, ve *service.ValidasiError) {
+	if len(ve.Fields) == 0 {
+		hal.Error = ve.Pesan
+		return
+	}
+	for field, pesan := range ve.Fields {
+		hal.Errors[field] = pesan
+	}
 }
 
 // redirect dengan pesan sukses.

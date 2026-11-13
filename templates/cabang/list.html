@@ -23,7 +23,8 @@
       <input id="nama" name="nama" class="input{{if index $.Errors "nama"}} invalid{{end}}" value="{{.Cabang.Nama}}" maxlength="100" required>
       {{with index $.Errors "nama"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
     <div class="field"><label for="alamat">Alamat</label>
-      <input id="alamat" name="alamat" class="input" value="{{.Cabang.Alamat}}" maxlength="255"></div>
+      <input id="alamat" name="alamat" class="input{{if index $.Errors "alamat"}} invalid{{end}}" value="{{.Cabang.Alamat}}" maxlength="255">
+      {{with index $.Errors "alamat"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
     <label class="check"><input type="checkbox" class="cb" name="aktif" {{if .Cabang.Aktif}}checked{{end}}> Aktif</label>
     <div class="actions"><button class="btn">Simpan</button>
       {{if .Cabang.ID}}<a class="btn ghost" href="/cabang">Batal</a>{{end}}</div>

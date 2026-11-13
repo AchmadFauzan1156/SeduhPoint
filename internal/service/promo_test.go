@@ -52,7 +52,7 @@ func TestValidasiPromo(t *testing.T) {
 		switch {
 		case c.field == "" && err != nil:
 			t.Errorf("%s: harusnya lolos, dapat %v", c.nama, err)
-		case c.field != "" && (!errors.As(err, &ve) || ve.Field != c.field):
+		case c.field != "" && (!errors.As(err, &ve) || ve.Fields[c.field] == ""):
 			t.Errorf("%s: harusnya salah di %q, dapat %v", c.nama, c.field, err)
 		}
 	}
@@ -82,12 +82,12 @@ func TestValidasiBatasBaru(t *testing.T) {
 	m := time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC)
 	p := model.Promo{Nama: "X", Jenis: JenisDiskon, NilaiPersen: n(95), ProdukIDs: []int{1}, TglMulai: m, TglSelesai: m, CabangIDs: []int{1}}
 	var ve *ValidasiError
-	if err := s.Validasi(context.Background(), &p); !errors.As(err, &ve) || ve.Field != "nilai_persen" {
+	if err := s.Validasi(context.Background(), &p); !errors.As(err, &ve) || ve.Fields["nilai_persen"] == "" {
 		t.Errorf("diskon 95%% harus ditolak, dapat %v", err)
 	}
 	q := model.Promo{Nama: "Malam", Jenis: JenisB2G1, KategoriIDs: []int{1}, TglMulai: m, TglSelesai: m, CabangIDs: []int{1},
 		JamMulai: sql.NullString{String: "22:00", Valid: true}, JamSelesai: sql.NullString{String: "02:00", Valid: true}}
-	if err := s.Validasi(context.Background(), &q); !errors.As(err, &ve) || ve.Field != "jam_selesai" {
+	if err := s.Validasi(context.Background(), &q); !errors.As(err, &ve) || ve.Fields["jam_selesai"] == "" {
 		t.Errorf("jam lewat tengah malam harus ditolak, dapat %v", err)
 	}
 }

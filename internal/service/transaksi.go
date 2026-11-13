@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"seduhpoint/internal/config"
 	"seduhpoint/internal/model"
@@ -379,7 +380,7 @@ func (s *TransaksiService) Batalkan(ctx context.Context, id int, alasan string) 
 	if alasan == "" {
 		return salah("alasan", "Alasan pembatalan wajib diisi")
 	}
-	if len([]rune(alasan)) > 255 {
+	if utf8.RuneCountInString(alasan) > 255 {
 		return salah("alasan", "Alasan maksimal 255 karakter")
 	}
 	return repository.WithTx(ctx, s.DB, func(tx *sql.Tx) error {
