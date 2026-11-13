@@ -5,6 +5,9 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
+
+	"github.com/go-sql-driver/mysql"
 
 	"seduhpoint/internal/model"
 )
@@ -26,6 +29,19 @@ func pastikanAdaBaris(res sql.Result) error {
 		return model.ErrNotFound
 	}
 	return nil
+}
+
+// BisaDiulang: error karena dua transaksi database berjalan bersamaan dan bisa dicoba lagi.
+// Pola cek nomor error MySQL sama dengan materi #11 (1062 duplicate entry).
+//   - 1062: duplicate entry, mis. dua request dengan token Bayar yang sama, atau nomor transaksi yang sama
+//   - 1213: deadlock, MySQL membatalkan salah satu transaction
+//   - 1205: terlalu lama menunggu kunci baris
+func BisaDiulang(err error) bool {
+	var me *mysql.MySQLError
+	if !errors.As(err, &me) {
+		return false
+	}
+	return me.Number == 1062 || me.Number == 1213 || me.Number == 1205
 }
 
 // WithTx menjalankan fn dalam satu transaction; error -> rollback.

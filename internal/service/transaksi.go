@@ -217,7 +217,21 @@ func (s *TransaksiService) Pratinjau(ctx context.Context, p PermintaanCheckout) 
 }
 
 // Checkout menyimpan transaksi dalam satu database transaction.
+//
+// Jika dua request Bayar berjalan bersamaan (tombol ditekan berkali-kali, atau dua kasir di cabang yang sama
+// mendapat nomor transaksi yang sama), MySQL menolak salah satunya. Request itu dicoba lagi; pada percobaan
+// berikutnya token yang sama sudah tersimpan sehingga transaksi yang ada dikembalikan, bukan error 500.
 func (s *TransaksiService) Checkout(ctx context.Context, p PermintaanCheckout) (int64, error) {
+	const maksPercobaan = 3
+	for percobaan := 1; ; percobaan++ {
+		id, err := s.checkout(ctx, p)
+		if err == nil || percobaan == maksPercobaan || !repository.BisaDiulang(err) {
+			return id, err
+		}
+	}
+}
+
+func (s *TransaksiService) checkout(ctx context.Context, p PermintaanCheckout) (int64, error) {
 	var trxID int64
 	err := repository.WithTx(ctx, s.DB, func(tx *sql.Tx) error {
 		// Tombol Bayar ditekan dua kali: kembalikan transaksi yang sudah ada.
