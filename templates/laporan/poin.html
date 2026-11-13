@@ -5,7 +5,7 @@
 <div class="kpis" style="grid-template-columns:repeat(3,1fr);margin-bottom:var(--gap)">
   <div class="kpi"><div class="label">Poin masih berlaku</div><div class="val lead">{{.PoinAktif}} <span class="unit">poin</span></div></div>
   <div class="kpi"><div class="label">Nilai rupiah</div><div class="val">{{rupiah .NilaiRupiah}}</div></div>
-  <div class="kpi"><div class="label">Kedaluwarsa ≤ {{.HariDekat}} hari</div><div class="val">{{.PoinDekat}} <span class="unit">poin · {{rupiah .NilaiDekat}}</span></div></div>
+  <div class="kpi"><div class="label">Kedaluwarsa ≤ {{.HariDekat}} hari</div><div class="val">{{.PoinDekat}} <span class="unit">poin · {{rupiah .NilaiDekat}} · {{.MemberDekat}} member</span></div></div>
 </div>
 
 <div class="grid" style="grid-template-columns:1fr 1.4fr">

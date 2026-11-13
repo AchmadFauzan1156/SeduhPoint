@@ -67,3 +67,14 @@ func TestGrafikDanDonat(t *testing.T) {
 		t.Errorf("donat salah: %+v", d)
 	}
 }
+
+// B3: member dengan beberapa tanggal kedaluwarsa hanya dihitung sekali.
+func TestJumlahMemberUnik(t *testing.T) {
+	d := []repository.LotKedaluwarsa{{MemberID: 1}, {MemberID: 1}, {MemberID: 2}, {MemberID: 3}, {MemberID: 3}}
+	if got := jumlahMemberUnik(d); got != 3 {
+		t.Errorf("dapat %d, harusnya 3", got)
+	}
+	if got := jumlahMemberUnik(nil); got != 0 {
+		t.Errorf("daftar kosong: dapat %d, harusnya 0", got)
+	}
+}

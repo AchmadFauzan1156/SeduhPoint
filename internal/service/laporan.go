@@ -118,6 +118,7 @@ type LaporanPoin struct {
 	NilaiRupiah   int64
 	MemberBerpoin int
 	PoinDekat     int // akan kedaluwarsa dalam HariKedaluwarsaDekat hari
+	MemberDekat   int // jumlah member unik yang poinnya akan kedaluwarsa (satu member bisa punya beberapa tanggal)
 	NilaiDekat    int64
 	HariDekat     int
 	Dekat         []repository.LotKedaluwarsa
@@ -138,6 +139,7 @@ func (s *LaporanService) Poin(ctx context.Context) (LaporanPoin, error) {
 	for _, l := range lp.Dekat {
 		lp.PoinDekat += l.Poin
 	}
+	lp.MemberDekat = jumlahMemberUnik(lp.Dekat)
 	lp.NilaiDekat = int64(lp.PoinDekat) * NilaiPoin
 	bulan, err := s.Repo.PoinPerBulanKedaluwarsa(ctx, now)
 	if err != nil {
@@ -472,4 +474,14 @@ func trimKoma(f float64) string {
 
 func fmtTitik(x, y float64) string {
 	return strconv.FormatFloat(x, 'f', -1, 64) + "," + strconv.FormatFloat(y, 'f', -1, 64) + " "
+}
+
+// jumlahMemberUnik: daftar "akan kedaluwarsa" berisi satu baris per (member, tanggal),
+// jadi member yang poinnya kedaluwarsa di beberapa tanggal hanya dihitung sekali.
+func jumlahMemberUnik(daftar []repository.LotKedaluwarsa) int {
+	unik := map[int]bool{}
+	for _, l := range daftar {
+		unik[l.MemberID] = true
+	}
+	return len(unik)
 }

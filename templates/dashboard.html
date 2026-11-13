@@ -73,7 +73,7 @@
     <div class="panel-head"><h2 id="pn-judul">Poin member</h2><a href="/laporan/poin">Laporan</a></div>
     <div class="poin-mini">
       <div><span class="small">Poin masih berlaku</span><b>{{.Poin.PoinAktif}}</b><span class="small">{{rupiah .Poin.NilaiRupiah}}</span></div>
-      <div><span class="small">Kedaluwarsa ≤ {{.Poin.HariDekat}} hari</span><b>{{.Poin.PoinDekat}}</b><span class="small">{{len .Poin.Dekat}} member perlu diingatkan</span></div>
+      <div><span class="small">Kedaluwarsa ≤ {{.Poin.HariDekat}} hari</span><b>{{.Poin.PoinDekat}}</b><span class="small">{{.Poin.MemberDekat}} member perlu diingatkan</span></div>
     </div>
   </section>
   <section class="panel" aria-labelledby="p-judul">
