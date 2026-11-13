@@ -88,6 +88,38 @@ func (r *MemberRepo) Tambah(ctx context.Context, q Querier, m model.Member) (int
 	return id, err
 }
 
+// Gabung memindahkan seluruh transaksi, lot poin, dan mutasi poin member duplikat ke member utama,
+// memakai tanggal daftar yang paling awal, lalu menghapus member duplikat beserta riwayat tingkatnya.
+// Dipanggil di dalam database transaction; kedua baris member sudah dikunci oleh pemanggil.
+func (r *MemberRepo) Gabung(ctx context.Context, q Querier, utamaID, duplikatID int) error {
+	pindah := []string{
+		"UPDATE transaksi SET member_id = ? WHERE member_id = ?",
+		"UPDATE poin_lot SET member_id = ? WHERE member_id = ?",
+		"UPDATE poin_mutasi SET member_id = ? WHERE member_id = ?",
+	}
+	for _, query := range pindah {
+		if _, err := q.ExecContext(ctx, query, utamaID, duplikatID); err != nil {
+			return fmt.Errorf("gabung member %d ke %d: %w", duplikatID, utamaID, err)
+		}
+	}
+	if _, err := q.ExecContext(ctx, `UPDATE member SET updated_at = NOW(),
+		tgl_daftar = LEAST(tgl_daftar, (SELECT tgl FROM (SELECT tgl_daftar AS tgl FROM member WHERE id = ?) d))
+		WHERE id = ?`, duplikatID, utamaID); err != nil {
+		return fmt.Errorf("tanggal daftar member %d: %w", utamaID, err)
+	}
+	return r.Hapus(ctx, q, duplikatID)
+}
+
+// Kunci mengunci baris member (SELECT ... FOR UPDATE) selama database transaction berjalan.
+func (r *MemberRepo) Kunci(ctx context.Context, q Querier, id int) error {
+	var x int
+	err := q.QueryRowContext(ctx, "SELECT id FROM member WHERE id = ? AND deleted_at IS NULL FOR UPDATE", id).Scan(&x)
+	if errors.Is(err, sql.ErrNoRows) {
+		return model.ErrNotFound
+	}
+	return err
+}
+
 // JumlahTransaksi: banyaknya transaksi member (semua status) dan lot poinnya.
 func (r *MemberRepo) JumlahTransaksi(ctx context.Context, q Querier, id int) (int, error) {
 	var n int

@@ -22,7 +22,7 @@
 
   {{if eq .Data.Mode "detail"}}{{with .Data.Detail}}
   <div class="panel">
-    <div class="panel-head"><div><h2>{{.Member.Nama}}</h2><p class="small">{{.Member.NoHP}} · member sejak {{tglPendek .Member.TglDaftar}}</p></div>
+    <div class="panel-head"><div><h2>{{.Member.Nama}}</h2><p class="small">ID {{.Member.ID}} · {{.Member.NoHP}} · member sejak {{tglPendek .Member.TglDaftar}}</p></div>
       {{if eq .Member.Tingkat "GOLD"}}<span class="pill gold">Gold</span>{{else}}<span class="pill silver">Silver</span>{{end}}</div>
     <div style="display:flex;gap:32px;margin:8px 0 16px">
       <div><div class="grey">Poin aktif</div><div style="font:700 32px/40px var(--head)">{{.Member.PoinAktif}}</div></div>
@@ -40,6 +40,12 @@
     {{else}}<p class="small">Belum ada poin. Poin didapat dari setiap kelipatan Rp10.000 belanja.</p>{{end}}
     <div class="actions"><a class="btn ghost" href="/member/{{.Member.ID}}/edit">Ubah data</a></div>
     {{if user.IsAdmin}}
+    <form method="post" action="/member/{{.Member.ID}}/gabung" data-confirm="Gabungkan member duplikat ke {{.Member.Nama}}? Transaksi dan poinnya dipindahkan ke member ini, lalu member duplikat dihapus. Tidak bisa dibatalkan." style="margin-top:20px">
+      <div class="field"><label for="duplikat">Gabungkan member dobel ke member ini</label>
+        <div class="input-row"><input id="duplikat" name="duplikat" class="input{{if index $.Errors "duplikat"}} invalid{{end}}" inputmode="numeric" placeholder="ID member duplikat" autocomplete="off" required>
+          <button class="btn ghost">Gabungkan</button></div>
+        {{with index $.Errors "duplikat"}}<p class="field-error" role="alert">{{.}}</p>{{else}}<p class="hint">ID tertera di detail member duplikat. Transaksi, poin, dan tingkatnya ikut dipindahkan ke sini.</p>{{end}}</div>
+    </form>
     <form method="post" action="/member/{{.Member.ID}}/hapus" data-confirm="Hapus member {{.Member.Nama}}? Hanya bisa untuk member yang belum pernah bertransaksi." style="margin-top:16px">
       <button class="link-btn bad">Hapus member ini (salah input / dobel)</button></form>
     {{end}}

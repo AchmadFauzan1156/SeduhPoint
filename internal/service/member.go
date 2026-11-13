@@ -5,6 +5,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"regexp"
 	"strings"
 	"unicode/utf8"
@@ -17,6 +18,7 @@ type MemberService struct {
 	DB       *sql.DB
 	Repo     *repository.MemberRepo
 	PoinRepo *repository.PoinRepo
+	Tingkat  *PoinService // evaluasi tingkat setelah member digabung
 }
 
 // DetailMember: data untuk panel detail.
@@ -136,6 +138,35 @@ func (s *MemberService) Hapus(ctx context.Context, u model.Pengguna, id int) err
 			return salah("", "Member ini sudah punya riwayat transaksi atau poin, jadi tidak bisa dihapus. Perbaiki datanya lewat Ubah data.")
 		}
 		return s.Repo.Hapus(ctx, tx, id)
+	})
+}
+
+// Gabung menyatukan member yang terdaftar dobel (khusus admin). Riwayat belanja dan poin member duplikat
+// tidak dihapus, melainkan dipindahkan ke member utama, sehingga saldo poin dan tingkat dihitung dari
+// gabungan keduanya. Member duplikat lalu dihapus dan nomor HP-nya bebas dipakai lagi.
+func (s *MemberService) Gabung(ctx context.Context, u model.Pengguna, utamaID, duplikatID int) error {
+	if !u.IsAdmin() {
+		return model.ErrForbidden
+	}
+	if duplikatID <= 0 {
+		return salah("duplikat", "Isi ID member duplikat")
+	}
+	if duplikatID == utamaID {
+		return salah("duplikat", "Member tidak bisa digabung dengan dirinya sendiri")
+	}
+	return repository.WithTx(ctx, s.DB, func(tx *sql.Tx) error {
+		// Kunci dengan urutan id kecil dulu agar dua admin yang menggabung bersamaan tidak deadlock.
+		for _, id := range []int{min(utamaID, duplikatID), max(utamaID, duplikatID)} {
+			if err := s.Repo.Kunci(ctx, tx, id); errors.Is(err, model.ErrNotFound) && id == duplikatID {
+				return salah("duplikat", "Member dengan ID "+itoa(duplikatID)+" tidak ditemukan")
+			} else if err != nil {
+				return err
+			}
+		}
+		if err := s.Repo.Gabung(ctx, tx, utamaID, duplikatID); err != nil {
+			return err
+		}
+		return s.Tingkat.Evaluasi(ctx, tx, utamaID)
 	})
 }
 

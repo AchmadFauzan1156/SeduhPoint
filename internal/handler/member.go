@@ -118,19 +118,40 @@ func (h *MemberHandler) Hapus(w http.ResponseWriter, r *http.Request) {
 	}
 	u, _ := middleware.PenggunaDari(r.Context())
 	if err := h.Svc.Hapus(r.Context(), u, id); err != nil {
-		var ve *service.ValidasiError
-		if errors.As(err, &ve) {
-			d, e := h.Svc.DetailLengkap(r.Context(), id)
-			if e != nil {
-				gagal(w, e)
-				return
-			}
-			h.tampil(w, r, d.Member.Nama, MemberPage{Mode: "detail", Detail: d}, err)
-			return
-		}
-		gagal(w, err)
+		h.detailGagal(w, r, id, err)
 		return
 	}
 	catatAksi(r, "menghapus member %d", id)
 	redirect(w, r, "/member", "member-dihapus")
+}
+
+// Gabung: khusus admin. Member duplikat (ID diisi di form) digabung ke member yang sedang dibuka.
+func (h *MemberHandler) Gabung(w http.ResponseWriter, r *http.Request) {
+	id, ok := idDariPath(w, r)
+	if !ok {
+		return
+	}
+	u, _ := middleware.PenggunaDari(r.Context())
+	duplikat := atoi(r.PostFormValue("duplikat"))
+	if err := h.Svc.Gabung(r.Context(), u, id, duplikat); err != nil {
+		h.detailGagal(w, r, id, err)
+		return
+	}
+	catatAksi(r, "menggabungkan member %d ke member %d", duplikat, id)
+	redirect(w, r, fmt.Sprintf("/member/%d", id), "member-digabung")
+}
+
+// detailGagal: salah input ditampilkan di panel detail member; error lain lewat gagal().
+func (h *MemberHandler) detailGagal(w http.ResponseWriter, r *http.Request, id int, err error) {
+	var ve *service.ValidasiError
+	if !errors.As(err, &ve) {
+		gagal(w, err)
+		return
+	}
+	d, e := h.Svc.DetailLengkap(r.Context(), id)
+	if e != nil {
+		gagal(w, e)
+		return
+	}
+	h.tampil(w, r, d.Member.Nama, MemberPage{Mode: "detail", Detail: d}, err)
 }

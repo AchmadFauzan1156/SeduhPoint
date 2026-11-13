@@ -59,3 +59,20 @@ func TestHapusMemberHanyaAdmin(t *testing.T) {
 		t.Errorf("kasir harus ditolak (ErrForbidden), dapat %v", err)
 	}
 }
+
+// Gabung member: kasir ditolak, dan member tidak bisa digabung dengan dirinya sendiri (tanpa database).
+func TestGabungMemberAturan(t *testing.T) {
+	s := &MemberService{}
+	kasir := model.Pengguna{ID: 2, Peran: model.PeranKasir, CabangID: 1}
+	admin := model.Pengguna{ID: 1, Peran: model.PeranAdmin}
+	if err := s.Gabung(context.Background(), kasir, 10, 11); !errors.Is(err, model.ErrForbidden) {
+		t.Errorf("kasir harus ditolak (ErrForbidden), dapat %v", err)
+	}
+	var ve *ValidasiError
+	if err := s.Gabung(context.Background(), admin, 10, 10); !errors.As(err, &ve) || ve.Fields["duplikat"] == "" {
+		t.Errorf("gabung dengan diri sendiri harus ditolak, dapat %v", err)
+	}
+	if err := s.Gabung(context.Background(), admin, 10, 0); !errors.As(err, &ve) || ve.Fields["duplikat"] == "" {
+		t.Errorf("ID duplikat kosong harus ditolak, dapat %v", err)
+	}
+}

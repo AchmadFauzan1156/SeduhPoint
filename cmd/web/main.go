@@ -45,9 +45,9 @@ func main() {
 	authSvc := &service.AuthService{Pengguna: penggunaRepo, Sessions: &repository.SessionRepo{DB: db}}
 	cabangSvc := &service.CabangService{DB: db, Repo: cabangRepo, PenggunaRepo: penggunaRepo}
 	produkSvc := &service.ProdukService{Repo: produkRepo, KategoriRepo: kategoriRepo}
-	memberSvc := &service.MemberService{DB: db, Repo: memberRepo, PoinRepo: poinRepo}
 	promoSvc := &service.PromoService{Repo: promoRepo}
 	poinSvc := &service.PoinService{DB: db, PoinRepo: poinRepo, MemberRepo: memberRepo}
+	memberSvc := &service.MemberService{DB: db, Repo: memberRepo, PoinRepo: poinRepo, Tingkat: poinSvc}
 	transaksiSvc := &service.TransaksiService{DB: db, Repo: transaksiRepo, PromoRepo: promoRepo,
 		PoinRepo: poinRepo, ProdukRepo: produkRepo, MemberRepo: memberRepo, Tingkat: poinSvc}
 	laporanSvc := &service.LaporanService{Repo: laporanRepo}
@@ -108,6 +108,7 @@ func main() {
 	privat.HandleFunc("GET /member/{id}/edit", member.FormEdit)
 	privat.HandleFunc("POST /member/{id}/edit", member.Update)
 	privat.Handle("POST /member/{id}/hapus", admin(member.Hapus))
+	privat.Handle("POST /member/{id}/gabung", admin(member.Gabung))
 
 	// Promo & voucher (admin)
 	privat.Handle("GET /promo", admin(promo.Daftar))

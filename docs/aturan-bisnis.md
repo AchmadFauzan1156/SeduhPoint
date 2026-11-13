@@ -48,6 +48,16 @@ saat simulasi pengujian (lihat [hasil-simulasi.md](hasil-simulasi.md)).
   - Tingkat member dievaluasi ulang.
 - Kasir hanya boleh membatalkan transaksi cabangnya sendiri pada hari yang sama (WIB). Admin boleh membatalkan semua transaksi.
 
+## Member dobel atau salah input
+
+- **Gabung** (admin): member duplikat digabung ke member utama dalam satu database transaction.
+  - Seluruh transaksi, lot poin, dan mutasi poinnya dipindahkan ke member utama. Lot tetap dengan tanggal kedaluwarsanya, jadi aturan FIFO tidak berubah.
+  - Tanggal daftar memakai yang paling awal.
+  - Member duplikat dan riwayat tingkatnya dihapus, sehingga nomor HP-nya bisa dipakai lagi.
+  - Tingkat member utama dievaluasi ulang dari gabungan belanja.
+  - Total poin aktif di sistem tidak berubah, karena poin hanya berpindah pemilik.
+- **Hapus** (admin): hanya untuk member yang belum pernah bertransaksi dan tidak punya poin. Member dihapus permanen beserta riwayat tingkatnya.
+
 ## Hak akses
 
 | Aksi | Tamu | Kasir | Admin |
@@ -57,7 +67,7 @@ saat simulasi pengujian (lihat [hasil-simulasi.md](hasil-simulasi.md)).
 | Riwayat dan struk | | cabang sendiri | semua |
 | Batalkan transaksi | | cabang sendiri, hari ini | semua |
 | Member: lihat, daftar, ubah | | ✓ | ✓ |
-| Hapus member salah input/dobel (belum pernah bertransaksi) | | | ✓ |
+| Gabungkan member dobel; hapus member salah input yang belum pernah bertransaksi | | | ✓ |
 | Cabang (beserta akun kasirnya), kategori, produk, promo, laporan, pengguna | | | ✓ |
 
 Setiap cabang punya satu akun kasir yang dibuat admin bersamaan dengan cabangnya dan dipakai bersama di mesin
