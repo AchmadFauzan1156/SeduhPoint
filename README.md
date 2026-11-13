@@ -250,7 +250,8 @@ kasus negatif hak akses (kasir ditolak di halaman admin, tidak bisa melihat caba
 transaksi kemarin, dan tidak bisa me-reset password).
 
 Aturan bisnis lengkap ada di [docs/aturan-bisnis.md](docs/aturan-bisnis.md), dan hasil simulasi pengujian
-seluruh fitur dengan peran admin dan kasir ada di [docs/hasil-simulasi.md](docs/hasil-simulasi.md).
+seluruh fitur dengan peran admin dan kasir ada di [docs/hasil-simulasi.md](docs/hasil-simulasi.md). Daftar akun uji
+beserta kegunaannya ada di [docs/akun-uji.md](docs/akun-uji.md).
 
 ## Arsitektur
 
@@ -285,7 +286,7 @@ SeduhPoint/
 │   ├── handler/           handler HTTP dan helper template
 │   └── middleware/        logging, batas ukuran body, RequireLogin, RequireRole
 ├── db/seduhpoint.sql      database, tabel, dan data contoh
-├── docs/                  aturan bisnis dan hasil simulasi pengujian
+├── docs/                  aturan bisnis, hasil simulasi pengujian, dan akun uji
 ├── templates/             template HTML per halaman
 └── static/                CSS, JavaScript, logo, foto menu
 ```
