@@ -12,8 +12,10 @@ import (
 )
 
 type CabangForm struct {
-	Action string
-	Cabang model.Cabang
+	Action   string
+	Cabang   model.Cabang
+	Kasir    string // username kasir cabang ini; kosong = belum punya (form menampilkan isian akun kasir)
+	Username string // isian username kasir yang ditampilkan ulang saat validasi gagal (password tidak)
 }
 
 type CabangPage struct {
@@ -47,11 +49,12 @@ func (h *CabangHandler) Daftar(w http.ResponseWriter, r *http.Request) {
 func (h *CabangHandler) FormTambah(w http.ResponseWriter, r *http.Request) { h.Daftar(w, r) }
 
 func (h *CabangHandler) Simpan(w http.ResponseWriter, r *http.Request) {
-	c := cabangDariForm(r)
-	if _, err := h.Svc.Buat(r.Context(), c); err != nil {
-		h.tampil(w, r, "Cabang", CabangForm{Action: "/cabang", Cabang: c}, err)
+	c, akun := cabangDariForm(r), akunDariForm(r)
+	if _, err := h.Svc.Buat(r.Context(), c, akun); err != nil {
+		h.tampil(w, r, "Cabang", CabangForm{Action: "/cabang", Cabang: c, Username: akun.Username}, err)
 		return
 	}
+	catatAksi(r, "menambah cabang %s dengan akun kasir %s", c.Nama, akun.Username)
 	redirect(w, r, "/cabang", "cabang-dibuat")
 }
 
@@ -65,7 +68,12 @@ func (h *CabangHandler) FormEdit(w http.ResponseWriter, r *http.Request) {
 		gagal(w, err)
 		return
 	}
-	h.tampil(w, r, "Ubah cabang", CabangForm{Action: fmt.Sprintf("/cabang/%d/edit", id), Cabang: c}, nil)
+	kasir, err := h.Svc.KasirCabang(r.Context(), id)
+	if err != nil {
+		gagal(w, err)
+		return
+	}
+	h.tampil(w, r, "Ubah cabang", CabangForm{Action: fmt.Sprintf("/cabang/%d/edit", id), Cabang: c, Kasir: kasir}, nil)
 }
 
 func (h *CabangHandler) Update(w http.ResponseWriter, r *http.Request) {
@@ -73,11 +81,16 @@ func (h *CabangHandler) Update(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	c := cabangDariForm(r)
+	c, akun := cabangDariForm(r), akunDariForm(r)
 	c.ID = id
-	if err := h.Svc.Ubah(r.Context(), c); err != nil {
-		h.tampil(w, r, "Ubah cabang", CabangForm{Action: fmt.Sprintf("/cabang/%d/edit", id), Cabang: c}, err)
+	if err := h.Svc.Ubah(r.Context(), c, akun); err != nil {
+		kasir, _ := h.Svc.KasirCabang(r.Context(), id)
+		h.tampil(w, r, "Ubah cabang", CabangForm{Action: fmt.Sprintf("/cabang/%d/edit", id), Cabang: c,
+			Kasir: kasir, Username: akun.Username}, err)
 		return
+	}
+	if !akun.Kosong() {
+		catatAksi(r, "membuat akun kasir %s untuk cabang %d", akun.Username, id)
 	}
 	redirect(w, r, "/cabang", "cabang-diubah")
 }
@@ -100,5 +113,14 @@ func cabangDariForm(r *http.Request) model.Cabang {
 		Nama:   r.PostFormValue("nama"),
 		Alamat: r.PostFormValue("alamat"),
 		Aktif:  r.PostFormValue("aktif") == "on",
+	}
+}
+
+// akunDariForm: isian akun kasir pada form cabang.
+func akunDariForm(r *http.Request) service.AkunKasir {
+	return service.AkunKasir{
+		Username: r.PostFormValue("username"),
+		Password: r.PostFormValue("kasir_baru"),
+		Ulang:    r.PostFormValue("kasir_ulang"),
 	}
 }

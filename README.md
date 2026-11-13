@@ -72,7 +72,8 @@ pemilik memantau biaya promo, poin beredar, dan perkembangan member dari satu te
 
 ### Admin & laporan
 - Kelola cabang, kategori, produk (dengan foto), member, promo
-- Kelola pengguna: ganti password admin dan reset password kasir
+- Cabang baru langsung dibuatkan satu akun kasir (dipakai bersama di mesin kasir cabang itu)
+- Kelola pengguna: ganti password admin dan reset password kasir saat kasirnya berganti orang
 - Ringkasan omzet, transaksi, biaya promo, member Gold
 - Grafik omzet harian dan omzet per cabang, dibanding periode sebelumnya
 - Laporan biaya promo (filter tanggal & cabang)
@@ -225,7 +226,8 @@ dan setiap aturan dicek di server, bukan hanya dengan menyembunyikan tombol.
 | Lihat riwayat dan struk transaksi | | cabangnya sendiri | semua cabang |
 | Batalkan transaksi | | cabangnya sendiri, hari ini | semua |
 | Lihat, daftarkan, dan ubah member | | ✓ | ✓ |
-| Kelola cabang, kategori, produk, promo & voucher | | | ✓ |
+| Hapus member salah input/dobel (belum pernah bertransaksi) | | | ✓ |
+| Kelola cabang (beserta akun kasirnya), kategori, produk, promo & voucher | | | ✓ |
 | Ringkasan dan laporan | | | ✓ |
 | Kelola pengguna, ganti/reset password | | | ✓ |
 
@@ -294,6 +296,15 @@ SeduhPoint/
   server dimulai ulang. Setelah password diganti, session akun itu di perangkat lain dihapus.
 - Aksi penting (pembatalan transaksi, hapus data master, ubah status promo, ganti/reset password) dicatat
   ke log server beserta username pelakunya.
+
+## Pengembangan fitur
+
+Rencana yang belum dikerjakan karena membutuhkan perubahan struktur database:
+
+| Fitur | Kebutuhan | Perubahan database |
+|---|---|---|
+| Mencatat siapa yang membatalkan transaksi | Audit, mis. menelusuri kasir yang membatalkan transaksi setelah menerima uang. Saat ini alasan dan waktu tersimpan, pelakunya hanya ada di log server | Kolom baru `transaksi.dibatalkan_oleh INT NULL` (FK ke `pengguna`), diisi saat pembatalan dan ditampilkan di struk serta riwayat |
+| Menonaktifkan member yang sudah punya transaksi | Saat ini hanya member tanpa transaksi yang bisa dihapus; member lama yang berhenti tetap muncul di pencarian kasir | Memakai `member.deleted_at` dan mengubah aturan unik `no_hp` (mis. unik hanya untuk member aktif) agar nomornya bisa dipakai lagi; laporan poin dan tingkat perlu memutuskan apakah member nonaktif ikut dihitung |
 
 ## Kredit
 

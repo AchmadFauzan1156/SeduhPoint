@@ -3,9 +3,11 @@ package handler
 // Member: daftar + cari, panel detail (saldo & lot poin) atau panel form.
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
+	"seduhpoint/internal/middleware"
 	"seduhpoint/internal/model"
 	"seduhpoint/internal/service"
 )
@@ -106,4 +108,29 @@ func (h *MemberHandler) Update(w http.ResponseWriter, r *http.Request) {
 // memberDariForm hanya membaca field yang boleh diisi dari form (materi #10).
 func memberDariForm(r *http.Request) model.Member {
 	return model.Member{Nama: r.PostFormValue("nama"), NoHP: r.PostFormValue("no_hp")}
+}
+
+// Hapus: khusus admin (dicek di route dan di service), untuk member salah input/dobel tanpa transaksi.
+func (h *MemberHandler) Hapus(w http.ResponseWriter, r *http.Request) {
+	id, ok := idDariPath(w, r)
+	if !ok {
+		return
+	}
+	u, _ := middleware.PenggunaDari(r.Context())
+	if err := h.Svc.Hapus(r.Context(), u, id); err != nil {
+		var ve *service.ValidasiError
+		if errors.As(err, &ve) {
+			d, e := h.Svc.DetailLengkap(r.Context(), id)
+			if e != nil {
+				gagal(w, e)
+				return
+			}
+			h.tampil(w, r, d.Member.Nama, MemberPage{Mode: "detail", Detail: d}, err)
+			return
+		}
+		gagal(w, err)
+		return
+	}
+	catatAksi(r, "menghapus member %d", id)
+	redirect(w, r, "/member", "member-dihapus")
 }

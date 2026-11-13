@@ -117,6 +117,28 @@ func (s *MemberService) Buat(ctx context.Context, m model.Member) (int64, error)
 	return id, err
 }
 
+// Hapus member yang salah input atau terdaftar dobel. Hanya admin, dan hanya untuk member yang belum
+// pernah bertransaksi: member yang sudah punya transaksi/poin tetap disimpan agar riwayat dan laporan utuh.
+// Member dihapus permanen (bukan soft delete) supaya nomor HP-nya bisa dipakai lagi.
+func (s *MemberService) Hapus(ctx context.Context, u model.Pengguna, id int) error {
+	if !u.IsAdmin() {
+		return model.ErrForbidden
+	}
+	return repository.WithTx(ctx, s.DB, func(tx *sql.Tx) error {
+		if _, err := s.Repo.CariByID(ctx, id); err != nil {
+			return err
+		}
+		n, err := s.Repo.JumlahTransaksi(ctx, tx, id)
+		if err != nil {
+			return err
+		}
+		if n > 0 {
+			return salah("", "Member ini sudah punya riwayat transaksi atau poin, jadi tidak bisa dihapus. Perbaiki datanya lewat Ubah data.")
+		}
+		return s.Repo.Hapus(ctx, tx, id)
+	})
+}
+
 func (s *MemberService) Ubah(ctx context.Context, m model.Member) error {
 	if err := s.validasi(ctx, &m); err != nil {
 		return err

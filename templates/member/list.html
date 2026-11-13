@@ -39,6 +39,10 @@
     </table>
     {{else}}<p class="small">Belum ada poin. Poin didapat dari setiap kelipatan Rp10.000 belanja.</p>{{end}}
     <div class="actions"><a class="btn ghost" href="/member/{{.Member.ID}}/edit">Ubah data</a></div>
+    {{if user.IsAdmin}}
+    <form method="post" action="/member/{{.Member.ID}}/hapus" data-confirm="Hapus member {{.Member.Nama}}? Hanya bisa untuk member yang belum pernah bertransaksi." style="margin-top:16px">
+      <button class="link-btn bad">Hapus member ini (salah input / dobel)</button></form>
+    {{end}}
   </div>
   {{end}}{{else if eq .Data.Mode "form"}}{{with .Data}}
   <form class="panel" method="post" action="{{.Action}}">

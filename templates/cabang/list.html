@@ -26,6 +26,22 @@
       <input id="alamat" name="alamat" class="input{{if index $.Errors "alamat"}} invalid{{end}}" value="{{.Cabang.Alamat}}" maxlength="255">
       {{with index $.Errors "alamat"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
     <label class="check"><input type="checkbox" class="cb" name="aktif" {{if .Cabang.Aktif}}checked{{end}}> Aktif</label>
+    {{if .Kasir}}
+    <p class="sub" style="margin-top:14px">Akun kasir: <b>{{.Kasir}}</b> · ganti password di menu <a href="/pengguna">Pengguna</a>.</p>
+    {{with index $.Errors "username"}}<p class="field-error" role="alert">{{.}}</p>{{end}}
+    {{else}}
+    <h3 style="margin:18px 0 6px;font-size:15px">Akun kasir cabang</h3>
+    <p class="sub" style="margin-bottom:10px">Satu akun dipakai di mesin kasir cabang ini.{{if .Cabang.ID}} Kosongkan jika belum ingin membuat akun.{{end}}</p>
+    <div class="field"><label for="username">Username kasir</label>
+      <input id="username" name="username" class="input{{if index $.Errors "username"}} invalid{{end}}" value="{{.Username}}" maxlength="30" autocomplete="off" placeholder="mis. kasir_pleburan"{{if not .Cabang.ID}} required{{end}}>
+      {{with index $.Errors "username"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
+    <div class="field"><label for="kasir_baru">Password kasir</label>
+      <input id="kasir_baru" name="kasir_baru" type="password" class="input{{if index $.Errors "kasir_baru"}} invalid{{end}}" autocomplete="new-password" maxlength="72"{{if not .Cabang.ID}} required minlength="8"{{end}}>
+      {{with index $.Errors "kasir_baru"}}<p class="field-error" role="alert">{{.}}</p>{{else}}<p class="sub">8 sampai 72 karakter.</p>{{end}}</div>
+    <div class="field"><label for="kasir_ulang">Ulangi password kasir</label>
+      <input id="kasir_ulang" name="kasir_ulang" type="password" class="input{{if index $.Errors "kasir_ulang"}} invalid{{end}}" autocomplete="new-password" maxlength="72"{{if not .Cabang.ID}} required{{end}}>
+      {{with index $.Errors "kasir_ulang"}}<p class="field-error" role="alert">{{.}}</p>{{end}}</div>
+    {{end}}
     <div class="actions"><button class="btn">Simpan</button>
       {{if .Cabang.ID}}<a class="btn ghost" href="/cabang">Batal</a>{{end}}</div>
   </form>
@@ -34,7 +50,7 @@
   {{end}}
 </div>
 {{with .Data.Form}}{{if .Cabang.ID}}
-<form method="post" action="/cabang/{{.Cabang.ID}}/hapus" data-confirm="Hapus cabang {{.Cabang.Nama}}? Riwayat transaksinya tetap tersimpan." style="margin-top:16px">
+<form method="post" action="/cabang/{{.Cabang.ID}}/hapus" data-confirm="Hapus cabang {{.Cabang.Nama}}? Riwayat transaksinya tetap tersimpan, akun kasirnya dinonaktifkan." style="margin-top:16px">
   <button class="link-btn bad">Hapus cabang ini</button></form>
 {{end}}{{end}}
 {{end}}

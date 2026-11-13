@@ -50,3 +50,12 @@ func TestValidasiPasswordBaru(t *testing.T) {
 		}
 	}
 }
+
+// Kasir tidak boleh menghapus member; ditolak sebelum menyentuh database.
+func TestHapusMemberHanyaAdmin(t *testing.T) {
+	s := &MemberService{}
+	kasir := model.Pengguna{ID: 2, Peran: model.PeranKasir, CabangID: 1}
+	if err := s.Hapus(context.Background(), kasir, 10003); !errors.Is(err, model.ErrForbidden) {
+		t.Errorf("kasir harus ditolak (ErrForbidden), dapat %v", err)
+	}
+}

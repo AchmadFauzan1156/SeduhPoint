@@ -47,8 +47,9 @@ func (r *CabangRepo) CariByID(ctx context.Context, id int) (model.Cabang, error)
 	return c, nil
 }
 
-func (r *CabangRepo) Tambah(ctx context.Context, c model.Cabang) (int64, error) {
-	res, err := r.DB.ExecContext(ctx,
+// Tambah dipanggil di dalam database transaction (q = *sql.Tx) karena cabang baru dibuat bersama akun kasirnya.
+func (r *CabangRepo) Tambah(ctx context.Context, q Querier, c model.Cabang) (int64, error) {
+	res, err := q.ExecContext(ctx,
 		"INSERT INTO cabang (nama, alamat, aktif) VALUES (?, ?, ?)", c.Nama, c.Alamat, c.Aktif)
 	if err != nil {
 		return 0, fmt.Errorf("tambah cabang: %w", err)
@@ -67,8 +68,8 @@ func (r *CabangRepo) Ubah(ctx context.Context, c model.Cabang) error {
 }
 
 // Hapus = soft delete (data lama tetap ada untuk riwayat transaksi).
-func (r *CabangRepo) Hapus(ctx context.Context, id int) error {
-	res, err := r.DB.ExecContext(ctx,
+func (r *CabangRepo) Hapus(ctx context.Context, q Querier, id int) error {
+	res, err := q.ExecContext(ctx,
 		"UPDATE cabang SET deleted_at = NOW() WHERE id = ? AND deleted_at IS NULL", id)
 	if err != nil {
 		return fmt.Errorf("hapus cabang %d: %w", id, err)

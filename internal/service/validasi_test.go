@@ -14,8 +14,10 @@ import (
 // Materi #4: semua field diperiksa sekaligus, bukan berhenti di error pertama.
 func TestValidasiMengumpulkanSemuaError(t *testing.T) {
 	c := model.Cabang{Nama: "  ", Alamat: strings.Repeat("a", 256)}
+	errsCabang := map[string]string{}
+	validasiCabang(&c, errsCabang)
 	var ve *ValidasiError
-	if err := validasiCabang(&c); !errors.As(err, &ve) {
+	if err := hasilValidasi(errsCabang); !errors.As(err, &ve) {
 		t.Fatalf("harusnya ValidasiError, dapat %v", err)
 	}
 	for _, field := range []string{"nama", "alamat"} {
@@ -38,8 +40,9 @@ func TestValidasiMengumpulkanSemuaError(t *testing.T) {
 
 func TestValidasiCabangLolos(t *testing.T) {
 	c := model.Cabang{Nama: " Seduh Sekaran ", Alamat: "Jl. Raya Sekaran"}
-	if err := validasiCabang(&c); err != nil {
-		t.Fatal(err)
+	errs := map[string]string{}
+	if validasiCabang(&c, errs); len(errs) > 0 {
+		t.Fatal(errs)
 	}
 	if c.Nama != "Seduh Sekaran" {
 		t.Errorf("nama harus dirapikan (TrimSpace), dapat %q", c.Nama)

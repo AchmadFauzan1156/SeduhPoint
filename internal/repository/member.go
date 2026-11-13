@@ -88,6 +88,27 @@ func (r *MemberRepo) Tambah(ctx context.Context, q Querier, m model.Member) (int
 	return id, err
 }
 
+// JumlahTransaksi: banyaknya transaksi member (semua status) dan lot poinnya.
+func (r *MemberRepo) JumlahTransaksi(ctx context.Context, q Querier, id int) (int, error) {
+	var n int
+	err := q.QueryRowContext(ctx, `SELECT (SELECT COUNT(*) FROM transaksi WHERE member_id = ?)
+		+ (SELECT COUNT(*) FROM poin_lot WHERE member_id = ?)`, id, id).Scan(&n)
+	return n, err
+}
+
+// Hapus menghapus member beserta riwayat tingkatnya secara permanen (dipanggil di dalam database transaction).
+// Hanya untuk member yang belum punya transaksi; pengecekannya di service.
+func (r *MemberRepo) Hapus(ctx context.Context, q Querier, id int) error {
+	if _, err := q.ExecContext(ctx, "DELETE FROM member_tingkat_riwayat WHERE member_id = ?", id); err != nil {
+		return fmt.Errorf("hapus riwayat tingkat member %d: %w", id, err)
+	}
+	res, err := q.ExecContext(ctx, "DELETE FROM member WHERE id = ?", id)
+	if err != nil {
+		return fmt.Errorf("hapus member %d: %w", id, err)
+	}
+	return pastikanAdaBaris(res)
+}
+
 func (r *MemberRepo) Ubah(ctx context.Context, m model.Member) error {
 	res, err := r.DB.ExecContext(ctx,
 		"UPDATE member SET nama = ?, no_hp = ?, updated_at = NOW() WHERE id = ? AND deleted_at IS NULL", m.Nama, m.NoHP, m.ID)

@@ -88,3 +88,43 @@ func (r *PenggunaRepo) UbahPassword(ctx context.Context, id int, hash string) er
 	}
 	return pastikanAdaBaris(res)
 }
+
+// UsernameDipakai: username unik untuk semua akun, termasuk yang sudah dihapus.
+func (r *PenggunaRepo) UsernameDipakai(ctx context.Context, username string) (bool, error) {
+	var n int
+	err := r.DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM pengguna WHERE username = ?", username).Scan(&n)
+	return n > 0, err
+}
+
+// KasirCabang: username akun kasir aktif di sebuah cabang ("" jika belum ada).
+func (r *PenggunaRepo) KasirCabang(ctx context.Context, cabangID int) (string, error) {
+	var username string
+	err := r.DB.QueryRowContext(ctx, `SELECT username FROM pengguna
+		WHERE peran = 'KASIR' AND cabang_id = ? AND aktif = TRUE AND deleted_at IS NULL LIMIT 1`, cabangID,
+	).Scan(&username)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", nil
+	}
+	return username, err
+}
+
+// TambahKasir membuat akun kasir untuk satu cabang (dipanggil di dalam database transaction).
+func (r *PenggunaRepo) TambahKasir(ctx context.Context, q Querier, username, hash string, cabangID int64) error {
+	_, err := q.ExecContext(ctx,
+		"INSERT INTO pengguna (username, password_hash, peran, cabang_id) VALUES (?, ?, 'KASIR', ?)",
+		username, hash, cabangID)
+	if err != nil {
+		return fmt.Errorf("tambah kasir: %w", err)
+	}
+	return nil
+}
+
+// NonaktifkanKasirCabang: akun kasir cabang yang dihapus tidak bisa login lagi.
+func (r *PenggunaRepo) NonaktifkanKasirCabang(ctx context.Context, q Querier, cabangID int) error {
+	_, err := q.ExecContext(ctx,
+		"UPDATE pengguna SET aktif = FALSE, updated_at = NOW() WHERE peran = 'KASIR' AND cabang_id = ?", cabangID)
+	if err != nil {
+		return fmt.Errorf("nonaktifkan kasir cabang %d: %w", cabangID, err)
+	}
+	return nil
+}

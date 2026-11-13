@@ -57,7 +57,12 @@ saat simulasi pengujian (lihat [hasil-simulasi.md](hasil-simulasi.md)).
 | Riwayat dan struk | | cabang sendiri | semua |
 | Batalkan transaksi | | cabang sendiri, hari ini | semua |
 | Member: lihat, daftar, ubah | | ✓ | ✓ |
-| Cabang, kategori, produk, promo, laporan, pengguna | | | ✓ |
+| Hapus member salah input/dobel (belum pernah bertransaksi) | | | ✓ |
+| Cabang (beserta akun kasirnya), kategori, produk, promo, laporan, pengguna | | | ✓ |
+
+Setiap cabang punya satu akun kasir yang dibuat admin bersamaan dengan cabangnya dan dipakai bersama di mesin
+kasir cabang itu. Kasir berganti orang cukup dengan reset password di halaman Pengguna. Menghapus cabang
+menonaktifkan akun kasirnya.
 
 Respons HTTP:
 - Belum login: diarahkan ke `/login`.

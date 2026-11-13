@@ -100,6 +100,7 @@ var pesanFlash = map[string]string{
 	"produk-dihapus":       "Produk berhasil dihapus",
 	"member-dibuat":        "Member terdaftar dengan tingkat Silver",
 	"member-diubah":        "Data member berhasil disimpan",
+	"member-dihapus":       "Member berhasil dihapus",
 	"promo-dibuat":         "Promo berhasil ditambahkan",
 	"promo-diubah":         "Promo berhasil disimpan",
 	"promo-aktif":          "Promo diaktifkan",
